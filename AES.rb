@@ -69,6 +69,27 @@ class Fixnum
     end
 end
 
+class Key
+    def initialize(str,type=nil)
+        @type = (type) ? type : 128
+        case type
+        when 128 then
+            @key = Array.new(11) { State.new }
+        when 196 then 
+            @key = Array.new(17) { State.new }
+        when 256 then 
+            @key = Array.new(23) { State.new }
+        else "unknown"
+        end
+    end
+
+    def get_first_rk(key)
+    end
+
+    def get_next_rk(key)
+    end
+end
+
 class State
     def initialize(str=nil)
         if str != nil
@@ -156,10 +177,10 @@ class AES
     end
 
     def self.keySchedule(key)
-
+        
     end
 
-    def self.xorRoundKeys(state, key)
+    def self.xorRoundKeys(state, roundkey)
     end
 
     def self.cipher(text, key)
