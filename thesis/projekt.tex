@@ -9,7 +9,7 @@
 % pøipomínky posílejte na e-mail: bidlom AT fit.vutbr.cz
 % vim: set syntax=tex encoding=latin2:
 %============================================================================
-\documentclass[cover]{fitthesis} % odevzdani do wisu - odkazy, na ktere se da klikat
+\documentclass[english]{fitthesis} % odevzdani do wisu - odkazy, na ktere se da klikat
 %\documentclass[cover,print]{fitthesis} % pro tisk - na odkazy se neda klikat
 %\documentclass[english,print]{fitthesis} % pro tisk - na odkazy se neda klikat
 %      \documentclass[english]{fitthesis}
@@ -23,7 +23,7 @@
 % "latin2" pro iso8859-2 nebo "cp1250" pro windows-1250, "utf8" pro "utf-8"
 %\usepackage{ucs}
 \usepackage[latin2]{inputenc}
-\usepackage[T1, IL2]{fontenc}
+%\usepackage[T1, IL2]{fontenc}
 \usepackage{url}
 \DeclareUrlCommand\url{\def\UrlLeft{<}\def\UrlRight{>} \urlstyle{tt}}
 
@@ -52,22 +52,24 @@
 %---------------------------------------------------------------------------
 \projectinfo{
   %Prace
-  project=BP,            %typ prace BP/SP/DP/DR
-  year=2008,             %rok
+  project=DP,            %typ prace BP/SP/DP/DR
+  year=2012,             %rok
   date=\today,           %datum odevzdani
   %Nazev prace
-  title.cs={Název práce},  %nazev prace v cestine
-  title.en={Thesis title}, %nazev prace v anglictine
+  title.cs={Návrh a analýza výkonnosti paralelního zpracování SRTP pøenosù},  %nazev prace v cestine
+  title.nezalom={Návrh a analýza výkonnosti paralelního\\ zpracování SRTP pøenosù}, %aby se nerozdelila slova v nadpisu
+  title.en={Design and Performance Analysis of Parallel Processing of SRTP Packets}, %nazev prace v anglictine
+  title.nobreak={Design and Performance Analysis of Parallel\\ Processing of SRTP Packets},  %aby se nerozdelila slova v nadpisu
   %Autor
-  author={Jméno Pøíjmení},   %jmeno prijmeni autora
-  %author.title.p=Bc., %titul pred jmenem (nepovinne)
+  author={Jan Wozniak},   %jmeno prijmeni autora
+  author.title.p=Bc., %titul pred jmenem (nepovinne)
   %author.title.a=PhD, %titul za jmenem (nepovinne)
   %Ustav
-  department=UPSY, % doplnte prislusnou zkratku: UPSY/UIFS/UITS/UPGM
+  department=UITS, % doplnte prislusnou zkratku: UPSY/UIFS/UITS/UPGM
   %Skolitel
-  supervisor= Jméno Pøíjmení, %jmeno prijmeni skolitele
+  supervisor=Peter Jurneèka, %jmeno prijmeni skolitele
   supervisor.title.p=Ing.,   %titul pred jmenem (nepovinne)
-  supervisor.title.a={Ph.D.},    %titul za jmenem (nepovinne)
+  %supervisor.title.a={Ph.D.},    %titul za jmenem (nepovinne)
   %Klicova slova, abstrakty, prohlaseni a podekovani je mozne definovat 
   %bud pomoci nasledujicich parametru nebo pomoci vyhrazenych maker (viz dale)
   %===========================================================================
@@ -80,7 +82,7 @@
   %Prohlaseni
   declaration={Prohla¹uji, ¾e jsem tuto bakaláøskou práci vypracoval samostatnì pod vedením pana ...},
   %Podekovani (nepovinne)
-  acknowledgment={Zde je mo¾né uvést podìkování vedoucímu práce a tìm, kteøí poskytli odbornou pomoc.} % nepovinne
+  %acknowledgment={Zde je mo¾né uvést podìkování vedoucímu práce a tìm, kteøí poskytli odbornou pomoc.} % nepovinne
 }
 
 %Abstrakt (cesky, anglicky)

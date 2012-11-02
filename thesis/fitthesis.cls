@@ -139,6 +139,8 @@ Práce je chránìna autorským zákonem a její u¾ití bez udìlení oprávnìní autorem j
 %Parametry 
 \define@key{projinfo}{title.cs}{\global\def\@title@CS{#1}}
 \define@key{projinfo}{title.en}{\global\def\@title@EN{#1}}
+\define@key{projinfo}{title.nezalom}{\global\def\@title@NEZALOM{#1}}
+\define@key{projinfo}{title.nobreak}{\global\def\@title@NOBREAK{#1}}
 \define@key{projinfo}{department}{\set@department{#1}}
 \define@key{projinfo}{project}{\set@project{#1}}
 \define@key{projinfo}{year}{\def\@year{#1}}
@@ -267,7 +269,7 @@ Práce je chránìna autorským zákonem a její u¾ití bez udìlení oprávnìní autorem j
 %-----------------------------------------------------------------------------
 \newcommand\makedeclaration{
 \thispagestyle{empty}%
-\mktxt@b{18}{\@title}
+\mktxt@b{18}{\@title@NOBREAK}
 
 \vspace{10mm}
 \mktxt@b{16}{\@tdecl@CS}

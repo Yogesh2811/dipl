@@ -1,5 +1,3 @@
-load "matrix.rb"
-
 class Fixnum 
     def to_s_two(base)
         s = self.to_s(base)
@@ -69,65 +67,114 @@ class Fixnum
     end
 end
 
+class Array
+    def is_aes!()
+        @AES = true
+        return self
+    end
+
+    def is_aes?()
+        return @AES
+    end
+
+    def self.new_aes()
+        new = []
+        new.is_aes!
+        return new
+    end
+end
+
+
 class Key
-    def initialize(str,type=nil)
-        @type = (type) ? type : 128
-        case type
-        when 128 then
-            @key = Array.new(11) { State.new }
-        when 196 then 
-            @key = Array.new(17) { State.new }
-        when 256 then 
-            @key = Array.new(23) { State.new }
-        else "unknown"
-        end
+    attr_accessor :key
+    def initialize(str)
+        @key = Array.new
+        @key[0], str = get_first_rk(str)
+        (1..10).each { |x| k, str = get_next_rk(@key[x-1],str); @key << k }
     end
 
     def get_first_rk(key)
+        return State.new(key), key[32..-1]
     end
 
-    def get_next_rk(key)
+    def get_next_rk(prev, key)
+        i = 0
+        k = State.new()
+        c1 = prev.col(3).to_a.rotate(1).map {|block| block.sbox}
+        return k, key[32..-1]
     end
 end
 
 class State
     def initialize(str=nil)
-        if str != nil
-            if str.is_a?(Matrix)
+        @matrix = Array.new_aes
+
+        if str == nil
+            @matrix = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+        else
+            if str.respond_to?(:is_aes?) && str.is_aes?
                 @matrix = str
             else
-                arr = str.scan(/../)
-                @matrix = Matrix.build(4,4) {|row,col|
-                    arr[col+row*4].to_i(16)
+                @matrix = []
+                arr = str.scan(/.{8}/)
+                arr.each_with_index{ |row,i|
+                    @matrix[i] = row.scan(/../).map{ |x| x.to_i(16)}  
                 }
             end
-        else
-            @matrix = Matrix.zeros(4,4)
         end
     end
 
-    def each_block(&block)
-        @matrix.each{ |x|
-            yield(x)
+    def each_block()
+        @matrix.each{ |row|
+            row.each{ |x|
+                yield(x)
+            }
         }
     end
 
+    def each_block_with_index()
+        @matrix.each_with_index{ |row,r|
+            row.each_with_index{ |block,c|
+                yield(block,r,c)
+            }
+        }
+    end
+
+    def row(i)
+        @matrix[i]
+    end
+
+    def column(i)
+        [@matrix[0][i],
+         @matrix[1][i],
+         @matrix[2][i],
+         @matrix[3][i]]
+    end
+
     def each_row()
-        (0...@matrix.row_size).each { |i| yield(@matrix.row(i), i)}
+        @matrix.each_with_index{ |row,i|  yield(row,i) }
     end
 
     def each_column()
-        (0...@matrix.column_size).each { |i| yield(@matrix.column(i), i)}
+        (0..3).each{ |i| 
+            yield([@matrix[0][i],
+            @matrix[1][i],
+            @matrix[2][i],
+            @matrix[3][i]],
+            i)
+        }
     end
 
+
     def print_nice(base = nil)
-        @matrix.each_with_index { |x,r,c|
+        self.each_block_with_index { |x,r,c|
             print (base) ? "#{x.to_s_two(base)} " : "#{x} "
             print "\n" if c == 3
         }
         print "\n"
     end
 end
+
 
 class AES
 @@rcon = 
@@ -157,13 +204,13 @@ class AES
     end
 
     def self.shiftRows(state)
-        mx = Array.new
-        state.each_row { |row, pos| mx[pos] = row.to_a.rotate(pos) }
-        return State.new(Matrix[mx[0],mx[1],mx[2],mx[3]])
+        mx = Array.new_aes
+        state.each_row { |row, pos| mx[pos] = row.rotate(pos) }
+        return State.new(mx)
     end
 
     def self.mixColumns(state)
-        mx = Array.new
+        mx = Array.new_aes
         state.each_column { |col, pos| 
             a0, a1, a2, a3 = col[0], col[1], col[2], col[3]
             mx[pos] = [
@@ -173,7 +220,7 @@ class AES
                 a0.g3 ^ a1    ^ a2    ^ a3.g2,
             ] 
         }
-        return State.new( Matrix.columns([mx[0],mx[1],mx[2],mx[3]]) )
+        return State.new( mx.transpose.is_aes! )
     end
 
     def self.keySchedule(key)
@@ -199,16 +246,17 @@ s  = State.new("19a09ae93df4c6f8e3e28d48be2b2a08")
 #                     [0xd4, 0xd4, 0xd4, 0xd5]])
 
 #s = State.new(m1)
+print "state\n"
 s.print_nice(16)
 
-#sx = AES.mixColumns(s)
-#sx.print_nice(16)
-
+print "subBytes\n"
 s1 = AES.subBytes(s)
 s1.print_nice(16)
 
+print "shiftRows\n"
 s2 = AES.shiftRows(s1)
 s2.print_nice(16)
 
+print"mixColumns\n"
 s3 = AES.mixColumns(s2)
 s3.print_nice(16)
