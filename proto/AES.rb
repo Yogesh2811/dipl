@@ -423,7 +423,7 @@ class AES
         state = state.xor(@@key[10])
         state = shiftRowsInv(state)
         state = subBytesInv(state)
-        (9..1).each{ |i|
+        9.downto(1).each{ |i|
             state = state.xor(@@key[i])
             state = mixColumnsInv(state)
             state = shiftRowsInv(state)
@@ -454,8 +454,6 @@ puts "#{ciph} \n\n"
 deci = AES.decipher(ciph,k)
 puts "orig "+s
 puts "deci "+deci
-
-
 
 #print "state\n"
 #s.print_nice(16)
