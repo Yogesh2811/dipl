@@ -338,7 +338,7 @@ end
 
 
 class AES
-    def self.subBytes(state)
+    def self.sub_bytes (state)
         sub = ''
         state.each_block { |block|
             sub = sub + block.sbox.to_s_two(16)            
@@ -346,7 +346,7 @@ class AES
         return State.new(sub)
     end
 
-    def self.subBytesInv(state)
+    def self.sub_bytes_inv(state)
         sub = ''
         state.each_block { |block|
             sub = sub + block.sbox_inv.to_s_two(16)
@@ -354,19 +354,19 @@ class AES
         return State.new(sub)
     end
 
-    def self.shiftRows(state)
+    def self.shift_rows(state)
         mx = Array.new_aes
         state.each_row { |row, pos| mx[pos] = row.rotate(pos) }
         return State.new(mx)
     end
 
-    def self.shiftRowsInv(state)        
+    def self.shift_rows_inv(state)        
         mx = Array.new_aes
         state.each_row { |row, pos| mx[pos] = row.rotate(-pos) }
         return State.new(mx)
     end
 
-    def self.mixColumns(state)
+    def self.mix_columns(state)
         mx = Array.new_aes
         state.each_column { |col, pos| 
             a0, a1, a2, a3 = col[0], col[1], col[2], col[3]
@@ -380,7 +380,7 @@ class AES
         return State.new( mx.transpose.is_aes! )
     end
 
-    def self.mixColumnsInv(state)
+    def self.mix_columns_inv(state)
         mx = Array.new_aes
         state.each_column { |col, pos|
             a0, a1, a2, a3 = col[0], col[1], col[2], col[3]
@@ -397,13 +397,13 @@ class AES
     def self.cipher_state(state)
         state = state.xor(@@key[0])
         (1..9).each{|i|
-            state = subBytes(state)
-            state = shiftRows(state)
-            state = mixColumns(state)
+            state = sub_bytes(state)
+            state = shift_rows(state)
+            state = mix_columns(state)
             state = state.xor(@@key[i])
         }
-        state = subBytes(state)
-        state = shiftRows(state)
+        state = sub_bytes(state)
+        state = shift_rows(state)
         state = state.xor(@@key[10])
         return state.to_s        
     end
@@ -421,13 +421,13 @@ class AES
 
     def self.decipher_state(state)
         state = state.xor(@@key[10])
-        state = shiftRowsInv(state)
-        state = subBytesInv(state)
+        state = shift_rows_inv(state)
+        state = sub_bytes_inv(state)
         9.downto(1).each{ |i|
             state = state.xor(@@key[i])
-            state = mixColumnsInv(state)
-            state = shiftRowsInv(state)
-            state = subBytesInv(state)
+            state = mix_columns_inv(state)
+            state = shift_rows_inv(state)
+            state = sub_bytes_inv(state)
         }
         state = state.xor(@@key[0])
         return state.to_s
@@ -455,17 +455,3 @@ deci = AES.decipher(ciph,k)
 puts "orig "+s
 puts "deci "+deci
 
-#print "state\n"
-#s.print_nice(16)
-#
-#print "subBytes\n"
-#s1 = AES.subBytes(s)
-#s1.print_nice(16)
-#
-#print "shiftRows\n"
-#s2 = AES.shiftRows(s1)
-#s2.print_nice(16)
-#
-#print"mixColumns\n"
-#s3 = AES.mixColumns(s2)
-#s3.print_nice(16)
