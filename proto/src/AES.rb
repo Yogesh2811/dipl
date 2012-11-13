@@ -445,13 +445,13 @@ class AES
     end
 end
 
-s = "328831e0435a3137f6309807a88da234"
-k = "2b28ab097eaef7cf15d2154f16a6883c"
-
-ciph = AES.cipher(s,k)
-puts "#{ciph} \n\n"
-
-deci = AES.decipher(ciph,k)
-puts "orig "+s
-puts "deci "+deci
-
+#s = "328831e0435a3137f6309807a88da234"
+#k = "2b28ab097eaef7cf15d2154f16a6883c"
+#
+#ciph = AES.cipher(s,k)
+#puts "#{ciph} \n\n"
+#
+#deci = AES.decipher(ciph,k)
+#puts "orig "+s
+#puts "deci "+deci
+#

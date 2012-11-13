@@ -1,30 +1,39 @@
-require 'packetfu'
-include PacketFu
+require "observer"
+require "socket"
+load "AES.rb"
+
 
 MSG_MAX_SIZE = 1024
 
+        
 
 
 class UdpSocketThread
+    include Observable
+
     def initialize(iface, id, address, port)
         @id = id
-        @interface = iface 
         @socket = UDPSocket.new
         @socket.bind(address, port)
+        @address = address
+        @port = port
         puts "#{id} - #{address}:#{port}"
         @close = false
 
-        @thread = Thread.new do
-            while !close
+        add_observer(iface, func=:msg_received)
+
+        run()
+    end
+
+    def run()
+        @thread = Thread.new {
+            while !@close
                 msg, info = @socket.recvfrom(1024)                
-                @interface.msg_received(id, msg)
+                msg_received(msg)
             end
             @socket.close
             puts "#{id} closed"
-        end
-    end
-
-    def close()
+        }
     end
 
     def close_socket()
@@ -34,6 +43,23 @@ class UdpSocketThread
 
     def send(msg, remote_address, remote_port)
         @socket.send(msg, 0, remote_address, remote_port)
+    end
+
+    def set_key(key)
+        @key = key
+    end
+
+    def parse_packet(packet)
+        seq = packet[96..99]
+        ssrc = packet[108..115]
+        payload = packet[116..-9]
+        return seq, ssrc, payload
+    end
+
+    def msg_received(msg)
+        #seq, ssrc, payload = parse_packet(msg)
+        changed
+        notify_observers(@id, msg)
     end
 end
 
@@ -50,14 +76,14 @@ class Interface
     end
 
     def msg_received(socket_id, msg)
-        puts "#{socket_id} received \"#{msg}\""
+        puts "#{socket_id} \"#{msg}\""
     end
 
     def send_msg(socket_id, msg, remote_address, remote_port)
        @sockets[socket_id].send(msg, remote_address, remote_port) 
     end
 
-    def close(stream=nil)
+    def close_interface(stream=nil)
         puts "called close for Interface#{stream}"
         if stream == nil
             @sockets.each {|s| s.close_socket if s!=nil}
@@ -68,3 +94,36 @@ class Interface
     end
 end
 
+
+
+
+
+
+
+
+
+#class CryptographicContexts
+#    attr_accessor :roc          # rollover counter
+#    attr_accessor :master_keys  # array of master keys
+#    attr_accessor :master_salts # array of master salts
+#    attr_accessor :n_e          # length of session key
+#    attr_accessor :counter_ep   # encrypted packets counter
+#    attr_accessor :key_rate     # session key derivation rate
+#
+#    def initialize(ssrc, dest_add, dest_port)
+#        @roc = 0
+#        @ssrc = ssrc
+#        @dest_add = dest_add
+#        @dest_port = dest_port
+#        @master_keys = []
+#        @master_salts = []
+#        @n_e = 0
+#        
+#        @id = get_id()
+#    end
+#
+#    def get_id()
+#        return (@ssrc.to_s + @dest_add.to_s + @dest_port.to_s).to_sym unless @id
+#        @id
+#    end
+#end
