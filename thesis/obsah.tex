@@ -2,7 +2,426 @@
 % (c) Michal Bidlo, Bohuslav Køena, 2008
 
 \chapter{Introduction}
-r\cite{Rybicka}.
+
+\chapter{OpenCL}
+\cite{opencl}.
+
+
+
+\chapter{AES}
+\textit{Advanced Encryption Standard} is symetric block cipher which means 
+it uses the same key for both encryption and decryption and encodes the
+input in uniform sized blocks. The algorithm was developed to supersede
+\textit{Data Encryption Standard} due to various security reasons\footnote
+{For instance COPACOBANA is FPGA based machine that could find 
+an exhaustive key for DES in no longer than a week\cite{copacobana}.} in 
+electronic data transmission. 
+
+For this purpose National Institute of Standards and Technology (NIST)
+announced public competition for new encryption standard in 1997 and 
+considering multiple requirements the \textit{Rijndael}\footnote{Rijndael
+was original name of the AES as abreviation of authors' names -- Joan 
+Daemen and Vincent Rijmen.} was selected as the most suitable algorithm
+for the task\cite{AES-FIPS}. 
+
+\section{Mathematical Preliminaries}
+All the bytes in AES are interpreted as 8-bit values in finite field $2^8$.
+For better readability the values are printed using hexadecimal notation.
+Following mathematical therms and operations are used in AES aglorithm:
+
+\subsubsection*{Galois field}
+In algebra Galois field is finite field with finite number of elements.
+Common notation is $GF(p^k)$ where $p$ is prime number and $k$ is positive
+natural number. Therefore it is possible to classify the Galois fields 
+by their size, because only single $GF(p^k)$ exists for each $p$ and $k$.
+Characteristics of the field is equal to the $p$.
+
+Each byte is in fact a polynomial with degree equal to 7 with coeficients
+$b_i$ 0 or 1 with this notation $b_7x^7 + b_6x^6 + b_5x^5 + b_4x^4 + b_3x^3
++ b_2x^2 + b_1x^1 + b_0$. The decimal number 95 could be represented as:
+\begin{itemize}
+\item $5F$ in hexadecimal
+\item $0101~1111$ in binary as a byte
+\item $x^6 + x^4 + x^3 + x^2 + x^1 + 1$ as polynomial with degree equal to 7
+\end{itemize}
+
+\subsubsection*{Addition}
+Addition is defined as addition of coeficinets of both polynomials modulo
+2. This operation has the same result as bitwise XOR and because 
+each value is its own inversion, addition and substraction are equal
+operations.
+
+\subsubsection*{Multiplication}
+Multiplication is defined as multiplication of both polynomials modulo
+irreducible polynomial of degree eight. For AES the irreducible polynom
+is defined as
+\begin{equation}
+m(x) = x^8 + x^4 + x^3 + x + 1
+\end{equation}
+
+\subsubsection*{Multiplication by $x$}
+
+
+\section{Algorithm Description}
+The AES is block cipher, therefore both encryption and decryption processes
+are performed on a matrix of 4x4 bytes called \textit{state}. Even though
+state has fixed block size 128-bit, supported key sizes are 128-bit, 196-bit
+and 256-bit. 
+
+Encryption process as described in pseudocode \ref{encr} has 4 operations 
+perfomed on each state of the data in specific number of cycles which 
+varies from key length.
+\begin{itemize}
+\item 10 cycles for 128-bit key
+\item 12 cycles for 196-bit key
+\item 14 cycles for 256-bit key
+\end{itemize}
+
+\subsubsection*{Key Expansion}
+Round keys are derived from cipher key through process called \textit{key expansion}.
+For the ciphering and deciphering purposes, the round keys could be thought as array
+of 4x4 8-bit values, which length is 10, 12 or 14 according to the used key size. The 
+first matrix is copy of first 128 bits of cipher key. The following round keys are
+always calculated from the previous key and \textit{rcon} array as explained in
+the algorithm \ref{keyexp}.
+
+\begin{algorithm}
+\caption{Key Expansion}
+\label{keyexp}
+\begin{algorithmic}
+\State \textbf{ExpandRoundKey(Key, size)}
+\State rk[0] $\gets$ Key[0]
+\vspace{0.5em}
+\For {$i \gets (1..size)$}
+    \State k.col(0) $\gets$ Key[$i-1$].col(3).rotate(1).map(sbox $\oplus$ Key[$i-1$].col(0)) $\oplus$ rcon
+    \For {$j \gets (1..3)$}
+        \State k.col($j$) $\gets$ Key[$i$-1].col($j$) $\oplus$ k.col($j-1$)
+    \EndFor
+    \State rk[$i$] $\gets$ k
+\EndFor
+\vspace{0.5em}
+\State $return$ rk
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsubsection*{Ciphering Process}
+\texttt{AddRoundKey} is XOR operation on the state with specific round key. Round key
+is extracted from the cipher key in \textit{ExpandRoundKey}. Since this operation
+uses XOR, it is its own inverse form as well.
+
+\begin{table}[H]
+\label{shift}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline%
+ $s_{00}$ & $s_{01}$ & $s_{02}$ & $s_{03}$  \\\hline
+ $s_{10}$ & $s_{11}$ & $s_{12}$ & $s_{13}$  \\\hline
+ $s_{20}$ & $s_{21}$ & $s_{22}$ & $s_{23}$  \\\hline
+ $s_{30}$ & $s_{31}$ & $s_{32}$ & $s_{33}$  \\\hline
+\end{tabular}
+$\oplus$
+\begin{tabular}{|c|c|c|c|}\hline%
+ $k_{00}$ & $k_{01}$ & $k_{02}$ & $k_{03}$  \\\hline
+ $k_{11}$ & $k_{12}$ & $k_{13}$ & $k_{10}$  \\\hline
+ $k_{22}$ & $k_{23}$ & $k_{20}$ & $k_{21}$  \\\hline
+ $k_{33}$ & $k_{30}$ & $k_{31}$ & $k_{32}$  \\\hline
+\end{tabular}
+$=$
+\begin{tabular}{|c|c|c|c|}\hline%
+ $a_{00}$ & $a_{01}$ & $a_{02}$ & $a_{03}$  \\\hline
+ $a_{11}$ & $a_{12}$ & $a_{13}$ & $a_{10}$  \\\hline
+ $a_{22}$ & $a_{23}$ & $a_{20}$ & $a_{21}$  \\\hline
+ $a_{33}$ & $a_{30}$ & $a_{31}$ & $a_{32}$  \\\hline
+\end{tabular}
+\end{center}
+\caption{AddRoundKey on state $s$ with key $k$ where $a_{ij} = s_{ij}\oplus k_{ij}$.}
+\end{table}
+
+
+
+\hspace{-1.5em}\texttt{ShiftRows} is performed on each row of the state matrix.
+The first row is not shifted, second row is shifted by one byte to the left, third row
+is shifted by two bytes to the left and fourth row is shifted by three bytes to the left.
+Inverted ShiftRows for decryption is simply reversed.
+
+\begin{table}[H]
+\label{shift}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline%
+ $a_{00}$ & $a_{01}$ & $a_{02}$ & $a_{03}$  \\\hline
+ $a_{10}$ & $a_{11}$ & $a_{12}$ & $a_{13}$  \\\hline
+ $a_{20}$ & $a_{21}$ & $a_{22}$ & $a_{23}$  \\\hline
+ $a_{30}$ & $a_{31}$ & $a_{32}$ & $a_{33}$  \\\hline
+\end{tabular}
+$\longrightarrow$
+\begin{tabular}{|c|c|c|c|}\hline%
+ $a_{00}$ & $a_{01}$ & $a_{02}$ & $a_{03}$  \\\hline
+ $a_{11}$ & $a_{12}$ & $a_{13}$ & $a_{10}$  \\\hline
+ $a_{22}$ & $a_{23}$ & $a_{20}$ & $a_{21}$  \\\hline
+ $a_{33}$ & $a_{30}$ & $a_{31}$ & $a_{32}$  \\\hline
+\end{tabular}
+\end{center}
+\caption{State on the right is the first state after ShiftRows is performed.}
+\end{table}
+
+\hspace{-1.5em}\texttt{MixColumns} together with ShiftRows provides diffusion in the
+AES algorithm. During this operation each column of the state is multiplied in Galois
+field $2^8$ by matrix \ref{mix}.
+
+\begin{table}[H]
+\label{mix}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}\hline%
+ 2 & 3 & 1 & 1  \\\hline
+ 1 & 2 & 3 & 1  \\\hline
+ 1 & 1 & 2 & 3  \\\hline
+ 3 & 1 & 1 & 2  \\\hline
+\end{tabular}
+\end{center}
+\caption{Matrix for MixColumn multiplication.}
+\end{table}
+
+As a result of this multiplication, each column $[s_{0c}, s_{1c}, s_{2c}, s_{3c}]$ is 
+replaced by the $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which could be calculated:
+
+\begin{equation}
+\begin{array}{lllllllll}
+a_{0c} &=& 2\cdot s_{0c} &\oplus& 3\cdot s_{3c} &\oplus& s_{2c} &\oplus& s_{1c} \\
+a_{1c} &=& s_{1c} &\oplus& 2\cdot s_{0c} &\oplus& 3\cdot s_{3c} &\oplus& s_{2c} \\
+a_{2c} &=& s_{2c} &\oplus& s_{1c} &\oplus& 2\cdot s_{0c} &\oplus& 3\cdot s_{3c} \\
+a_{3c} &=& 3\cdot s_{3c} &\oplus& 2\cdot s_{2c} &\oplus& s_{1c} &\oplus& s_{0c}
+\end{array}
+\end{equation}
+
+
+\hspace{-1.5em}\texttt{SubBytes} is non-linear transformation of the input \textit{state}.
+Each byte in the state matrix is replaced with byte from substitution array
+of 256 8-bit values called S-box. The S-box \ref{sbox} for encryption is generated by
+determining the multiplicative inverse for a given number in $GF(2^8)$ Rijndael's
+finite field and then affine transformation. The S-box \ref{invsbox} for decryption uses the
+same matrix but has first applied addine transformation and then the multiplicative
+inverse. For implementation purposes both S-boxes are precomputed. 
+
+
+\begin{equation}
+\label{sboxdef}
+  \left[\begin{array}{c}
+    y_0\\
+    y_1\\
+    y_2\\
+    y_3\\
+    y_4\\
+    y_5\\
+    y_6\\
+    y_7\\
+  \end{array}\right]
+  =
+  \left[\begin{array}{cccccccc}
+    1 & 0 & 0 & 0 & 1 & 1 & 1 & 1\\
+    1 & 1 & 0 & 0 & 0 & 1 & 1 & 1\\
+    1 & 1 & 1 & 0 & 0 & 0 & 1 & 1\\
+    1 & 1 & 1 & 1 & 0 & 0 & 0 & 1\\
+    1 & 1 & 1 & 1 & 1 & 0 & 0 & 0\\
+    0 & 1 & 1 & 1 & 1 & 1 & 0 & 0\\
+    0 & 0 & 1 & 1 & 1 & 1 & 1 & 0\\
+    0 & 0 & 0 & 1 & 1 & 1 & 1 & 1\\
+  \end{array}\right]
+  \left[\begin{array}{c}
+    x_0\\
+    x_1\\
+    x_2\\
+    x_3\\
+    x_4\\
+    x_5\\
+    x_6\\
+    x_7\\
+  \end{array}\right]
+  \oplus
+  \left[\begin{array}{c}
+    1\\
+    1\\
+    0\\
+    0\\
+    0\\
+    1\\
+    1\\
+    0\\
+  \end{array}\right]
+\end{equation}
+
+In this transformation $[x_0, .., x_7]$ is the multiplicative inverse as vector,
+and $\oplus$ is XOR operation.
+
+\begin{table}[H]
+\label{sbox}
+\begin{center}
+\begin{tabular}{|c|cccccccccccccccc|}\hline%
+      &  0 &  1 &  2 &  3 &  4 &  5 &  6 &  7 &  8 &  9 &  a &  b &  c &  d &  e &  f \\\hline
+   00 & 63 & 7c & 77 & 7b & f2 & 6b & 6f & c5 & 30 & 01 & 67 & 2b & fe & d7 & ab & 76 \\ 
+   10 & ca & 82 & c9 & 7d & fa & 59 & 47 & f0 & ad & d4 & a2 & af & 9c & a4 & 72 & c0 \\ 
+   20 & b7 & fd & 93 & 26 & 36 & 3f & f7 & cc & 34 & a5 & e5 & f1 & 71 & d8 & 31 & 15 \\ 
+   30 & 04 & c7 & 23 & c3 & 18 & 96 & 05 & 9a & 07 & 12 & 80 & e2 & eb & 27 & b2 & 75 \\ 
+   40 & 09 & 83 & 2c & 1a & 1b & 6e & 5a & a0 & 52 & 3b & d6 & b3 & 29 & e3 & 2f & 84 \\ 
+   50 & 53 & d1 & 00 & ed & 20 & fc & b1 & 5b & 6a & cb & be & 39 & 4a & 4c & 58 & cf \\ 
+   60 & d0 & ef & aa & fb & 43 & 4d & 33 & 85 & 45 & f9 & 02 & 7f & 50 & 3c & 9f & a8 \\ 
+   70 & 51 & a3 & 40 & 8f & 92 & 9d & 38 & f5 & bc & b6 & da & 21 & 10 & ff & f3 & d2 \\ 
+   80 & cd & 0c & 13 & ec & 5f & 97 & 44 & 17 & c4 & a7 & 7e & 3d & 64 & 5d & 19 & 73 \\ 
+   90 & 60 & 81 & 4f & dc & 22 & 2a & 90 & 88 & 46 & ee & b8 & 14 & de & 5e & 0b & db \\ 
+   a0 & e0 & 32 & 3a & 0a & 49 & 06 & 24 & 5c & c2 & d3 & ac & 62 & 91 & 95 & e4 & 79 \\ 
+   b0 & e7 & c8 & 37 & 6d & 8d & d5 & 4e & a9 & 6c & 56 & f4 & ea & 65 & 7a & ae & 08 \\ 
+   c0 & ba & 78 & 25 & 2e & 1c & a6 & b4 & c6 & e8 & dd & 74 & 1f & 4b & bd & 8b & 8a \\ 
+   d0 & 70 & 3e & b5 & 66 & 48 & 03 & f6 & 0e & 61 & 35 & 57 & b9 & 86 & c1 & 1d & 9e \\ 
+   e0 & e1 & f8 & 98 & 11 & 69 & d9 & 8e & 94 & 9b & 1e & 87 & e9 & ce & 55 & 28 & df \\ 
+   f0 & 8c & a1 & 89 & 0d & bf & e6 & 42 & 68 & 41 & 99 & 2d & 0f & b0 & 54 & bb & 16 \\ 
+\hline
+\end{tabular}
+\end{center}
+\caption{S-box for SubBytes transformation in hexadecimal notation.}
+\end{table}
+
+
+%\begin{table}[H]
+%\label{invsbox}
+%\begin{center}
+%\begin{tabular}{|c|cccccccccccccccc|}\hline%
+%      &  0 &  1 &  2 &  3 &  4 &  5 &  6 &  7 &  8 &  9 &  a &  b &  c &  d &  e &  f \\\hline
+%   00 & 63 & 7c & 77 & 7b & f2 & 6b & 6f & c5 & 30 & 01 & 67 & 2b & fe & d7 & ab & 76 \\ 
+%   10 & ca & 82 & c9 & 7d & fa & 59 & 47 & f0 & ad & d4 & a2 & af & 9c & a4 & 72 & c0 \\ 
+%   20 & b7 & fd & 93 & 26 & 36 & 3f & f7 & cc & 34 & a5 & e5 & f1 & 71 & d8 & 31 & 15 \\ 
+%   30 & 04 & c7 & 23 & c3 & 18 & 96 & 05 & 9a & 07 & 12 & 80 & e2 & eb & 27 & b2 & 75 \\ 
+%   40 & 09 & 83 & 2c & 1a & 1b & 6e & 5a & a0 & 52 & 3b & d6 & b3 & 29 & e3 & 2f & 84 \\ 
+%   50 & 53 & d1 & 00 & ed & 20 & fc & b1 & 5b & 6a & cb & be & 39 & 4a & 4c & 58 & cf \\ 
+%   60 & d0 & ef & aa & fb & 43 & 4d & 33 & 85 & 45 & f9 & 02 & 7f & 50 & 3c & 9f & a8 \\ 
+%   70 & 51 & a3 & 40 & 8f & 92 & 9d & 38 & f5 & bc & b6 & da & 21 & 10 & ff & f3 & d2 \\ 
+%   80 & cd & 0c & 13 & ec & 5f & 97 & 44 & 17 & c4 & a7 & 7e & 3d & 64 & 5d & 19 & 73 \\ 
+%   90 & 60 & 81 & 4f & dc & 22 & 2a & 90 & 88 & 46 & ee & b8 & 14 & de & 5e & 0b & db \\ 
+%   a0 & e0 & 32 & 3a & 0a & 49 & 06 & 24 & 5c & c2 & d3 & ac & 62 & 91 & 95 & e4 & 79 \\ 
+%   b0 & e7 & c8 & 37 & 6d & 8d & d5 & 4e & a9 & 6c & 56 & f4 & ea & 65 & 7a & ae & 08 \\ 
+%   c0 & ba & 78 & 25 & 2e & 1c & a6 & b4 & c6 & e8 & dd & 74 & 1f & 4b & bd & 8b & 8a \\ 
+%   d0 & 70 & 3e & b5 & 66 & 48 & 03 & f6 & 0e & 61 & 35 & 57 & b9 & 86 & c1 & 1d & 9e \\ 
+%   e0 & e1 & f8 & 98 & 11 & 69 & d9 & 8e & 94 & 9b & 1e & 87 & e9 & ce & 55 & 28 & df \\ 
+%   f0 & 8c & a1 & 89 & 0d & bf & e6 & 42 & 68 & 41 & 99 & 2d & 0f & b0 & 54 & bb & 16 \\ 
+%\hline
+%\end{tabular}
+%\end{center}
+%\caption{Inverse S-box for SubBytes transformation in hexadecimal notation.}
+%\end{table}
+
+
+\begin{algorithm}
+\caption{AES encryption}
+\label{encr}
+\begin{algorithmic}
+\State \textbf{Cipher(State, Key)}
+\State state $\gets AddRoundKey($State, Key[0]$)$
+\vspace{0.5em}
+\For{$i \gets (1..n-1)$}
+    \State state $\gets SubBytes($state$)$
+    \State state $\gets ShiftRows($state$)$
+    \State state $\gets MixColumns($state$)$
+    \State state $\gets AddRoundKey($state, Key[i]$)$
+\EndFor
+\vspace{0.5em}
+\State state $\gets SubBytes($state$)$
+\State state $\gets ShiftRows($state$)$
+\State state $\gets AddRoundKey($state, Key[n]$)$
+\vspace{0.5em}
+\State $return$ state
+\end{algorithmic}
+\end{algorithm}
+
+
+
+%\begin{algorithm}
+%\caption{AES decryption}
+%\label{decr}
+%\begin{algorithmic}
+%\State \textbf{Decipher(State, Key)}
+%\State state $\gets AddRoundKey($State, Key[n]$)$
+%\State state $\gets ShiftRows($state$)$
+%\State state $\gets SubBytes($state$)$
+%\vspace{0.5em}
+%\For{$i \gets (n-1..1)$}
+%    \State state $\gets AddRoundKey($state, Key[i]$)$
+%    \State state $\gets MixColumns($state$)$
+%    \State state $\gets ShiftRows($state$)$
+%    \State state $\gets SubBytes($state$)$
+%\EndFor
+%\vspace{0.5em}
+%\State state $\gets AddRoundKey($state, Key[0]$)$
+%\vspace{0.5em}
+%\State $return$ state
+%\end{algorithmic}
+%\end{algorithm}
+
+\chapter{Secure Real-time Transport Protocol}
+To achieve confidetiality and neccessary security for real-time multimedia
+transmission over TCP/IP connection there has been invented SRTP
+\cite{rfc3711}. Except previously mentioned, it provides message
+authentication and replay protection for both RTP and RTCP traffic, 
+however, the thesis is going to focus on the security.
+
+\section{Packet Structure}
+\begin{verbatim}
+    0                   1                   2                   3
+  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+<+
+  |V=2|P|X|  CC   |M|     PT      |       sequence number         | |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+  |                           timestamp                           | |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+  |           synchronization source (SSRC) identifier            | |
+  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+ |
+  |            contributing source (CSRC) identifiers             | |
+  |                               ....                            | |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+  |                   RTP extension (OPTIONAL)                    | |
++>+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+| |                          payload  ...                         | |
+| |                               +-------------------------------+ |
+| |                               | RTP padding   | RTP pad count | |
++>+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+<+
+| ~                     SRTP MKI (OPTIONAL)                       ~ |
+| +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+| :                 authentication tag (RECOMMENDED)              : |
+| +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+|                                                                   |
++- Encrypted Portion*                      Authenticated Portion ---+
+\end{verbatim}
+
+\section{Cryptographic Context}
+In order to implement SRTP stack in the application, it is necessary to
+preserve certain information about each encrypted session, which is 
+called \textit{cryptographic context}. It must consist of the following:
+
+\begin{itemize}
+\item Rollover Counter -- 32-bit unsigned number, records how many times 
+has the RTP sequential number been reseted to zero passed the value 65~535.
+\item Highest Received SEQ -- 16-bit unsigned number
+\item Identifier of the Encryption Algorithm -- the cipher and its mode
+\item Replay List -- containing indices of recently received and 
+authenticated SRTP packets
+\item MKI -- if the MKI is present in current session, the length
+of the MKI field in octets, actual value of currently used MKI
+\item Master Keys -- enumeration of random and secret master keys
+and counter for each key of how many packets have been sent with
+that key
+\item Session Keys -- current key for encryption and authentication
+including stored their lengths in \texttt{n\_e} and \texttt{n\_a}
+\end{itemize}
+
+And for every master key, the cryptographic context may contain also
+random but possibly public \textit{Master Salt} which will be used in 
+key derivation.
+
+
+\chapter{Implementation}
+
+
+
+
+\chapter{Testing}
+
 
 
 
