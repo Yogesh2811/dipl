@@ -1,5 +1,5 @@
 %=========================================================================
-% (c) Michal Bidlo, Bohuslav Køena, 2008
+% (c) Michal Bidlo, Bohuslav Kï¿½ena, 2008
 
 \chapter{Introduction}
 
@@ -13,13 +13,13 @@
 it uses the same key for both encryption and decryption and encodes the
 input in uniform sized blocks. The algorithm was developed to supersede
 \textit{Data Encryption Standard} due to various security reasons\footnote
-{For instance COPACOBANA is FPGA based machine that could find 
+{ For instance COPACOBANA is FPGA based machine that could find 
 an exhaustive key for DES in no longer than a week\cite{copacobana}.} in 
 electronic data transmission. 
 
 For this purpose National Institute of Standards and Technology (NIST)
 announced public competition for new encryption standard in 1997 and 
-considering multiple requirements the \textit{Rijndael}\footnote{Rijndael
+considering multiple requirements the \textit{Rijndael}\footnote{ Rijndael
 was original name of the AES as abreviation of authors' names -- Joan 
 Daemen and Vincent Rijmen.} was selected as the most suitable algorithm
 for the task\cite{AES-FIPS}. 
@@ -77,15 +77,37 @@ varies from key length.
 \item 14 cycles for 256-bit key
 \end{itemize}
 
-\subsubsection*{Key Expansion}
-Round keys are derived from cipher key through process called \textit{key expansion}.
-For the ciphering and deciphering purposes, the round keys could be thought as array
-of 4x4 8-bit values, which length is 10, 12 or 14 according to the used key size. The 
-first matrix is copy of first 128 bits of cipher key. The following round keys are
-always calculated from the previous key and \textit{rcon} array as explained in
-the algorithm \ref{keyexp}.
-
 \begin{algorithm}
+\caption{AES encryption}
+\label{encr}
+\begin{algorithmic}
+\State \textbf{Cipher(State, Key)}
+\State state $\gets AddRoundKey($State, Key[0]$)$
+\vspace{0.5em}
+\For{$i \gets (1..n-1)$}
+    \State state $\gets SubBytes($state$)$
+    \State state $\gets ShiftRows($state$)$
+    \State state $\gets MixColumns($state$)$
+    \State state $\gets AddRoundKey($state, Key[i]$)$
+\EndFor
+\vspace{0.5em}
+\State state $\gets SubBytes($state$)$
+\State state $\gets ShiftRows($state$)$
+\State state $\gets AddRoundKey($state, Key[n]$)$
+\vspace{0.5em}
+\State $return$ state
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Key Expansion}
+Round keys are derived from cipher key through process called \textit{key 
+expansion}. For the ciphering and deciphering purposes, the round keys could be 
+thought as array of 4x4 8-bit values, which length is 10, 12 or 14 according to 
+the used key size. The first matrix is copy of first 128 bits of cipher key. The
+following round keys are always calculated from the previous key and 
+\textit{rcon} array as explained in the algorithm \ref{keyexp}.
+
+\begin{algorithm}[H]
 \caption{Key Expansion}
 \label{keyexp}
 \begin{algorithmic}
@@ -93,7 +115,8 @@ the algorithm \ref{keyexp}.
 \State rk[0] $\gets$ Key[0]
 \vspace{0.5em}
 \For {$i \gets (1..size)$}
-    \State k.col(0) $\gets$ Key[$i-1$].col(3).rotate(1).map(sbox $\oplus$ Key[$i-1$].col(0)) $\oplus$ rcon
+    \State k.col(0) $\gets$ Key[$i-1$].col(3).rotate(1).map(sbox 
+	    $\oplus$ Key[$i-1$].col(0)) $\oplus$ rcon
     \For {$j \gets (1..3)$}
         \State k.col($j$) $\gets$ Key[$i$-1].col($j$) $\oplus$ k.col($j-1$)
     \EndFor
@@ -106,9 +129,9 @@ the algorithm \ref{keyexp}.
 
 
 \subsubsection*{Ciphering Process}
-\texttt{AddRoundKey} is XOR operation on the state with specific round key. Round key
-is extracted from the cipher key in \textit{ExpandRoundKey}. Since this operation
-uses XOR, it is its own inverse form as well.
+\texttt{AddRoundKey} is XOR operation on the state with specific round key. 
+Round key is extracted from the cipher key in \textit{ExpandRoundKey}. Since
+this operation uses XOR, it is its own inverse form as well.
 
 \begin{table}[H]
 \label{shift}
@@ -140,9 +163,9 @@ $=$
 
 
 \hspace{-1.5em}\texttt{ShiftRows} is performed on each row of the state matrix.
-The first row is not shifted, second row is shifted by one byte to the left, third row
-is shifted by two bytes to the left and fourth row is shifted by three bytes to the left.
-Inverted ShiftRows for decryption is simply reversed.
+The first row is not shifted, second row is shifted by one byte to the left, 
+third row is shifted by two bytes to the left and fourth row is shifted by three
+bytes to the left. Inverted ShiftRows for decryption is simply reversed.
 
 \begin{table}[H]
 \label{shift}
@@ -164,25 +187,25 @@ $\longrightarrow$
 \caption{State on the right is the first state after ShiftRows is performed.}
 \end{table}
 
-\hspace{-1.5em}\texttt{MixColumns} together with ShiftRows provides diffusion in the
-AES algorithm. During this operation each column of the state is multiplied in Galois
-field $2^8$ by matrix \ref{mix}.
+\hspace{-1.5em}\texttt{MixColumns} together with ShiftRows provides diffusion in
+the AES algorithm. During this operation each column of the state is multiplied 
+in Galois field $2^8$ by matrix \ref{mix}.
 
-\begin{table}[H]
+\begin{equation}
 \label{mix}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}\hline%
- 2 & 3 & 1 & 1  \\\hline
- 1 & 2 & 3 & 1  \\\hline
- 1 & 1 & 2 & 3  \\\hline
- 3 & 1 & 1 & 2  \\\hline
-\end{tabular}
-\end{center}
-\caption{Matrix for MixColumn multiplication.}
-\end{table}
+\left(
+\begin{array}{cccc}%
+ 2 & 3 & 1 & 1  \\
+ 1 & 2 & 3 & 1  \\
+ 1 & 1 & 2 & 3  \\
+ 3 & 1 & 1 & 2  \\
+\end{array}
+\right)
+\end{equation}
 
-As a result of this multiplication, each column $[s_{0c}, s_{1c}, s_{2c}, s_{3c}]$ is 
-replaced by the $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which could be calculated:
+As a result of this multiplication, each column $[s_{0c}, s_{1c}, s_{2c}, 
+s_{3c}]$ is replaced by the $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which could be 
+calculated:
 
 \begin{equation}
 \begin{array}{lllllllll}
@@ -194,12 +217,13 @@ a_{3c} &=& 3\cdot s_{3c} &\oplus& 2\cdot s_{2c} &\oplus& s_{1c} &\oplus& s_{0c}
 \end{equation}
 
 
-\hspace{-1.5em}\texttt{SubBytes} is non-linear transformation of the input \textit{state}.
-Each byte in the state matrix is replaced with byte from substitution array
-of 256 8-bit values called S-box. The S-box \ref{sbox} for encryption is generated by
-determining the multiplicative inverse for a given number in $GF(2^8)$ Rijndael's
-finite field and then affine transformation. The S-box \ref{invsbox} for decryption uses the
-same matrix but has first applied addine transformation and then the multiplicative
+\hspace{-1.5em}\texttt{SubBytes} is non-linear transformation of the input 
+\textit{state}. Each byte in the state matrix is replaced with byte from 
+substitution array of 256 8-bit values called S-box. The S-box \ref{sbox} for 
+encryption is generated by determining the multiplicative inverse for a given 
+number in $GF(2^8)$ Rijndael's finite field and then affine transformation. 
+The S-box \ref{invsbox} for decryption uses the same matrix but has first 
+applied addine transformation and then the multiplicative
 inverse. For implementation purposes both S-boxes are precomputed. 
 
 
@@ -279,6 +303,90 @@ and $\oplus$ is XOR operation.
 \caption{S-box for SubBytes transformation in hexadecimal notation.}
 \end{table}
 
+\section{Block Cipher Modes}
+During encyption the same key is applied repeatedly on the uniform lenght blocks
+of data to whose the message is separated into. Large amount of ciphered data 
+with the same encryption key might present security threat unless the ciphering
+algorithm provides form of randomization the output value. Such procedure might
+be achieved by additional input value.
+
+There are many variations on block cipher to provide this confidentiality
+\cite{blockciphers}, for AES algorithm the most often used are \textit{counter 
+mode} and \textit{f8-mode}. Both algorithms keep standard high level of 
+confusion of the AES algorithm and provides necessary diffusion\footnote{
+\textit{Confusion} and \textit{diffusion} are basic two properties of secure 
+cipher introduced by Claude Shannon \cite{shannon}.}.
+
+Both algorithms share some similar terminology and acronyms:
+\begin{itemize}
+\item $IV$ -- initial value used for encrypting the first block
+\item $C_i$ -- ciphertext block number $i$
+\item $P_i$ -- plaintext block number $i$
+\item $E_K$ -- encryption function
+\item $D_K$ -- decryption function
+\end{itemize}
+
+\subsubsection*{Counter Mode}
+The counter mode (CTR) turns AES block algorithm into stream cipher with 
+possibility for parallel computations \cite{parallelctr}. It is possible to 
+decrypt the cipher text even with loss of number of blocks because the encrypted
+blocks are not dependent on the previous blocks. Instead the additional 
+diffusion value are achieved by specific counter. 
+
+Equation \ref{ctr1} describes computation of counter value, equation \ref{ctr2}
+describes ciphering the counter value, equation \ref{ctr3} is encryption process
+-- XOR operation of plaintext with encrypted counter value which produces 
+ciphered text and equation \ref{ctr4} is decryption process.
+
+\begin{eqnarray}
+\label{ctr1}
+CTR_i &=& (IV + i-1)\mod 2^B \\
+\label{ctr2}
+H_i &=& E_K(CTR_i, key) \\
+\label{ctr3}
+C_i &=& P_i \oplus H_i \\
+\label{ctr4}
+P_i &=& C_i \oplus H_i \\
+\end{eqnarray} 
+
+The last block of the plaintext doesn't have to be padded\footnote{ Padding 
+can be used for the plaintext that is not alligned to the multiplies of the 
+block.}, it is common to use only the most significant bits of ciphered counter
+to be XORed with plaintext in cipher algorithm (and in similar way for
+deciphering). 
+
+
+\subsubsection*{F8-mode}
+The f8-mode is a variant of commonly known Output Feedback Mode (OFB)
+\cite{blockciphers} with more elaborate initialization and feedback function
+\cite{rfc3711}. The first output block $O_1$ is computed from $IV$, then it
+is XORed with plaintext to produce the first ciphertext block. The output block
+from previous step $O_{j-1}$ is used to compute the current output block $O_j$
+which is always XORed with current plaintext in encryption algorithm. 
+
+The equation \ref{ofb0} describes the improved initializing function where
+$m$ is the mask. The equations \ref{ofb1} and \ref{ofb2} describes computation 
+of value, which is used for ciphering algorithm to produce output values in 
+equation \ref{ofb3}. Equation \ref{ofb4} describes ciphering and equation 
+\ref{ofb5} describes deciphering.
+
+\begin{eqnarray}
+\label{ofb0}
+IV' &=& E_K(IV, key \oplus m)\\
+\label{ofb1}
+I_1 &=& IV' \\
+\label{ofb2}
+I_j &=& O_{j-1} \oplus IV' \oplus j \\
+\label{ofb3}
+O_j &=& E_K(I_j, key) \\
+\label{ofb4}
+C_j &=& P_j \oplus O_j \\
+\label{ofb5}
+P_j &=& C_j \oplus O_j
+\label{}
+\end{eqnarray}
+
+
 
 %\begin{table}[H]
 %\label{invsbox}
@@ -308,27 +416,6 @@ and $\oplus$ is XOR operation.
 %\end{table}
 
 
-\begin{algorithm}
-\caption{AES encryption}
-\label{encr}
-\begin{algorithmic}
-\State \textbf{Cipher(State, Key)}
-\State state $\gets AddRoundKey($State, Key[0]$)$
-\vspace{0.5em}
-\For{$i \gets (1..n-1)$}
-    \State state $\gets SubBytes($state$)$
-    \State state $\gets ShiftRows($state$)$
-    \State state $\gets MixColumns($state$)$
-    \State state $\gets AddRoundKey($state, Key[i]$)$
-\EndFor
-\vspace{0.5em}
-\State state $\gets SubBytes($state$)$
-\State state $\gets ShiftRows($state$)$
-\State state $\gets AddRoundKey($state, Key[n]$)$
-\vspace{0.5em}
-\State $return$ state
-\end{algorithmic}
-\end{algorithm}
 
 
 
@@ -355,11 +442,12 @@ and $\oplus$ is XOR operation.
 %\end{algorithm}
 
 \chapter{Secure Real-time Transport Protocol}
-To achieve confidetiality and neccessary security for real-time multimedia
+To achieve confidentiality and neccessary security for real-time multimedia
 transmission over TCP/IP connection there has been invented SRTP
 \cite{rfc3711}. Except previously mentioned, it provides message
 authentication and replay protection for both RTP and RTCP traffic, 
-however, the thesis is going to focus on the security.
+however, the thesis is going to focus on the security. The default cipher is AES
+in counter mode.
 
 \section{Packet Structure}
 \begin{verbatim}
@@ -405,7 +493,8 @@ authenticated SRTP packets
 of the MKI field in octets, actual value of currently used MKI
 \item Master Keys -- enumeration of random and secret master keys
 and counter for each key of how many packets have been sent with
-that key
+that key. Single Master Key identifies SRTP stream and corresponding SRTCP
+stream.
 \item Session Keys -- current key for encryption and authentication
 including stored their lengths in \texttt{n\_e} and \texttt{n\_a}
 \end{itemize}
