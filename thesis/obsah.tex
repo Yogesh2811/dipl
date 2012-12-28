@@ -450,6 +450,38 @@ however, the thesis is going to focus on the security. The default cipher is AES
 in counter mode.
 
 \section{Packet Structure}
+SRTP packet can be described as RTP extension. It keeps the RTP fields of
+the packet such as:
+\begin{itemize}
+\item Version (V) -- two bit number which currently is equal to 2.
+\item Padding (P) -- boolean value whether the padding is set.
+\item Extension (X) -- if this field is set, fixed header must be followed by
+exactly one extension header.
+\item CSRC count (CC) -- number of CSRC identifiers that follow the fixed header.
+\item Marker (M) -- interpretation defined by a profile.
+\item Payload Type (PT) -- identifies the type of payload
+\item Sequence Number (SEQ) -- incremets by one for each RTP packet.
+\item Timestamp (TS) -- reflecting the exact moment the payload was sampled.
+\item Synchronization Source Identifier (SSRC) -- identifier of RTP synchronization 
+source within the single RTP session.
+\item Contributing Source Identifiers (CSRC) -- list of 0 to 15 items identifying
+contributing sources.
+\end{itemize}
+
+The SRTP protocol defines that only payload is encrypted and also describes new 
+fields in the RTP header.
+
+\begin{itemize}
+\item Master Key Identifier (MKI) -- unique identifier of the master key 
+(previously signaled) to be used in session key derivation.
+\item Authentication Tag -- carries message authentication data. If both
+encryption and authentication are used, encryption should be applied first.
+\end{itemize}
+
+The packet length is variable and depends on number of CSRC used and length
+of payload. The following scheme describes the packet with proportional
+sizes of each field.
+
 \begin{verbatim}
     0                   1                   2                   3
   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
