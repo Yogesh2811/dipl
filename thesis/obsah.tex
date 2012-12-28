@@ -3,12 +3,11 @@
 
 \chapter{Introduction}
 
-\chapter{OpenCL}
-\cite{opencl}.
-
-
-
 \chapter{AES}
+This chapter treats neccessary theoretical background of Advanced Encryption 
+Standard, which is the default cipher, and as the text has been written the only
+cipher, of Secure Real-time Transport Protocol used in VoIP communication.
+
 \textit{Advanced Encryption Standard} is symetric block cipher which means 
 it uses the same key for both encryption and decryption and encodes the
 input in uniform sized blocks. The algorithm was developed to supersede
@@ -60,7 +59,16 @@ m(x) = x^8 + x^4 + x^3 + x + 1
 \end{equation}
 
 \subsubsection*{Multiplication by $x$}
+Multiplication of binary polynomial by polynomial $x$ results in polynomial of
+higher degree therefore the result must be reduced modulo $m(x)$. Following
+equation is the binary polynomial multiplied by polynomial $x$.
 
+\begin{equation}
+b_7x^8+b_6x^7+b_5x^6+b_4x^5+b_3x^4+b_2x^3+b_1x^2+b_0x
+\end{equation} 
+
+If $b_7 = 1$ the result must be XORed with the polynomial $m(x)$. This operation
+can be accomplished as bitwise left shift and XOR with $1B$.
 
 \section{Algorithm Description}
 The AES is block cipher, therefore both encryption and decryption processes
@@ -535,9 +543,67 @@ And for every master key, the cryptographic context may contain also
 random but possibly public \textit{Master Salt} which will be used in 
 key derivation.
 
+\section{Security Analysis}
+
+
+
+\chapter{Parallel Programming Paradigm}
+This chapter describes the basic ideas and techniques behind GPU parallel 
+programming model and architecture. Following text will focus on possibilities
+of efective implementation for GPGPU and integrated GPU in modern CPU using 
+OpenCL framework, brief description of selected principles and development of
+parallel applications. 
+
+Parallel machines have impressive performance to cost ratio compared to the
+common sequential machines\cite{Darlington93structuredparallel}, but bring well
+known problems for software development such as run-time resource allocation
+and resource sharing. Mapping parallel program to multiprocessor machine is
+complex problem that needs to decide about task allocation, scheduling of
+processes', communication patterns and much more.
+
+
+\section{General Purpose GPU}
+While current CPUs are powerfull and sofisticated chips, their design must be
+focused on wide variety of tasks, therefore vast majority of resources might
+not be as fully utilized as could have been. The GPU chips provide much better
+theoretical performance for certain tasks for smaller price\cite{Owens:2007:ASO}.
+Interest among developers has grown in using the power GPUs provide for other
+tasks than graphics pipeline. 
+
+In order to achieve improvement in certain algorithm it is neccessary to analyze
+the procedures and find possibilities for parallelization and take under 
+consideration that usage of additional processing unit brings computational 
+overhead. The characteristics of such application are\cite{Owens:2008:GC}:
+
+\begin{itemize}
+\item Utilization of data-parallelism -- many non-graphical problems might be
+separated into fractional procedures and computed separately, such as matrix 
+calculations individially for each cell.
+\item Large portion of computation -- GPU porcessors are optimized for 
+computations over handling conditional evaluations.
+\item Throughput over Latency -- computations on GPU are designed for large
+overall throughput of a picture rather than short response time of each 
+individual operation.
+\end{itemize}
+
+The current trend in development shows that parallel computations either in the
+form of GPU computations, APU\footnote{ Accelerated Processing Unit -- 
+in this context it means CPU with GPGPU chip.}, or CPU with integrated GPU are
+worth examination and research. SIMD\footnote{ Single Instruction Multiple Data 
+-- multiple processing elements that perform the same operation on multiple data 
+points simultaneously\cite{Flynn:1972}.} has already proven it's value on 
+improving performance with parallelization of various 
+algorithms\cite{nvidia:sample}, \cite{amd:apps}.
+
+\subsubsection*{CPU with Integrated GPU}
+
+
+\section{OpenCL}
+Development for parallel computation brought need for infrastructure\cite{opencl}.
+
+
 
 \chapter{Implementation}
-
 
 
 

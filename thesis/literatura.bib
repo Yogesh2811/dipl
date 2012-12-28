@@ -58,6 +58,19 @@
     url = "{http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf}" 
 }
 
+@misc{nvidia:sample, 
+    title = "{NVIDIA OpenCL SDK Code Samples [online]}",
+    howpublished = "\url{http://mlso.hao.ucar.edu/hao/acos/sw/cuda-sdk/OpenCL/Samples.html}", 
+    url = "{http://mlso.hao.ucar.edu/hao/acos/sw/cuda-sdk/OpenCL/Samples.html}",
+    note = "Published 2012-10-1, accessed 2012-12-28" 
+}
+
+@misc{amd:apps, 
+    title = "{AMD and Leading Software Vendors Continue to Expand Offerings Optimized for OpenCL Standard [online]}",
+    howpublished = "\url{http://www.amd.com/us/press-releases/Pages/offerings-optimized-for-opencl-2011jun08.aspx}", 
+    url = "{http://www.amd.com/us/press-releases/Pages/offerings-optimized-for-opencl-2011jun08.aspx}",
+    note = "Published 2011-6-8, accessed 2012-12-28"
+}
 
 @Book{Daemen:2002:DRA, 
     author="J. Daemen and V. Rijmen", 
@@ -73,10 +86,66 @@
     booktitle="{Computational Science and Engineering (CSE), 2011 IEEE 14th International Conference on}",
     title="{Parallel Execution of AES-CTR Algorithm Using Extended Block Size}", 
     year={2011}, 
-    month={aug.}, 
+    month={August}, 
     volume={}, 
     number={}, 
     pages={191 -198}, 
     doi={10.1109/CSE.2011.43}, 
     ISSN={},
 }
+
+@article{Owens:2007:ASO,
+title	=	"{A Survey of General-Purpose Computation on Graphics Hardware}",
+journal	=	"Computer Graphics Forum",
+author	=	"J. D. Owens AND D. Luebke AND N. Govindaraju AND M. Harris AND J. Krüger AND A. Lefohn AND T. J. Purcell ",
+year	=	"2007",
+keywords	=	"GPGPU survey",
+url	=	"http://www.blackwell-synergy.com/doi/pdf/10.1111/j.1467-8659.2007.01012.x",
+pages	=	"80--113",
+volume	=	"26",
+number	=	"1",
+abstract	=	"The rapid increase in the performance of graphics hardware, coupled with recent improvements in its programmability, have made graphics hardware a compelling platform for computationally demanding tasks in a wide variety of application domains. In this report, we describe, summarize, and analyze the latest research in mapping general-purpose computation to graphics hardware. We begin with the technical motivations that underlie general-purpose computation on graphics processors (GPGPU) and describe the hardware and software developments that have led to the recent interest in this field. We then aim the main body of this report at two separate audiences. First, we describe the techniques used in mapping general-purpose computation to graphics hardware. We believe these techniques will be generally useful for researchers who plan to develop the next generation of GPGPU algorithms and techniques. Second, we survey and categorize the latest developments in general-purpose application development on graphics hardware.",
+}
+
+@article{Owens:2008:GC,
+title	=	"{GPU Computing}",
+journal	=	"Proceedings of the IEEE",
+author	=	"J. D. Owens AND M. Houston AND D. Luebke AND S. Green AND J. E. Stone AND J. C. Phillips ",
+year	=	"2008",
+month	=	may,
+keywords	=	"GPGPU, GPU computing, parallel computing",
+pages	=	"879--899",
+volume	=	"96",
+number	=	"5",
+abstract	=	"The graphics processing unit (GPU) has become an integral part of today's mainstream computing systems. Over the past six years, there has been a marked increase in the performance and capabilities of GPUs. The modern GPU is not only a powerful graphics engine but also a highly-parallel programmable processor featuring peak arithmetic and memory bandwidth that substantially outpaces its CPU counterpart. The GPU's rapid increase in both programmability and capability has spawned a research community that has successfully mapped a broad range of computationally demanding, complex problems to the GPU. This effort in \emph{general-purpose computing on the GPU} (GPGPU), also known as \emph{GPU computing}, has positioned the GPU as a compelling alternative to traditional microprocessors in high-performance computer systems of the future. We describe the background, hardware, and programming model for GPU computing, summarize the state of the art in tools and techniques, and present four GPU computing successes in game physics and computational biophysics that deliver order-of-magnitude performance gains over optimized CPU applications. ",
+}
+
+
+@article{Flynn:1972,
+ author = {Flynn, M. J.},
+ title = {Some computer organizations and their effectiveness},
+ journal = {IEEE Trans. Comput.},
+ issue_date = {September 1972},
+ volume = {21},
+ number = {9},
+ month = sep,
+ year = {1972},
+ issn = {0018-9340},
+ pages = {948--960},
+ numpages = {13},
+ url = {http://dx.doi.org/10.1109/TC.1972.5009071},
+ doi = {10.1109/TC.1972.5009071},
+ acmid = {1952459},
+ publisher = {IEEE Computer Society},
+ address = {Washington, DC, USA},
+ keywords = {Computer organization, computer organization, instruction stream, overlapped, parallel processors, resource hierarchy},
+}
+
+@INPROCEEDINGS{Darlington93structuredparallel,
+    author = {J. Darlington and M. Ghanem and H. W. To},
+    title = "{Structured Parallel Programming}",
+    booktitle = "{In Programming Models for Massively Parallel Computers}",
+    year = {1993},
+    pages = {160--169},
+    publisher = {IEEE Computer Society Press}
+} 
