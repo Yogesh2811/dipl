@@ -11,7 +11,7 @@
 
 
 @article{rfc3711,
-    author="{M. Baugher and D. McGrew and M. Naslund and E. Carrara and K. Norrman}",
+    author={M. Baugher and D. McGrew and M. Naslund and E. Carrara and K. Norrman},
     title="{The Secure Real-time Transport Protocol (SRTP)}",
     series="Request for Comments",
     number="RFC 3711",
@@ -19,8 +19,20 @@
     publisher="IETF",
     organization="Internet Engineering Task Force",
     year=2004,
-    month=march,
+    month=March,
     url="http://www.ietf.org/rfc/rfc3711.txt",
+}
+
+@article{rfc6189,
+    author={P. Zimmermann AND A. Johnston AND J. Callas},
+    title="{ZRTP: Media Path Key Agreement for Unicast Secure RTP}",
+    series="Request for Comments",
+    number="RFC 6189",
+    howpublished="RFC 6189",
+    publisher="IETF",
+    year=2011,
+    month=April,
+    url="http://tools.ietf.org/html/rfc6189",
 }
 
 @article{shannon,
@@ -71,6 +83,37 @@
     url = "{http://www.amd.com/us/press-releases/Pages/offerings-optimized-for-opencl-2011jun08.aspx}",
     note = "Published 2011-6-8, accessed 2012-12-28"
 }
+
+
+@misc{wiki:apu,
+    author = "Wikipedia",
+    title = "Accelerated processing unit -- {W}ikipedia{,} The Free Encyclopedia [online]",
+    url = "http://en.wikipedia.org/wiki/Accelerated_processing_unit",
+    howpublished = "\url{http://en.wikipedia.org/wiki/Accelerated_processing_unit}",
+    note = "Published 2011-9, accessed 2012-12-31"
+}
+
+@misc{amd:apu, 
+    title = "{AMD Accelerated Processing Units [online]}",
+    howpublished = "\url{http://www.amd.com/us/products/technologies/apu/Pages/apu.aspx}", 
+    url = "{http://www.amd.com/us/products/technologies/apu/Pages/apu.aspx}",
+    note = "Published 2011-6-8, accessed 2012-12-28"
+}
+
+@misc{nvidia:apu, 
+    title = "{Project Denver [online]}",
+    howpublished = "\url{http://blogs.nvidia.com/2011/01/project-denver-processor-to-usher-in-new-era-of-computing/}", 
+    url = "{http://www.amd.com/us/products/technologies/apu/Pages/apu.aspx}",
+    note = "Published 2011-1-5, accessed 2012-12-28"
+}
+
+@misc{intel:apu, 
+    title = "{Intel HD Graphics [online]}",
+    howpublished = "\url{http://www.intel.com/content/www/us/en/architecture-and-technology/hd-graphics/hd-graphics-developer.html}", 
+    url = "{http://www.amd.com/us/products/technologies/apu/Pages/apu.aspx}",
+    note = "Accessed 2012-12-28"
+}
+
 
 @Book{Daemen:2002:DRA, 
     author="J. Daemen and V. Rijmen", 
@@ -148,4 +191,83 @@ abstract	=	"The graphics processing unit (GPU) has become an integral part of to
     year = {1993},
     pages = {160--169},
     publisher = {IEEE Computer Society Press}
-} 
+}
+
+@INPROCEEDINGS{apu:efficiency, 
+    author={Daga, M. and Aji, A.M. and Wu-chun Feng}, 
+    booktitle={Application Accelerators in High-Performance Computing (SAAHPC), 2011 Symposium on}, 
+    title="{On the Efficacy of a Fused CPU+GPU Processor (or APU) for Parallel Computing}", 
+    year={2011}, 
+    month={July}, 
+    volume={}, 
+    number={}, 
+    pages={141 -149}, 
+    abstract={The graphics processing unit (GPU) has made significant strides as an accelerator in parallel computing. However, because the GPU has resided out on PCIe as a discrete device, the performance of GPU applications can be bottlenecked by data transfers between the CPU and GPU over PCIe. Emerging heterogeneous computing architectures that "fuse" the functionality of the CPU and GPU, e.g., AMD Fusion and Intel Knights Ferry, hold the promise of addressing the PCIe bottleneck. In this
+        paper, we empirically characterize and analyze the efficacy of AMD Fusion, an architecture that combines general-purpose x86 cores and programmable accelerator cores on the same silicon die. We characterize its performance via a set of micro-benchmarks (e.g., PCIe data transfer), kernel benchmarks(e.g., reduction), and actual applications (e.g., molecular dynamics). Depending on the benchmark, our results show that Fusion produces a 1.7 to 6.0-fold improvement in the
+            data-transfer time, when compared to a discrete GPU. In turn, this improvement in data-transfer performance can significantly enhance application performance. For example, running a reduction benchmark on AMD Fusion with its mere 80 GPU cores improves performance by 3.5-fold over the discrete AMD Radeon HD 5870 GPU with its 1600 more powerful GPU cores.}, 
+    keywords={Acceleration;Benchmark testing;Engines;Graphics processing unit;Instruction sets;Multicore processing;computer graphic equipment;coprocessors;parallel processing;AMD Fusion;AMD Radeon HD 5870;APU;Intel Knights Ferry;data transfer;fused CPU+GPU Processor;graphics processing unit;parallel computing;programmable accelerator;x86 core acclerator;AMD Fusion;APU;GPGPU;GPU;OpenCL;accelerated processing unit;benchmarking;graphics processing unit;heterogeneous computing;performance
+        evaluation;}, 
+    doi={10.1109/SAAHPC.2011.29}, 
+    ISSN={},
+}
+
+@inproceedings{APU:crypto,
+    author = {Harrison, Owen and Waldron, John},
+    title = "{Practical symmetric key cryptography on modern graphics hardware}",
+    booktitle = {Proceedings of the 17th conference on Security symposium},
+    series = {SS'08},
+    year = {2008},
+    location = {San Jose, CA},
+    pages = {195--209},
+    numpages = {15},
+    url = {http://static.usenix.org/event/sec08/tech/full_papers/harrison/harrison_html/},
+    acmid = {1496725},
+    publisher = {USENIX Association},
+    address = {Berkeley, CA, USA},
+}
+
+@INPROCEEDINGS{srtp:analysis1, 
+    author={Alexander, A. L. and Wijesinha, A. L. and Karne, R.}, 
+    booktitle={Network and System Security, 2009. NSS '09. Third International Conference on}, title={An Evaluation of Secure Real-Time Transport Protocol (SRTP) Performance for VoIP}, 
+    year={2009}, 
+    month={oct.}, 
+    volume={}, 
+    number={}, 
+    pages={95 -101}, 
+    abstract={The Secure Real-Time Transport Protocol (SRTP) is an Internet standards-track security profile for RTP used to provide confidentiality, integrity and replay protection for RTP traffic. We study the performance of SRTP when it is used to secure VoIP conversations. Experiments are conducted using snom and Twinkle softphones running on Windows and Linux platforms respectively and a bare PC softphone running with no operating system installed to provide a baseline. Pre-defined
+        SRTP transforms based on AES counter mode encryption with a 128-bit key and HMAC-SHA-1 with a 32-bit authentication tag, as well as 192 and 256-bit AES keys and an 80-bit authentication tag are tested. Measurement of internal processing times for each operation in the SRTP protocol indicates that authentication processing is more expensive than encryption regardless of key or tag size. A comparison of jitter and delta (packet interarrival time) for secured and
+            unsecured VoIP traffic reveals that the addition of SRTP protection to VoIP traffic over RTP has a negligible effect on voice quality. VoIP throughput with SRTP is about 2% more than with RTP alone since the insignificant increase in delay is offset by the small increase in packet size.}, 
+    keywords={Authentication;Counting circuits;Cryptography;Internet;Linux;Operating systems;Protection;Security;Testing;Transport protocols;Internet telephony;cryptography;real-time systems;telecommunication security;telecommunication traffic;transport protocols;AES counter mode encryption;Internet standard;Linux platform;PC softphone;RTP traffic;SRTP performance;Twinkle softphone;VoIP traffic;Windows platform;authentication tag;encryption;jitter;packet interarrival time;replay
+        protection;secure real-time transport protocol;snom softphone;Performance;SRTP;Security;Softphone;VoIP;}, 
+    doi={10.1109/NSS.2009.90}, 
+    ISSN={},
+}
+
+
+@inproceedings{srtp:analysis2,
+    author = {T. Adomkusv and E. Kalvaitis},
+    title = "{Investigation of VoIP Quality of Service using SRTP Protocol}",
+    year = {2008},
+    location = {Kaunas, Lietuva},
+    pages = {195--209},
+    numpages = {15},
+    url = {http://www.ktu.lt/lt/mokslas/zurnalai/elektros_z/z84/19_ISSN_1392-1215_Investigation\%20of\%20VoIP\%20quality\%20of\%20service\%20using\%20SRTP\%20protocol.pdf},
+    issn = {1392 -- 1215}
+}
+
+@book{perkins:rtp2003,
+    added-at = {2007-12-04T05:18:34.000+0100},
+    author = {Perkins, C.},
+    biburl = {http://www.bibsonomy.org/bibtex/293f8d5e1d0f2a09b3b0fc1157e25b6d0/lm77},
+    description = {Dissertation},
+    file = {#F#},
+    interhash = {919f3a3ee3ab57c61166cc862b01e9e9},
+    intrahash = {93f8d5e1d0f2a09b3b0fc1157e25b6d0},
+    isbn = {0672322498},
+    keywords = {{rtp}},
+    month = {June},
+    publisher = {Addison-Wesley},
+    timestamp = {2007-12-04T05:18:34.000+0100},
+    title = {RTP: Audio and Video for the Internet},
+    year = 2003
+}

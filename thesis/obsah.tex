@@ -1,8 +1,14 @@
 %=========================================================================
 % (c) Michal Bidlo, Bohuslav K�ena, 2008
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{AES}
 This chapter treats neccessary theoretical background of Advanced Encryption 
 Standard, which is the default cipher, and as the text has been written the only
@@ -36,7 +42,7 @@ by their size, because only single $GF(p^k)$ exists for each $p$ and $k$.
 Characteristics of the field is equal to the $p$.
 
 Each byte is in fact a polynomial with degree equal to 7 with coeficients
-$b_i$ 0 or 1 with this notation $b_7x^7 + b_6x^6 + b_5x^5 + b_4x^4 + b_3x^3
+$b_i$ 0 or 1 and this notation $b_7x^7 + b_6x^6 + b_5x^5 + b_4x^4 + b_3x^3
 + b_2x^2 + b_1x^1 + b_0$. The decimal number 95 could be represented as:
 \begin{itemize}
 \item $5F$ in hexadecimal
@@ -173,7 +179,7 @@ $=$
 \hspace{-1.5em}\texttt{ShiftRows} is performed on each row of the state matrix.
 The first row is not shifted, second row is shifted by one byte to the left, 
 third row is shifted by two bytes to the left and fourth row is shifted by three
-bytes to the left. Inverted ShiftRows for decryption is simply reversed.
+bytes to the left. Inverted ShiftRows for decryption is simply reversion.
 
 \begin{table}[H]
 \label{shift}
@@ -212,8 +218,8 @@ in Galois field $2^8$ by matrix \ref{mix}.
 \end{equation}
 
 As a result of this multiplication, each column $[s_{0c}, s_{1c}, s_{2c}, 
-s_{3c}]$ is replaced by the $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which could be 
-calculated:
+s_{3c}]$ is replaced by the column $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which could 
+be calculated:
 
 \begin{equation}
 \begin{array}{lllllllll}
@@ -318,12 +324,12 @@ with the same encryption key might present security threat unless the ciphering
 algorithm provides form of randomization the output value. Such procedure might
 be achieved by additional input value.
 
-There are many variations on block cipher to provide this confidentiality
-\cite{blockciphers}, for AES algorithm the most often used are \textit{counter 
+There are many variations on block cipher to provide this confidentiality\cite{
+blockciphers}, for AES algorithm the most often used are \textit{counter 
 mode} and \textit{f8-mode}. Both algorithms keep standard high level of 
 confusion of the AES algorithm and provides necessary diffusion\footnote{
 \textit{Confusion} and \textit{diffusion} are basic two properties of secure 
-cipher introduced by Claude Shannon \cite{shannon}.}.
+cipher introduced by Claude Shannon\cite{shannon}.}.
 
 Both algorithms share some similar terminology and acronyms:
 \begin{itemize}
@@ -336,7 +342,7 @@ Both algorithms share some similar terminology and acronyms:
 
 \subsubsection*{Counter Mode}
 The counter mode (CTR) turns AES block algorithm into stream cipher with 
-possibility for parallel computations \cite{parallelctr}. It is possible to 
+possibility for parallel computations\cite{parallelctr}. It is possible to 
 decrypt the cipher text even with loss of number of blocks because the encrypted
 blocks are not dependent on the previous blocks. Instead the additional 
 diffusion value are achieved by specific counter. 
@@ -449,13 +455,16 @@ P_j &=& C_j \oplus O_j
 %\end{algorithmic}
 %\end{algorithm}
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Secure Real-time Transport Protocol}
 To achieve confidentiality and neccessary security for real-time multimedia
-transmission over TCP/IP connection there has been invented SRTP
-\cite{rfc3711}. Except previously mentioned, it provides message
+transmission over TCP/IP connection there has been invented SRTP\cite{
+rfc3711}. Except previously mentioned, it provides message
 authentication and replay protection for both RTP and RTCP traffic, 
-however, the thesis is going to focus on the security. The default cipher is AES
-in counter mode.
+however, the thesis is going to focus on the implementation and computation
+time of the security. The default cipher is AES in counter mode.
 
 \section{Packet Structure}
 SRTP packet can be described as RTP extension. It keeps the RTP fields of
@@ -543,10 +552,53 @@ And for every master key, the cryptographic context may contain also
 random but possibly public \textit{Master Salt} which will be used in 
 key derivation.
 
-\section{Security Analysis}
+\section{Protocol Summary}
+Main concers about the use of SRTP are whether the increase of computational
+complexity and packet size don't make RTP hardly usable and what degree of
+security does it provide.
+
+\subsubsection*{Computational Overhead}
+In VoIP communication the time has essential impact on the quality of
+transmitted information, therefore it is important that ensuring the 
+security of RTP wouldn't increase the latency over the acceptable level.
+Among commont limitations of real-time communications 
+belong\cite{perkins:rtp2003}:
+\begin{itemize}
+\item Maximal tolerable latency round-trip time 300ms.
+\item Smaller packet loss than 5\%.
+\item Sensitivity to factors that are difficult to objectively measure
+such as jitter.
+\end{itemize}
 
 
 
+It has been proven that increase in size of the packet SRTP is
+insignificant compared to the RTP\cite{srtp:analysis2, srtp:analysis1}.
+Average throughput of secured VoIP is usually around 2\% more than 
+unsecured VoIP.
+
+
+
+\subsubsection*{Security}
+VoIP suffers from many simillar security threats as other standard internet
+services. 
+
+\textit{Man in the middle} in computer security is form of active eavesdropping.
+The attacker creates connections to both endpoints of the session which allows
+him to monitor, record or modify the packets in communication making the 
+endpoints believe that the conversation is secured. 
+Protection against such attack could be achieved by key negotiating protocol
+\textit{ZRTP} which is able to detect this activity\cite{rfc6189}.
+
+\textit{Denial of service} is considered an attempt to make target machine unavailable
+to to its intended users. Typical method of this attack is to saturate the target
+machine with excessive requests that could lead to overloading the machine.
+Replay protection mechanism of SRTP with replay lists and authentication headers
+provide sufficient protection against DoS attack\cite{rfc3711}.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Parallel Programming Paradigm}
 This chapter describes the basic ideas and techniques behind GPU parallel 
 programming model and architecture. Following text will focus on possibilities
@@ -559,7 +611,7 @@ common sequential machines\cite{Darlington93structuredparallel}, but bring well
 known problems for software development such as run-time resource allocation
 and resource sharing. Mapping parallel program to multiprocessor machine is
 complex problem that needs to decide about task allocation, scheduling of
-processes', communication patterns and much more.
+processes, communication patterns and much more.
 
 \section{General Purpose GPU}
 While current CPUs are powerfull and sofisticated chips, their design must be
@@ -581,40 +633,164 @@ calculations individially for each cell.
 \item Large portion of computation -- GPU porcessors are optimized for 
 computations over handling conditional evaluations.
 \item Throughput over Latency -- computations on GPU are designed for large
-overall throughput of a picture rather than short response time of each 
+overall throughput of entire data rather than short response time of each 
 individual operation.
 \end{itemize}
 
 The current trend in development shows that parallel computations either in the
-form of GPU computations, APU\footnote{ Accelerated Processing Unit -- 
-in this context it means CPU with GPGPU chip.}, or CPU with integrated GPU are
+form of GPU computations and APU\footnote{ Accelerated Processing Unit -- 
+in this context it means CPU with GPGPU chip.} are
 worth examination and research. SIMD\footnote{ Single Instruction Multiple Data 
 -- multiple processing elements that perform the same operation on multiple data 
 points simultaneously\cite{Flynn:1972}.} has already proven it's value on 
 improving performance with parallelization of various 
-algorithms\cite{nvidia:sample}, \cite{amd:apps}.
+algorithms\cite{nvidia:sample, amd:apps}.
 
 \subsubsection*{Architecture}
 
+\{***Some smart text and picture of how GPU looks and works***\}
 
-\subsubsection*{CPU with Integrated GPU}
 
+
+
+
+\subsubsection*{APU}
+Usual solutions with graphics card can have high power consumption. The modern
+trend and need of transportable forced development to reduce negative 
+effects of GPUs while keeping as much of latest visual experience as 
+possible\cite{apu:efficiency}.
+Both solutions utilize a portion of computer's system RAM memory.
+
+APU is Accelerated Processing Unit that is designed to accelerate certain
+type of computations outside of CPU in single chip\cite{wiki:apu}. It could include 
+GPU, FPGA or similar specialized processing unit. Among the best known there
+are Intel HD Graphics\cite{intel:apu}, AMD Fusion\cite{amd:apu} and NVIDIA 
+Project Denver\cite{nvidia:apu}.
 
 \section{OpenCL}
-Development for parallel computation brought need for infrastructure\cite{opencl}.
+Development for parallel computation brought need for infrastructure. OpenCL
+is an industry standard framework fr programming heterogenous systems 
+composed of a combination of CPUs, GPUs, DSP and other processing 
+units\cite{opencl}. With OpenCL it is possible to write a software that will
+run on wide variety of platforms from cell phones or computers to massive
+supercomputers. 
+
+The \textit{OpenCL programming language} has syntax based
+on the language C with few additions and limitations arising from the design
+and architecture of heterogenous platforms. Among most important limitations
+it omits the use of recursion, function pointers and header files. On the 
+other hand, the language is extended to the use of parallelism with build 
+in types and synchronization. Also it defines many functions and four new
+keywords as memory region qualifiers: \texttt{\_\_global}, 
+\texttt{\_\_local}, \texttt{\_\_constant} and \texttt{\_\_private}.
+
+For further reading of the text and better comprehensibility, there are
+listed neccessary words from OpenCL terminology\cite{opencl}.
+\begin{itemize}
+\item Context -- contains one or more devices used for kernel execution
+and are used for managing command queues, memory and program.
+\item Kernel -- function written in OpenCL programming language that 
+is executed on OpenCL device. 
+\item Work-item -- instance of executing kernel. 
+\item Work-group -- organisation of work-items. 
+\item Command-queue -- interaction between the host and OpenCL
+device through commands posted by the host and provides synchronization
+methods for the execution of the commands.
+\end{itemize}
+
+OpenCL platform includes single \textit{host} that comunicates with the user
+and the OpenCL program. The host is connected to one or more
+OpenCL \textit{devices} where the \textit{kernels} are executed. 
+\textit{Kernel} could be considered as the entry point between host and
+GPU. In order to achieve parallelism, the device consists of many 
+\textit{work-items} whose execute multiple instances of kernel at the same 
+time. The work-items are organized in integer indexed orthogonal grid where 
+the unique index of a work-item is called gloabl ID. The identification
+of work-item is possible through combination of its local ID inside a specific
+\textit{work-group} and the work-group global ID.
+
+\subsubsection*{Platform Model}
+The OpenCL provides a high-level abstraction model representing any heterogenous
+platform. The \textit{host} is a bridge between parallel computations on one or
+more devices and interaction with external environment. \textit{Device} could be
+CPU, GPU, DSP or any other processing unit supporting OpenCL and consists
+of compute units which are further divided into processing elements. 
+\textit{Processing element} is abstraction of a work-item and \textit{compute unit} is 
+in similar way representation of work-group.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=10cm]{fig/opencl_platform_model.jpg}
+\caption{OpenCL platform model with one host and multiple devices\cite{opencl}.}
+\label{oclpm}
+\end{figure}
+
+
+\subsubsection*{Execution Model}
+The OpenCL software executes on two levels
+\begin{itemize}
+\item \textbf{Host code} -- the OpenCL doesn't define any restrictions about the 
+host part of the application, it defines only the interaction between host and devices.
+It consists of selection and initialization of the context -- selected platform and 
+devices.
+\item \textbf{Device code} -- written in OpenCL programming language in the form of 
+short functions, kernels, that usually transform an input array through series of 
+processes into output array. It is compiled via OpenCL compiler and executed on the 
+device's work-items.
+\end{itemize}
+
+The host program takes care of synchronization and plans the execution of each
+kernel on the devices. Each instance of kernel runs in separate work-item and the
+work-items within each work-group execute concurrently. 
+
+\subsubsection*{Memory Model}
+OpenCL defines two types of memory objects. The \textit{buffer object} is
+versatile type that could be used for representation of any data type 
+available in C or OpenCL language. The \textit{image object} is restricted 
+to containing pictures only and is optimized for the specific needs of 
+image processing.
+
+OpenCL uses a hierarchicaly structured memory. The types differ in access time,
+availability and types of usage\cite{opencl}:
+\begin{itemize}
+\item \textbf{Private Memory} -- each work-item has it's own private memory which 
+could be thought of as analogy to CPU's registers. It is the fastest type of memory
+used in OpenCL.
+\item \textbf{Local Memory} -- designed for sharing data between work-items who 
+belong to the same work group. It is used to reduce the number of accesses to the
+global memory. Local memory is slower than private memory but faster than global
+memory. The programmer is denied both direct access and control over local memory.
+The analogy could be the cache in CPU.
+\item \textbf{Global Memory} -- shared among all work-items in the same context.
+\item \textbf{Host Memory} -- memory visible only for the host, OpenCL only defines
+how the host interacts with OpenCL objects and constructs.
+\end{itemize}
+
+\hspace{-1.5em}
+There could be another type of memory in graphic cards that OpenCL doesn't define
+
+\begin{itemize}
+\item \textbf{PCI Memory} -- type of memory that could be used by the program and
+GPU, part of host memory. It is slower than global memory.
+\end{itemize}
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Implementation}
+\cite{apu:crypto}
 
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Testing}
 
 
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Conclusion}
 
 
