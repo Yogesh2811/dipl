@@ -1,14 +1,14 @@
 %=========================================================================
 % (c) Michal Bidlo, Bohuslav K�ena, 2008
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
 
 
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{AES}
 This chapter treats neccessary theoretical background of Advanced Encryption 
 Standard, which is the default cipher, and as the text has been written the only
@@ -457,7 +457,7 @@ P_j &=& C_j \oplus O_j
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Secure Real-time Transport Protocol}
 To achieve confidentiality and neccessary security for real-time multimedia
 transmission over TCP/IP connection there has been invented SRTP\cite{
@@ -552,6 +552,24 @@ And for every master key, the cryptographic context may contain also
 random but possibly public \textit{Master Salt} which will be used in 
 key derivation.
 
+\section{Master Key Exchange}
+There are three most common protocols for key exchange in SRTP session between the end 
+users -- SDES, MIKEY, and ZRTP. They differ in what protocol in VoIP 
+communication they extend, provided security guarantees and possible 
+communication overhead.
+
+\textbf{ZRTP} is a protocol that extends RTP for secure establishing session key using 
+Diffie-Hellman key exchange improved for detection of man-in-the-middle attack, 
+which is briefly described in section \ref{mitm}, \cite{rfc6189}.
+The main advantage is that it doesn't require any prior shared secret nor public
+key infrastructure.
+
+\textbf{SDES}
+
+\textbf{MIKEY}
+
+
+
 \section{Protocol Summary}
 Main concers about the use of SRTP are whether the increase of computational
 complexity and packet size don't make RTP hardly usable and what degree of
@@ -583,22 +601,23 @@ unsecured VoIP.
 VoIP suffers from many simillar security threats as other standard internet
 services. 
 
-\textit{Man in the middle} in computer security is form of active eavesdropping.
-The attacker creates connections to both endpoints of the session which allows
-him to monitor, record or modify the packets in communication making the 
-endpoints believe that the conversation is secured. 
+\textit{Man in the middle}\label{mitm} in computer security is form of active 
+eavesdropping. The attacker creates connections to both endpoints of the session
+which allows him to monitor, record or modify the packets in communication 
+making the endpoints believe that the conversation is secured. 
 Protection against such attack could be achieved by key negotiating protocol
 \textit{ZRTP} which is able to detect this activity\cite{rfc6189}.
 
-\textit{Denial of service} is considered an attempt to make target machine unavailable
-to to its intended users. Typical method of this attack is to saturate the target
-machine with excessive requests that could lead to overloading the machine.
-Replay protection mechanism of SRTP with replay lists and authentication headers
-provide sufficient protection against DoS attack\cite{rfc3711}.
+\textit{Denial of service} is considered an attempt to make target machine 
+unavailable to to its intended users. Typical method of this attack is to 
+saturate the target machine with excessive requests that could lead to 
+overloading the machine. Replay protection mechanism of SRTP with replay lists 
+and authentication headers provide sufficient protection against DoS 
+attack\cite{rfc3711}.
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Parallel Programming Paradigm}
 This chapter describes the basic ideas and techniques behind GPU parallel 
 programming model and architecture. Following text will focus on possibilities
@@ -662,9 +681,9 @@ possible\cite{apu:efficiency}.
 Both solutions utilize a portion of computer's system RAM memory.
 
 APU is Accelerated Processing Unit that is designed to accelerate certain
-type of computations outside of CPU in single chip\cite{wiki:apu}. It could include 
-GPU, FPGA or similar specialized processing unit. Among the best known there
-are Intel HD Graphics\cite{intel:apu}, AMD Fusion\cite{amd:apu} and NVIDIA 
+type of computations outside of CPU in single chip\cite{wiki:apu}. It could 
+include GPU, FPGA or similar specialized processing unit. Among the best known 
+there are Intel HD Graphics\cite{intel:apu}, AMD Fusion\cite{amd:apu} and NVIDIA 
 Project Denver\cite{nvidia:apu}.
 
 \section{OpenCL}
@@ -715,8 +734,8 @@ platform. The \textit{host} is a bridge between parallel computations on one or
 more devices and interaction with external environment. \textit{Device} could be
 CPU, GPU, DSP or any other processing unit supporting OpenCL and consists
 of compute units which are further divided into processing elements. 
-\textit{Processing element} is abstraction of a work-item and \textit{compute unit} is 
-in similar way representation of work-group.
+\textit{Processing element} is abstraction of a work-item and 
+\textit{compute unit} is in similar way representation of work-group.
 
 \begin{figure}[H]
 \centering
@@ -730,13 +749,13 @@ in similar way representation of work-group.
 The OpenCL software executes on two levels
 \begin{itemize}
 \item \textbf{Host code} -- the OpenCL doesn't define any restrictions about the 
-host part of the application, it defines only the interaction between host and devices.
-It consists of selection and initialization of the context -- selected platform and 
-devices.
-\item \textbf{Device code} -- written in OpenCL programming language in the form of 
-short functions, kernels, that usually transform an input array through series of 
-processes into output array. It is compiled via OpenCL compiler and executed on the 
-device's work-items.
+host part of the application, it defines only the interaction between host and 
+devices. It consists of selection and initialization of the context -- selected 
+platform and devices.
+\item \textbf{Device code} -- written in OpenCL programming language in the form
+of short functions, kernels, that usually transform an input array through 
+series of processes into output array. It is compiled via OpenCL compiler and 
+executed on the device's work-items.
 \end{itemize}
 
 The host program takes care of synchronization and plans the execution of each
@@ -776,21 +795,21 @@ GPU, part of host memory. It is slower than global memory.
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Implementation}
 \cite{apu:crypto}
 
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Testing}
 
 
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Conclusion}
 
 
