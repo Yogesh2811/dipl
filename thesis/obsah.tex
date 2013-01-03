@@ -558,15 +558,20 @@ users -- SDES, MIKEY, and ZRTP. They differ in what protocol in VoIP
 communication they extend, provided security guarantees and possible 
 communication overhead.
 
-\textbf{ZRTP} is a protocol that extends RTP for secure establishing session key using 
+\textbf{ZRTP} is a protocol extension of RTP for secure establishing session key using 
 Diffie-Hellman key exchange improved for detection of man-in-the-middle attack, 
 which is briefly described in section \ref{mitm}, \cite{rfc6189}.
-The main advantage is that it doesn't require any prior shared secret nor public
-key infrastructure.
+Another advantage of the improvement is that it doesn't require any prior shared secret 
+nor public key infrastructure.
 
-\textbf{SDES}
+\textbf{SDES} is protocol extension of SDP\cite{rfc:sdp, rfc:sdes} typically in 
+SIP\cite{rfc:sip} message. It is responsibility of the SIP stack to protect the key 
+as secured secret, which is possible via TLS connection for instance.
 
-\textbf{MIKEY}
+\textbf{MIKEY} defines the key exchange as part of SDP payload in SIP message.
+The algorithm is basic Diffie-Hellman which requires either prior shared secret
+or PKI\footnote{ Public Key Infrastructure for digital certificates}. The SIP stack 
+doesn't have to protect the transfered information any further.
 
 
 
@@ -613,7 +618,7 @@ unavailable to to its intended users. Typical method of this attack is to
 saturate the target machine with excessive requests that could lead to 
 overloading the machine. Replay protection mechanism of SRTP with replay lists 
 and authentication headers provide sufficient protection against DoS 
-attack\cite{rfc3711}.
+attack\cite{rfc3711, cisco:srtp}.
 
 
 
