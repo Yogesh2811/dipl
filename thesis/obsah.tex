@@ -3,13 +3,222 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
+One of the essential metrics for measuring VoIP private branch exchange's 
+performance is the number of simultaneous calls. It is affected mostly by the
+computational demands of used communication protocols and number of registered
+users. While the count of registered users provides very limited room for 
+improvement by the nature of the problem itself, there could be wide variety
+of aproaches in implementing the protocol stacks. 
+
+The communication protocols for VoIP PBX can be divided into two groups. 
+Signalization, which consists mostly of textually represented protocols, where 
+the messages' occurance is either periodical with quite small frequency, or 
+based on the users initiative which is a stochastical event depending on the 
+activity of the user. However, generally the recurrance of both is rather 
+similar.
+
+Comparably more resources during indirect simultaneous call sessions consumes 
+processing the second group of protocols, transport of multimedia packets. Since
+security has recently grown to be necessary feature in VoIP communication and 
+the encryption and decryption processes are designed with the idea of 
+optimization, it is primary scope of interest of this thesis.
+
+Development and results in the areas of parallel architectures shows that many
+procedures could be distinctively accelerated by executing the algorithm on the
+processing unit capable of parallel computations. Therefore, target of this 
+thesis is implementation and analysis of parallel processing of encrypted
+real-time multimedia data transfere.
+
+Chapter \ref{chapter:srtp} describes the structures and algorithms used in 
+Secure Real-time Transport Protocol. Increased attention is devoted to 
+explanation of Advanced Encryption Standard, which is default cipher used in 
+SRTP, including brief theoretical background and analysis of SRTP and AES. 
+Because SRTP doesn't provide key exchange mechanism for symetric AES cipher, the
+chapter also includes description of selected protocol extensions for this task.
+Chapter \ref{chapter:gpgpu} provides basic information about graphic processing 
+unit and the usage of GPU for general purpose computations. Part of the chapter 
+is principal explanation of OpenCL framework and its elementary usage. 
+Chapter \ref{chapter:design} defines the term SIP Gateway for the context of 
+this thesis, discusses the design of such gateway as simplified PBX and includes
+listing of selected further implemented protocol stacks, their mutual 
+interaction and possible improvement of processing the passing data. 
+Finally chapter \ref{chapter:conclusion} sumarizes the potential benefits of 
+usage the GPGPU for the number of maximal simultaneous calls.
+
+
+
+
 
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{AES}
+\chapter{Secure Real-time Transport Protocol}\label{chapter:srtp}
+To achieve confidentiality and neccessary security for real-time multimedia
+transmission over TCP/IP connection there has been invented SRTP\cite{
+rfc3711}. Except previously mentioned, it provides message
+authentication and replay protection for both RTP and RTCP traffic, 
+however, the thesis is going to focus on the implementation and computation
+time of the security. The default cipher is AES in counter mode.
+
+\section{Packet Structure}
+SRTP packet can be described as RTP extension. It keeps the RTP fields of
+the packet such as:
+\begin{itemize}
+\item Version (V) -- two bit number which currently is equal to 2.
+\item Padding (P) -- boolean value whether the padding is set.
+\item Extension (X) -- if this field is set, fixed header must be followed by
+exactly one extension header.
+\item CSRC count (CC) -- number of CSRC identifiers that follow the fixed 
+header.
+\item Marker (M) -- interpretation defined by a profile.
+\item Payload Type (PT) -- identifies the type of payload
+\item Sequence Number (SEQ) -- incremets by one for each RTP packet.
+\item Timestamp (TS) -- reflecting the exact moment the payload was sampled.
+\item Synchronization Source Identifier (SSRC) -- identifier of RTP 
+synchronization source within the single RTP session.
+\item Contributing Source Identifiers (CSRC) -- list of 0 to 15 items 
+identifying contributing sources.
+\end{itemize}
+
+The SRTP protocol defines that only payload is encrypted and also describes new 
+fields in the RTP header.
+
+\begin{itemize}
+\item Master Key Identifier (MKI) -- unique identifier of the master key 
+(previously signaled) to be used in session key derivation.
+\item Authentication Tag -- carries message authentication data. If both
+encryption and authentication are used, encryption should be applied first.
+\end{itemize}
+
+The packet length is variable and depends on number of CSRC used and length
+of payload. The following scheme describes the packet with proportional
+sizes of each field.
+
+\begin{verbatim}
+    0                   1                   2                   3
+  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+<+
+  |V=2|P|X|  CC   |M|     PT      |       sequence number         | |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+  |                           timestamp                           | |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+  |           synchronization source (SSRC) identifier            | |
+  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+ |
+  |            contributing source (CSRC) identifiers             | |
+  |                               ....                            | |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+  |                   RTP extension (OPTIONAL)                    | |
++>+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+| |                          payload  ...                         | |
+| |                               +-------------------------------+ |
+| |                               | RTP padding   | RTP pad count | |
++>+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+<+
+| ~                     SRTP MKI (OPTIONAL)                       ~ |
+| +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+| :                 authentication tag (RECOMMENDED)              : |
+| +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+|                                                                   |
++- Encrypted Portion*                      Authenticated Portion ---+
+\end{verbatim}
+
+\section{Cryptographic Context}
+In order to implement SRTP stack in the application, it is necessary to
+preserve certain information about each encrypted session, which is 
+called \textit{cryptographic context}. It must consist of the following:
+
+\begin{itemize}
+\item Rollover Counter -- 32-bit unsigned number, records how many times 
+has the RTP sequential number been reseted to zero passed the value 65~535.
+\item Highest Received SEQ -- 16-bit unsigned number
+\item Identifier of the Encryption Algorithm -- the cipher and its mode
+\item Replay List -- containing indices of recently received and 
+authenticated SRTP packets
+\item MKI -- if the MKI is present in current session, the length
+of the MKI field in octets, actual value of currently used MKI
+\item Master Keys -- enumeration of random and secret master keys
+and counter for each key of how many packets have been sent with
+that key. Single Master Key identifies SRTP stream and corresponding SRTCP
+stream.
+\item Session Keys -- current key for encryption and authentication
+including stored their lengths in \texttt{n\_e} and \texttt{n\_a}
+\end{itemize}
+
+And for every master key, the cryptographic context may contain also
+random but possibly public \textit{Master Salt} which will be used in 
+key derivation.
+
+\section{Master Key Exchange}
+There are three most common protocols for key exchange in SRTP session between 
+the end users -- SDES, MIKEY, and ZRTP. They differ in what protocol in VoIP 
+communication they extend, provided security guarantees and possible 
+communication overhead.
+
+\textbf{ZRTP} is a protocol extension of RTP for secure establishing session key 
+using Diffie-Hellman key exchange improved for detection of man-in-the-middle 
+attack, which is briefly described in section \ref{mitm}, \cite{rfc6189}.
+Another advantage of the improvement is that it doesn't require any prior shared 
+secret nor public key infrastructure.
+
+\textbf{SDES} is protocol extension of SDP\cite{rfc:sdp, rfc:sdes} typically in 
+SIP\cite{rfc:sip} message. It is responsibility of the SIP stack to protect the 
+key as secured secret, which is possible via TLS connection for instance.
+
+\textbf{MIKEY} defines the key exchange as part of SDP payload in SIP message.
+The algorithm is basic Diffie-Hellman which requires either prior shared secret
+or PKI\footnote{ Public Key Infrastructure for digital certificates}. The SIP 
+stack doesn't have to protect the transfered information any further.
+
+
+
+\section{Protocol Summary}
+Main concers about the use of SRTP are whether the increase of computational
+complexity and packet size don't make RTP hardly usable and what degree of
+security does it provide.
+
+\subsubsection*{Computational Overhead}
+In VoIP communication the time has essential impact on the quality of
+transmitted information, therefore it is important that ensuring the 
+security of RTP wouldn't increase the latency over the acceptable level.
+Among commont limitations of real-time communications 
+belong\cite{perkins:rtp2003}:
+\begin{itemize}
+\item Maximal tolerable latency round-trip time 300ms.
+\item Smaller packet loss than 5\%.
+\item Sensitivity to factors that are difficult to objectively measure
+such as jitter.
+\end{itemize}
+
+
+
+It has been proven that increase in size of the packet SRTP is
+insignificant compared to the RTP\cite{srtp:analysis2, srtp:analysis1}.
+Average throughput of secured VoIP is usually around 2\% more than 
+unsecured VoIP.
+
+
+
+\subsubsection*{Security}
+VoIP suffers from many simillar security threats as other standard internet
+services. 
+
+\textit{Man in the middle}\label{mitm} in computer security is form of active 
+eavesdropping. The attacker creates connections to both endpoints of the session
+which allows him to monitor, record or modify the packets in communication 
+making the endpoints believe that the conversation is secured. 
+Protection against such attack could be achieved by key negotiating protocol
+\textit{ZRTP} which is able to detect this activity\cite{rfc6189}.
+
+\textit{Denial of service} is considered an attempt to make target machine 
+unavailable to to its intended users. Typical method of this attack is to 
+saturate the target machine with excessive requests that could lead to 
+overloading the machine. Replay protection mechanism of SRTP with replay lists 
+and authentication headers provide sufficient protection against DoS 
+attack\cite{rfc3711, cisco:srtp}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{AES}
 This chapter treats neccessary theoretical background of Advanced Encryption 
 Standard, which is the default cipher, and as the text has been written the only
 cipher, of Secure Real-time Transport Protocol used in VoIP communication.
@@ -29,7 +238,7 @@ was original name of the AES as abreviation of authors' names -- Joan
 Daemen and Vincent Rijmen.} was selected as the most suitable algorithm
 for the task\cite{AES-FIPS}. 
 
-\section{Mathematical Preliminaries}
+\subsection{Mathematical Preliminaries}
 All the bytes in AES are interpreted as 8-bit values in finite field $2^8$.
 For better readability the values are printed using hexadecimal notation.
 Following mathematical therms and operations are used in AES aglorithm:
@@ -76,7 +285,7 @@ b_7x^8+b_6x^7+b_5x^6+b_4x^5+b_3x^4+b_2x^3+b_1x^2+b_0x
 If $b_7 = 1$ the result must be XORed with the polynomial $m(x)$. This operation
 can be accomplished as bitwise left shift and XOR with $1B$.
 
-\section{Algorithm Description}
+\subsection{Algorithm Description}
 The AES is block cipher, therefore both encryption and decryption processes
 are performed on a matrix of 4x4 bytes called \textit{state}. Even though
 state has fixed block size 128-bit, supported key sizes are 128-bit, 196-bit
@@ -218,8 +427,8 @@ in Galois field $2^8$ by matrix \ref{mix}.
 \end{equation}
 
 As a result of this multiplication, each column $[s_{0c}, s_{1c}, s_{2c}, 
-s_{3c}]$ is replaced by the column $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which could 
-be calculated:
+s_{3c}]$ is replaced by the column $[a_{0c}, a_{1c}, a_{2c}, a_{3c}]$ which 
+could be calculated:
 
 \begin{equation}
 \begin{array}{lllllllll}
@@ -317,7 +526,7 @@ and $\oplus$ is XOR operation.
 \caption{S-box for SubBytes transformation in hexadecimal notation.}
 \end{table}
 
-\section{Block Cipher Modes}
+\subsection{Block Cipher Modes}
 During encyption the same key is applied repeatedly on the uniform lenght blocks
 of data to whose the message is separated into. Large amount of ciphered data 
 with the same encryption key might present security threat unless the ciphering
@@ -455,175 +664,10 @@ P_j &=& C_j \oplus O_j
 %\end{algorithmic}
 %\end{algorithm}
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Secure Real-time Transport Protocol}
-To achieve confidentiality and neccessary security for real-time multimedia
-transmission over TCP/IP connection there has been invented SRTP\cite{
-rfc3711}. Except previously mentioned, it provides message
-authentication and replay protection for both RTP and RTCP traffic, 
-however, the thesis is going to focus on the implementation and computation
-time of the security. The default cipher is AES in counter mode.
-
-\section{Packet Structure}
-SRTP packet can be described as RTP extension. It keeps the RTP fields of
-the packet such as:
-\begin{itemize}
-\item Version (V) -- two bit number which currently is equal to 2.
-\item Padding (P) -- boolean value whether the padding is set.
-\item Extension (X) -- if this field is set, fixed header must be followed by
-exactly one extension header.
-\item CSRC count (CC) -- number of CSRC identifiers that follow the fixed header.
-\item Marker (M) -- interpretation defined by a profile.
-\item Payload Type (PT) -- identifies the type of payload
-\item Sequence Number (SEQ) -- incremets by one for each RTP packet.
-\item Timestamp (TS) -- reflecting the exact moment the payload was sampled.
-\item Synchronization Source Identifier (SSRC) -- identifier of RTP synchronization 
-source within the single RTP session.
-\item Contributing Source Identifiers (CSRC) -- list of 0 to 15 items identifying
-contributing sources.
-\end{itemize}
-
-The SRTP protocol defines that only payload is encrypted and also describes new 
-fields in the RTP header.
-
-\begin{itemize}
-\item Master Key Identifier (MKI) -- unique identifier of the master key 
-(previously signaled) to be used in session key derivation.
-\item Authentication Tag -- carries message authentication data. If both
-encryption and authentication are used, encryption should be applied first.
-\end{itemize}
-
-The packet length is variable and depends on number of CSRC used and length
-of payload. The following scheme describes the packet with proportional
-sizes of each field.
-
-\begin{verbatim}
-    0                   1                   2                   3
-  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+<+
-  |V=2|P|X|  CC   |M|     PT      |       sequence number         | |
-  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
-  |                           timestamp                           | |
-  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
-  |           synchronization source (SSRC) identifier            | |
-  +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+ |
-  |            contributing source (CSRC) identifiers             | |
-  |                               ....                            | |
-  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
-  |                   RTP extension (OPTIONAL)                    | |
-+>+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
-| |                          payload  ...                         | |
-| |                               +-------------------------------+ |
-| |                               | RTP padding   | RTP pad count | |
-+>+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+<+
-| ~                     SRTP MKI (OPTIONAL)                       ~ |
-| +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
-| :                 authentication tag (RECOMMENDED)              : |
-| +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
-|                                                                   |
-+- Encrypted Portion*                      Authenticated Portion ---+
-\end{verbatim}
-
-\section{Cryptographic Context}
-In order to implement SRTP stack in the application, it is necessary to
-preserve certain information about each encrypted session, which is 
-called \textit{cryptographic context}. It must consist of the following:
-
-\begin{itemize}
-\item Rollover Counter -- 32-bit unsigned number, records how many times 
-has the RTP sequential number been reseted to zero passed the value 65~535.
-\item Highest Received SEQ -- 16-bit unsigned number
-\item Identifier of the Encryption Algorithm -- the cipher and its mode
-\item Replay List -- containing indices of recently received and 
-authenticated SRTP packets
-\item MKI -- if the MKI is present in current session, the length
-of the MKI field in octets, actual value of currently used MKI
-\item Master Keys -- enumeration of random and secret master keys
-and counter for each key of how many packets have been sent with
-that key. Single Master Key identifies SRTP stream and corresponding SRTCP
-stream.
-\item Session Keys -- current key for encryption and authentication
-including stored their lengths in \texttt{n\_e} and \texttt{n\_a}
-\end{itemize}
-
-And for every master key, the cryptographic context may contain also
-random but possibly public \textit{Master Salt} which will be used in 
-key derivation.
-
-\section{Master Key Exchange}
-There are three most common protocols for key exchange in SRTP session between the end 
-users -- SDES, MIKEY, and ZRTP. They differ in what protocol in VoIP 
-communication they extend, provided security guarantees and possible 
-communication overhead.
-
-\textbf{ZRTP} is a protocol extension of RTP for secure establishing session key using 
-Diffie-Hellman key exchange improved for detection of man-in-the-middle attack, 
-which is briefly described in section \ref{mitm}, \cite{rfc6189}.
-Another advantage of the improvement is that it doesn't require any prior shared secret 
-nor public key infrastructure.
-
-\textbf{SDES} is protocol extension of SDP\cite{rfc:sdp, rfc:sdes} typically in 
-SIP\cite{rfc:sip} message. It is responsibility of the SIP stack to protect the key 
-as secured secret, which is possible via TLS connection for instance.
-
-\textbf{MIKEY} defines the key exchange as part of SDP payload in SIP message.
-The algorithm is basic Diffie-Hellman which requires either prior shared secret
-or PKI\footnote{ Public Key Infrastructure for digital certificates}. The SIP stack 
-doesn't have to protect the transfered information any further.
 
 
-
-\section{Protocol Summary}
-Main concers about the use of SRTP are whether the increase of computational
-complexity and packet size don't make RTP hardly usable and what degree of
-security does it provide.
-
-\subsubsection*{Computational Overhead}
-In VoIP communication the time has essential impact on the quality of
-transmitted information, therefore it is important that ensuring the 
-security of RTP wouldn't increase the latency over the acceptable level.
-Among commont limitations of real-time communications 
-belong\cite{perkins:rtp2003}:
-\begin{itemize}
-\item Maximal tolerable latency round-trip time 300ms.
-\item Smaller packet loss than 5\%.
-\item Sensitivity to factors that are difficult to objectively measure
-such as jitter.
-\end{itemize}
-
-
-
-It has been proven that increase in size of the packet SRTP is
-insignificant compared to the RTP\cite{srtp:analysis2, srtp:analysis1}.
-Average throughput of secured VoIP is usually around 2\% more than 
-unsecured VoIP.
-
-
-
-\subsubsection*{Security}
-VoIP suffers from many simillar security threats as other standard internet
-services. 
-
-\textit{Man in the middle}\label{mitm} in computer security is form of active 
-eavesdropping. The attacker creates connections to both endpoints of the session
-which allows him to monitor, record or modify the packets in communication 
-making the endpoints believe that the conversation is secured. 
-Protection against such attack could be achieved by key negotiating protocol
-\textit{ZRTP} which is able to detect this activity\cite{rfc6189}.
-
-\textit{Denial of service} is considered an attempt to make target machine 
-unavailable to to its intended users. Typical method of this attack is to 
-saturate the target machine with excessive requests that could lead to 
-overloading the machine. Replay protection mechanism of SRTP with replay lists 
-and authentication headers provide sufficient protection against DoS 
-attack\cite{rfc3711, cisco:srtp}.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Parallel Programming Paradigm}
+\chapter{General Purpose GPU}\label{chapter:gpgpu}
 This chapter describes the basic ideas and techniques behind GPU parallel 
 programming model and architecture. Following text will focus on possibilities
 of efective implementation for GPGPU and integrated GPU in modern CPU using 
@@ -637,7 +681,6 @@ and resource sharing. Mapping parallel program to multiprocessor machine is
 complex problem that needs to decide about task allocation, scheduling of
 processes, communication patterns and much more.
 
-\section{General Purpose GPU}
 While current CPUs are powerfull and sofisticated chips, their design must be
 focused on wide variety of tasks, therefore vast majority of resources might
 not be as fully utilized as could have been. The GPU chips provide much better
@@ -672,7 +715,7 @@ algorithms\cite{nvidia:sample, amd:apps}.
 
 \subsubsection*{Architecture}
 
-\{***Some smart text and picture of how GPU looks and works***\}
+\{***Doplnit text o architekture GPU***\}
 
 
 
@@ -733,7 +776,7 @@ the unique index of a work-item is called gloabl ID. The identification
 of work-item is possible through combination of its local ID inside a specific
 \textit{work-group} and the work-group global ID.
 
-\subsubsection*{Platform Model}
+\subsection{Platform Model}
 The OpenCL provides a high-level abstraction model representing any heterogenous
 platform. The \textit{host} is a bridge between parallel computations on one or
 more devices and interaction with external environment. \textit{Device} could be
@@ -750,7 +793,7 @@ of compute units which are further divided into processing elements.
 \end{figure}
 
 
-\subsubsection*{Execution Model}
+\subsection{Execution Model}
 The OpenCL software executes on two levels
 \begin{itemize}
 \item \textbf{Host code} -- the OpenCL doesn't define any restrictions about the 
@@ -764,10 +807,10 @@ executed on the device's work-items.
 \end{itemize}
 
 The host program takes care of synchronization and plans the execution of each
-kernel on the devices. Each instance of kernel runs in separate work-item and the
-work-items within each work-group execute concurrently. 
+kernel on the devices. Each instance of kernel runs in separate work-item and 
+the work-items within each work-group execute concurrently. 
 
-\subsubsection*{Memory Model}
+\subsection{Memory Model}
 OpenCL defines two types of memory objects. The \textit{buffer object} is
 versatile type that could be used for representation of any data type 
 available in C or OpenCL language. The \textit{image object} is restricted 
@@ -777,45 +820,95 @@ image processing.
 OpenCL uses a hierarchicaly structured memory. The types differ in access time,
 availability and types of usage\cite{opencl}:
 \begin{itemize}
-\item \textbf{Private Memory} -- each work-item has it's own private memory which 
-could be thought of as analogy to CPU's registers. It is the fastest type of memory
-used in OpenCL.
+\item \textbf{Private Memory} -- each work-item has it's own private memory 
+which could be thought of as analogy to CPU's registers. It is the fastest type 
+of memory used in OpenCL.
 \item \textbf{Local Memory} -- designed for sharing data between work-items who 
-belong to the same work group. It is used to reduce the number of accesses to the
-global memory. Local memory is slower than private memory but faster than global
-memory. The programmer is denied both direct access and control over local memory.
-The analogy could be the cache in CPU.
+belong to the same work group. It is used to reduce the number of accesses to 
+the global memory. Local memory is slower than private memory but faster than 
+global memory. The programmer is denied both direct access and control over 
+local memory. The analogy could be the cache in CPU.
 \item \textbf{Global Memory} -- shared among all work-items in the same context.
-\item \textbf{Host Memory} -- memory visible only for the host, OpenCL only defines
-how the host interacts with OpenCL objects and constructs.
+\item \textbf{Host Memory} -- memory visible only for the host, OpenCL only 
+defines how the host interacts with OpenCL objects and constructs.
 \end{itemize}
 
 \hspace{-1.5em}
-There could be another type of memory in graphic cards that OpenCL doesn't define
+There could be another type of memory in graphic cards that OpenCL doesn't 
+define
 
 \begin{itemize}
-\item \textbf{PCI Memory} -- type of memory that could be used by the program and
-GPU, part of host memory. It is slower than global memory.
+\item \textbf{PCI Memory} -- type of memory that could be used by the program 
+and GPU, part of host memory. It is slower than global memory.
 \end{itemize}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Implementation}
-\cite{apu:crypto}
+\chapter{Design}\label{chapter:design}%\cite{apu:crypto}
+The aim of the implementation is to determine whether the parallel processing
+of SRTP could increase the limitations on modern VoIP softgates. The development
+of sophisticated softgate requires elaborate engineering and implementation
+of various communication protocols that would overshadow the effort in parallel
+processing. Therefore only narrow selection of well know communication protocols
+has been implemented. For VoIP telephony, registration and maintenance of users
+serves \textit{SIP} protocol, therefore for the media transmission description
+and session description \textit{SDP} protocol, and for secure media transport 
+\textit{SRTP} with \textit{ZRTP}. There is also implementation of \textit{LCP} 
+stack v1.0\footnote{ Light-weight Control Protocol -- communication protocol for
+Siemens prototype VoIP phone.}.
+
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=10cm]{fig/scenario1.pdf}
+\caption{Architecture of SIP Gateway with two VoIP telephones accessible, LCP
+phone directly connected and SIP phone through SIP Registrar.}
+\label{oclpm}
+\end{figure}
+
+Multiple SIP or LCP telephones are connected to the SIP Gateway which appears as
+user to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
+HiPath 8000}. The SIP Gateway in this scenario works as bridging point between 
+the SIP telephones and SIP Registrar, LCP phones and SIP Registrar or LCP phones
+directly.
+
+The modules of SIP Gateway are implemented in different programming languages
+and each serve specified purpose.
+\begin{itemize}
+\item \textbf{Gateway core} -- implemented in Java, provides communication 
+between each module and encapsulates basic functionality of a Gateway.
+\item \textbf{SIP Stack} -- Java API for SIP stack called JAIN SIP\cite{jainsip}, 
+implemented basic SIP features.
+\item \textbf{LCP Stack} -- implemented in Java fully covering LCP protocol v1.0.
+\item \textbf{RTP Stack} -- for non-direct connections where the telephones 
+couldn't agree on communication chanel for the session, RTP stack implemented in 
+C/C++ and OpenCL provides neccessary briging point.
+\end{itemize}
+
+
+\section{SIP Gateway}
+
+\section{SRTP processing}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\chapter{Implementation}
+
+
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Testing}
+%\chapter{Testing}
 
 
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Conclusion}
+\chapter{Conclusion}\label{chapter:conclusion}
 
 
 %=========================================================================
