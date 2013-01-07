@@ -39,7 +39,7 @@ Chapter \ref{chapter:gpgpu} provides basic information about graphic processing
 unit and the usage of GPU for general purpose computations. Part of the chapter 
 is principal explanation of OpenCL framework and its elementary usage. 
 Chapter \ref{chapter:design} defines the term SIP Gateway for the context of 
-this thesis, discusses the design of such gateway as simplified PBX and includes
+this thesis, discusses the design of such gateway and includes
 listing of selected further implemented protocol stacks, their mutual 
 interaction and possible improvement of processing the passing data. 
 Finally chapter \ref{chapter:conclusion} sumarizes the potential benefits of 
@@ -713,9 +713,9 @@ points simultaneously\cite{Flynn:1972}.} has already proven it's value on
 improving performance with parallelization of various 
 algorithms\cite{nvidia:sample, amd:apps}.
 
-\subsubsection*{Architecture}
-
-\{***Doplnit text o architekture GPU***\}
+%\subsubsection*{Architecture}
+%
+%\{***Doplnit text o architekture GPU***\}
 
 
 
@@ -860,13 +860,13 @@ Siemens prototype VoIP phone.}.
 
 
 
-%\begin{figure}[H]
-%\centering
-%\includegraphics[width=10cm]{fig/scenario1.pdf}
-%\caption{Architecture of SIP Gateway with two VoIP telephones accessible, LCP
-%phone directly connected and SIP phone through SIP Registrar.}
-%\label{oclpm}
-%\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=10cm]{fig/scenario1.pdf}
+\caption{SIP Gateway with two VoIP telephones accessible, LCP phone directly 
+connected and SIP phone through SIP Registrar.}
+\label{oclpm}
+\end{figure}
 
 Multiple SIP or LCP telephones are connected to the SIP Gateway which appears as
 user to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
@@ -889,8 +889,64 @@ C/C++ and OpenCL provides neccessary briging point.
 
 
 \section{SIP Gateway}
+Mesurement of utilization of computational resources during execution of 
+ciphering algorithm does provide correct and exact results, however in real 
+deployment the efectivity could be negatively affected by the other processes 
+running on the softgate. SIP Gateway is a collection of programs and utilites
+whose together implement a server for lighweight LCP phones and suplement a
+SIP functionality of each phone to be able to connect to an actual SIP 
+registrar. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=14cm]{fig/sipgw.pdf}
+\caption{Architecture of SIP Gateway with design pattern singleton. Consists
+of \textit{Daemon} class, multiple LCP phones connected via LCP stack and 
+represented as instances of \textit{Client} class and multiple user interfaces
+for control over gateway.}
+\label{oclpm}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=14cm]{fig/lcpstack.pdf}
+\caption{Architecture of LCP stack, design was inspired by the JAIN SIP 
+api\cite{jainsip}.}
+\label{oclpm}
+\end{figure}
 
 \section{SRTP processing}
+The exact size of payload in SRTP packet can differ widely according to the 
+used codec, its bit rate, and sampling frequency. The selection of used voice
+codecs, their sampling periods and payload size are mentioned in table 
+\ref{bandwidth}.
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|l|ccc|}\hline%
+  Codec and Bit Rate & Payload Size & Sampling Period & Packets Per Second\\\hline
+  G.711 -- 64 Kbps   & 160 bytes    & 20 ms           & 50 \\
+  G.729 -- 8 Kbps    & 20 bytes     & 20 ms           & 50 \\
+  G.726 -- 32 Kbps   & 80 bytes     & 20 ms           & 50 \\
+  G.726 -- 24 Kbps   & 60 bytes     & 20 ms           & 50 \\
+  G.728 -- 16 Kbps   & 60 bytes     & 30 ms           & 33 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{Selected codecs and payload information.}
+\label{bandwidth}
+\end{table}
+
+Fixed block size of AES is 16 bytes, which means that one or more states could
+be mapped to the packet using any of the mentioned common codecs. Parallelization
+of the encryption process could be mapped on each steps of the AES algorithm
+separately.
+
+Value during every method of the AES of each cell of the state is computed 
+separately, therefore a work-item can be mapped on computing for each cell. 
+Theoretical speed-up of AES algorithm shall be 16x.
+
+ 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\chapter{Implementation}
