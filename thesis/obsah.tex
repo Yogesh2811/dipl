@@ -788,7 +788,8 @@ of compute units which are further divided into processing elements.
 \begin{figure}[H]
 \centering
 \includegraphics[width=10cm]{fig/opencl_platform_model.jpg}
-\caption{OpenCL platform model with one host and multiple devices\cite{opencl}.}
+\caption{OpenCL platform model with one host and multiple devices. The figure
+was taken from the book OpenCL Programming Guide\cite{opencl}.}
 \label{oclpm}
 \end{figure}
 
@@ -855,7 +856,7 @@ has been implemented. For VoIP telephony, registration and maintenance of users
 serves \textit{SIP} protocol, therefore for the media transmission description
 and session description \textit{SDP} protocol, and for secure media transport 
 \textit{SRTP} with \textit{ZRTP}. There is also implementation of \textit{LCP} 
-stack v1.0\footnote{ Light-weight Control Protocol -- communication protocol for
+stack\footnote{ Light-weight Control Protocol -- communication protocol for
 Siemens prototype VoIP phone.}.
 
 
@@ -899,23 +900,50 @@ registrar.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=14cm]{fig/sipgw.pdf}
-\caption{Architecture of SIP Gateway with design pattern singleton. Consists
-of \textit{Daemon} class, multiple LCP phones connected via LCP stack and 
-represented as instances of \textit{Client} class and multiple user interfaces
-for control over gateway.}
-\label{oclpm}
+\includegraphics[width=14cm]{fig/lcpstack.pdf}
+\caption{Architecture of LCP stack, design was inspired by the JAIN-SIP 
+api\cite{jainsip}.}
+\label{lcpstack}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=14cm]{fig/lcpstack.pdf}
-\caption{Architecture of LCP stack, design was inspired by the JAIN SIP 
-api\cite{jainsip}.}
-\label{oclpm}
+\includegraphics[width=14cm]{fig/sipgw.pdf}
+\caption{Architecture of SIP Gateway with singleton design pattern. Consists
+of \textit{Daemon} class, multiple LCP phones connected via LCP stack and 
+represented as instances of \textit{Client} class and multiple user interfaces
+for control over the gateway.}
+\label{gw}
 \end{figure}
 
+The core application should offer simple management via command line for 
+both development and tracing of the flowing communication. 
+
+The core class of the gateway is Daemon, which controls the flow of data inside 
+the application and provides interfaces to communicate with external 
+applications.
+SIP Stack is implementation of the interface to communicate with SIP Registrar. 
+The single SIP Stack is shared for all users, implicitly runs on well known port
+for SIP communication 5060, which could be explicitly changed if neccessary, and
+has been implemented with the use of NIST reference implementation of JAIN-SIP 
+api\cite{jainsip}.
+The LCP stack visualized on the figure \ref{lcpstack} was designed to reflect
+the elaborate design used in JAIN SIP\cite{jainsip}. While SIP is much richer 
+protocol than LCP, the design of the stack was extremely shortened but the basic
+structure of elementary components and their interaction remained the same. LCP 
+stack runs implicitly on the recommended port 4066, but as well as SIP stakc 
+port, the port could be variable if needed.
+Each SIP/LCP client is instance of Client class, and universal interface for 
+remote communication and administration has been implemented as well.
+
+
 \section{SRTP processing}
+Advantage of usage AES in CM is that it allows out-of-order processing. Because
+majority of RTP implementations are build on UDP transport layer, which is 
+simple model with minimal protocol mechanisms, neither order nor delivery of the
+packets are guaranteed in exchange for smaller average delay and smaller 
+traffic. 
+
 The exact size of payload in SRTP packet can differ widely according to the 
 used codec, its bit rate, and sampling frequency. The selection of used voice
 codecs, their sampling periods and payload size are mentioned in table 
@@ -939,12 +967,17 @@ codecs, their sampling periods and payload size are mentioned in table
 
 Fixed block size of AES is 16 bytes, which means that one or more states could
 be mapped to the packet using any of the mentioned common codecs. Parallelization
-of the encryption process could be mapped on each steps of the AES algorithm
-separately.
-
-Value during every method of the AES of each cell of the state is computed 
+of the encryption process could be performed either on a single state, where
+value during every method of the AES of each cell of the state is computed 
 separately, therefore a work-item can be mapped on computing for each cell. 
-Theoretical speed-up of AES algorithm shall be 16x.
+Theoretical speed-up of this method of AES algorithm should be 16x utilizing 16
+work-items.
+
+Another possible approach for codecs with larger payload size, such as G.711, 
+could be to map multiple states for the parallel execution of entire packet, 
+which for the particular codec would require significantly more computational 
+units. 
+
 
  
 
@@ -965,6 +998,36 @@ Theoretical speed-up of AES algorithm shall be 16x.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Conclusion}\label{chapter:conclusion}
+There are lot of possibilities for optimization of SRTP processing. Selected
+approach focuses on methods of parallelization of encryption and decryption
+processes of default AES cipher, which offers large potential thanks to recent
+development in the field of parallel computational units.
+
+Proposed architectures and designs are currently far from being complete. The 
+most effort was invested in correct analysis and understanding of basic 
+principles of further implemented algorithms and elementary knowledge of 
+parallel programming paradigm focused on usage of OpenCL framework for
+general-purpose computations on graphical processing unit. Modern GPU 
+concentrate large amount of computational power, which could be to a certain
+extent utilized, if the algorithm is correctly mapped for parallel execution.
+That brings unusual complications in design whose must be carefully considered.
+
+Another important milestone is definition of integration of RTP stack with SRTP 
+processing into implemented SIP Gateway and their mutual interaction. The SRTP 
+processing is only a fraction of overall load on the gateway and if measured 
+separately while producing exact experimental results may not be equal to the 
+actual results on deployed machine experiencing real traffic. 
+
+For the further development number of issues must be taken for notice. For 
+instance the delay generated by the processing of separate SRTP packets should 
+be reliably masked and interpolated across the SRTP stream to reduce possible 
+jitter. On the other hand stands the actual delay of incomming packet, since
+after certain absolute value the conversation quality becomes unbearable.
+
+Nevertheless, partial value of this thesis lies in the understanding of current
+technologies for future potential direction of development and exploration of
+new options in the field communication infrastructure.
+
 
 
 %=========================================================================
