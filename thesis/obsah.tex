@@ -219,7 +219,7 @@ attack\cite{rfc3711, cisco:srtp}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{AES}
-This chapter treats neccessary theoretical background of Advanced Encryption 
+This section treats neccessary theoretical background of Advanced Encryption 
 Standard, which is the default cipher, and as the text has been written the only
 cipher, of Secure Real-time Transport Protocol used in VoIP communication.
 
@@ -736,7 +736,7 @@ Project Denver\cite{nvidia:apu}.
 
 \section{OpenCL}
 Development for parallel computation brought need for infrastructure. OpenCL
-is an industry standard framework fr programming heterogenous systems 
+is an industry standard framework for programming heterogenous systems 
 composed of a combination of CPUs, GPUs, DSP and other processing 
 units\cite{opencl}. With OpenCL it is possible to write a software that will
 run on wide variety of platforms from cell phones or computers to massive
@@ -853,7 +853,7 @@ of sophisticated softgate requires elaborate engineering and implementation
 of various communication protocols that would overshadow the effort in parallel
 processing. Therefore only narrow selection of well know communication protocols
 has been implemented. For VoIP telephony, registration and maintenance of users
-serves \textit{SIP} protocol, therefore for the media transmission description
+serves \textit{SIP} protocol, for the media transmission description
 and session description \textit{SDP} protocol, and for secure media transport 
 \textit{SRTP} with \textit{ZRTP}. There is also implementation of \textit{LCP} 
 stack\footnote{ Light-weight Control Protocol -- communication protocol for
@@ -869,8 +869,8 @@ connected and SIP phone through SIP Registrar.}
 \label{oclpm}
 \end{figure}
 
-Multiple SIP or LCP telephones are connected to the SIP Gateway which appears as
-user to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
+Multiple SIP or LCP telephones are connected to the SIP Gateway whose appear as
+users to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
 HiPath 8000}. The SIP Gateway in this scenario works as bridging point between 
 the SIP telephones and SIP Registrar, LCP phones and SIP Registrar or LCP phones
 directly.
@@ -895,7 +895,7 @@ ciphering algorithm does provide correct and exact results, however in real
 deployment the efectivity could be negatively affected by the other processes 
 running on the softgate. SIP Gateway is a collection of programs and utilites
 whose together implement a server for lighweight LCP phones and suplement a
-SIP functionality of each phone to be able to connect to an actual SIP 
+SIP functionality for each phone to be able to connect to an actual SIP 
 registrar. 
 
 \begin{figure}[H]
@@ -917,23 +917,22 @@ for control over the gateway.}
 \end{figure}
 
 The core application should offer simple management via command line for 
-both development and tracing of the flowing communication. 
+both development and tracing of the flowing communication and basic functionality
+for communication and session management. 
 
-The core class of the gateway is Daemon, which controls the flow of data inside 
+The core class of the gateway is \texttt{Daemon}, which controls the flow of data inside 
 the application and provides interfaces to communicate with external 
 applications.
-SIP Stack is implementation of the interface to communicate with SIP Registrar. 
+\texttt{SIP Stack} provides the interface to communicate with SIP Registrar. 
 The single SIP Stack is shared for all users, implicitly runs on well known port
-for SIP communication 5060, which could be explicitly changed if neccessary, and
-has been implemented with the use of NIST reference implementation of JAIN-SIP 
-api\cite{jainsip}.
-The LCP stack visualized on the figure \ref{lcpstack} was designed to reflect
+for SIP communication 5060, which could be explicitly changed if neccessary.
+\texttt{LCP stack} visualized on the figure \ref{lcpstack} was designed to reflect
 the elaborate design used in JAIN SIP\cite{jainsip}. While SIP is much richer 
 protocol than LCP, the design of the stack was extremely shortened but the basic
 structure of elementary components and their interaction remained the same. LCP 
-stack runs implicitly on the recommended port 4066, but as well as SIP stakc 
+stack runs implicitly on the recommended port 4066, but as well as SIP stack 
 port, the port could be variable if needed.
-Each SIP/LCP client is instance of Client class, and universal interface for 
+Each SIP/LCP client is instance of \texttt{Client} class, and universal interface for 
 remote communication and administration has been implemented as well.
 
 
