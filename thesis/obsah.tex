@@ -96,6 +96,8 @@ The packet length is variable and depends on number of CSRC used and length
 of payload. The following scheme describes the packet with proportional
 sizes of each field.
 
+\begin{figure}[H]
+\centering
 \begin{verbatim}
     0                   1                   2                   3
   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -122,6 +124,8 @@ sizes of each field.
 |                                                                   |
 +- Encrypted Portion*                      Authenticated Portion ---+
 \end{verbatim}
+\caption{SRTP packet structure.}
+\end{figure}
 
 \section{Cryptographic Context}
 In order to implement SRTP stack in the application, it is necessary to
@@ -569,7 +573,7 @@ H_i &=& E_K(CTR_i, key) \\
 \label{ctr3}
 C_i &=& P_i \oplus H_i \\
 \label{ctr4}
-P_i &=& C_i \oplus H_i \\
+P_i &=& C_i \oplus H_i
 \end{eqnarray} 
 
 The last block of the plaintext doesn't have to be padded\footnote{ Padding 
@@ -729,7 +733,7 @@ possible\cite{apu:efficiency}.
 Both solutions utilize a portion of computer's system RAM memory.
 
 APU is Accelerated Processing Unit that is designed to accelerate certain
-type of computations outside of CPU in single chip\cite{wiki:apu}. It could 
+type of computations outside of CPU in single chip. It could 
 include GPU, FPGA or similar specialized processing unit. Among the best known 
 there are Intel HD Graphics\cite{intel:apu}, AMD Fusion\cite{amd:apu} and NVIDIA 
 Project Denver\cite{nvidia:apu}.
@@ -788,8 +792,7 @@ of compute units which are further divided into processing elements.
 \begin{figure}[H]
 \centering
 \includegraphics[width=10cm]{fig/opencl_platform_model.jpg}
-\caption{OpenCL platform model with one host and multiple devices. The figure
-was taken from the book OpenCL Programming Guide\cite{opencl}.}
+\caption{OpenCL platform model with one host and multiple devices\cite{opencl}.}
 \label{oclpm}
 \end{figure}
 
