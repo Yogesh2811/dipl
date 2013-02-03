@@ -135,7 +135,7 @@ static unsigned char sbox[] = {
     0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
 };
 
-static unsigned char inv_sbox[] = {
+static unsigned char sbox_inv[] = {
     0x52,0x09,0x6a,0xd5,0x30,0x36,0xa5,0x38,0xbf,0x40,0xa3,0x9e,0x81,0xf3,0xd7,0xfb,
     0x7c,0xe3,0x39,0x82,0x9b,0x2f,0xff,0x87,0x34,0x8e,0x43,0x44,0xc4,0xde,0xe9,0xcb,
     0x54,0x7b,0x94,0x32,0xa6,0xc2,0x23,0x3d,0xee,0x4c,0x95,0x0b,0x42,0xfa,0xc3,0x4e,
@@ -201,7 +201,7 @@ void get_first_rk(BYTE* key, BYTE* round_key){
 }
 
 void get_next_rk(BYTE* previous_key, BYTE* round_key, BYTE rcon){
-    rotate_column(previous_key, round_key, 3, 0, 1);
+    rotate_column(previous_key, round_key, 0, 3, 1);
     for(int r = 0; r<ROWS; r++){
        round_key[r*COLUMNS] = sbox[round_key[r*COLUMNS]] ^ previous_key[r*COLUMNS]; 
     }
@@ -267,6 +267,31 @@ void xor_key(BYTE* src, BYTE* dst, BYTE* key){
 }
 
 
+void sub_bytes_inv(BYTE* src, BYTE* dst){
+    for(int i = 0; i < BLOCK_SIZE; i++){
+        dst[i] = sbox_inv[src[i]];
+    }
+}
+
+void shift_rows_inv(BYTE* src, BYTE* dst){   
+    for(int row = 0; row < ROWS; row++){
+        rotate_row(src+(row*COLUMNS), dst+(row*COLUMNS), ROWS-row);
+    }
+}
+
+void mix_columns_inv(BYTE* src, BYTE* dst){
+    for(int col = 0; col < COLUMNS; col++){ 
+        unsigned char a0 = src[col]; 
+        unsigned char a1 = src[col+4];
+        unsigned char a2 = src[col+8];
+        unsigned char a3 = src[col+12];
+
+        dst[col]    = g14[a0] ^ g9[a3] ^ g13[a2] ^ g11[a1];
+        dst[col+4]  = g14[a1] ^ g9[a0] ^ g13[a3] ^ g11[a2];
+        dst[col+8]  = g14[a2] ^ g9[a1] ^ g13[a0] ^ g11[a3];
+        dst[col+12] = g14[a3] ^ g9[a2] ^ g13[a1] ^ g11[a0];
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////
 // AES algorithm
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -296,6 +321,25 @@ int encode_block(BYTE* src, BYTE* dst, BYTE* key){
     return result;
 }
 
+int decode_block(BYTE* src, BYTE* dst, BYTE* key){
+    unsigned char round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
+    unsigned char temp[BLOCK_SIZE];
+    int result = expand_key(key,round_key);
+
+    xor_key(src,temp,round_key[ROUNDS]);
+    shift_rows_inv(temp,dst);
+    sub_bytes_inv(dst,temp);
+
+    for(int i = ROUNDS-1; i > 0; i--){ 
+        xor_key(temp, dst, round_key[i]);
+        mix_columns_inv(dst, temp);
+        shift_rows_inv(temp, dst);
+        sub_bytes_inv(dst, temp);
+    } 
+    xor_key(temp, dst, round_key[0]);
+
+    return result;
+}
 /*
  * Encodes payload of SRTP packet AES128-CTR
  * 
@@ -320,6 +364,7 @@ int srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
 }
 
 int srtp_decode(BYTE* src, BYTE* dst, BYTE* key, int length){
+
 }
 
 void test(){
@@ -329,25 +374,15 @@ void test(){
         0x08, 0x09, 0x10, 0x11,
         0x12, 0x13, 0x14, 0x15
     };
-    BYTE dst[16] = {
-        0x00, 0x01, 0x02, 0x03,
-        0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x10, 0x11,
-        0x12, 0x13, 0x14, 0x15
-    };
+    BYTE dst[16];
     BYTE key[] = {
         0x00, 0x01, 0x02, 0x03,
         0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x10, 0x11,
         0x12, 0x13, 0x14, 0x15
     };
-    BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
-    
-    print_state(key);
 
-    expand_key(key, round_key);
-    for(int i = 0; i<11; i++){
-        printf("\n");
-        print_state(round_key[i]);
-    }
+    encode_block(src,dst,key);
+    decode_block(dst,src,key);
+    print_state(src);
 }

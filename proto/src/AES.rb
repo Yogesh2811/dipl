@@ -1,3 +1,9 @@
+class String
+    def print_nice(base = nil)
+        State.new(self).print_nice(base)
+    end
+end
+
 class Integer 
     def to_s_two(base)
         s = self.to_s(base)
@@ -445,7 +451,15 @@ class AES
     end
 end
 
-#s = "328831e0435a3137f6309807a88da234"
+s = "00010203040506070809101112131415"
+
+st = State.new(s)
+
+AES.sub_bytes_inv(st).print_nice(16)
+AES.shift_rows_inv(st).print_nice(16)
+AES.mix_columns_inv(st).print_nice(16)
+
+
 #k = "2b28ab097eaef7cf15d2154f16a6883c"
 #
 #ciph = AES.cipher(s,k)

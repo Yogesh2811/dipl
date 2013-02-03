@@ -11,7 +11,7 @@ PROJ  = jpeg_conv
 SRC   = src/
 BIN   = bin/
 FLAGS = -std=c++11 -Wall -pedantic -w
-CC    = g++
+CC    = g++-4.7
 OBJS  = $(shell ls src/*cpp | sed s/src/bin/g | sed s/cpp/o/g)
 DOC   = gmu
 
