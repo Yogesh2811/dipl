@@ -9,33 +9,24 @@ using namespace std;
 
 
 // variables, settings & other stuff
-cl_platform_id platform;
-int dev_num = 1;
-cl_device_id devices[1];
-cl_uint dev_count;
-cl_uint dev_limit = 1;
-cl_context context;
-cl_command_queue queue;
-cl_program program;
-cl_kernel dct_kernel;
-cl_kernel inv_dct_kernel;
-cl_int error;
+static cl_platform_id platform;
+static int dev_num = 1;
+static cl_device_id devices[1];
+static cl_uint dev_count;
+static cl_uint dev_limit = 1;
+static cl_context context;
+static cl_command_queue queue;
+static cl_program program;
+static cl_kernel inv_dct_kernel;
+static cl_int error;
 
-//buffers for dct
-cl_mem block_src;
-cl_mem block_dst;
-cl_mem cl_luminace_table;
-cl_mem cl_chrominace_table;
+// buffers for dct
+static cl_mem block_src;
+static cl_mem block_dst;
 
-// kernel
-cl_kernel kernel_ycbcr;
-cl_kernel kernel_rgb;
-
-// buffers for color transormation
-cl_mem src_rgb;
-cl_mem dst_ycbcr;
-cl_mem src_ycbcr;
-cl_mem dst_rgb;
+// kernels
+cl_kernel encode_kernel;
+cl_kernel decode_kernel;
 
 //max number of local work items
 size_t max_work_item_size[3];
@@ -92,7 +83,6 @@ void set_max_dct_device_worksize(){
     dct_max_local_work_item_size[0] = set_dct_size(max_work_item_size[0]);
     dct_max_local_work_item_size[1] = set_dct_size(max_work_item_size[1]);
     dct_max_local_work_item_size[2] = set_dct_size(max_work_item_size[2]);
-//    cout << dct_max_local_work_item_size[0] << " " << dct_max_local_work_item_size [1] << " " <<dct_max_local_work_item_size[2] << "\n";
 }
 
 
@@ -120,43 +110,16 @@ int initOpenCL(){
     checkClError(error, "clCreateCommandQueue");
 
     // Load kernels
-    error = loadKernelFromFile("../src/jpeg.cl", &dct_kernel, "dct8x8");
-    checkClError(error, "loadKernelFromFile1");
-    error = loadKernelFromFile("../src/jpeg.cl", &inv_dct_kernel, "inv_dct8x8");
-    checkClError(error, "loadKernelFromFile2");
+    error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "srtp_decode");
+    checkClError(error, "loadKernelFromFile srtp_decode");
+    error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
+    checkClError(error, "loadKernelFromFile srtp_encode");
 
-    // Alloc buffers with const size & copy data to quantization table buffers
+    // Alloc buffers with const size & copy data
     block_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float)*64, NULL, &error);
-    checkClError(error, "clCreateBuffer1");
+    checkClError(error, "clCreateBuffer src");
     block_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float)*64, NULL, &error);
-    checkClError(error, "clCreateBuffer2");
-
-    cl_luminace_table = clCreateBuffer(context, CL_MEM_READ_ONLY,
-                                sizeof(cl_int)*64, NULL, &error);
-    checkClError(error, "clCreateBuffer1");
-    cl_chrominace_table = clCreateBuffer(context, CL_MEM_READ_ONLY,
-                                sizeof(cl_int)*64, NULL, &error);
-    checkClError(error, "clCreateBuffer2");
-    /*error = clEnqueueWriteBuffer(queue,
-            cl_luminace_table, //memory on gpu
-            CL_TRUE,   //blocking write
-            0,         //offset
-            sizeof(cl_int)*64, //size in bytes of copied data
-            luminace_table,       //memory data
-            0,         //wait list
-            NULL,      //wait list
-            NULL);     //wait list
-    checkClError(error,"clEnqueueWriteBuffer");
-    error = clEnqueueWriteBuffer(queue,
-            cl_chrominace_table, //memory on gpu
-            CL_TRUE,   //blocking write
-            0,         //offset
-            sizeof(cl_int)*64, //size in bytes of copied data
-            chrominace_table,       //memory data
-            0,         //wait list
-            NULL,      //wait list
-            NULL);     //wait list*/
-    checkClError(error,"clEnqueueWriteBuffer");
+    checkClError(error, "clCreateBuffer dst");
 }
 
 cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_name){
@@ -171,13 +134,6 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
     checkClError(error, "clCreatePogramWithSource");
 
     error = clBuildProgram(program, dev_count, devices, NULL, NULL, NULL);
-    /*
-    size_t len;
-    char log[32048];
-    memset(log, 0, sizeof(log));
-    clGetProgramBuildInfo(program, devices[0], CL_PROGRAM_BUILD_LOG, sizeof(log), log, &len);
-    cout<<"--- Build log ---\n "<<log<<endl;
-    */
     checkClError(error, /*"clBuildProgram"*/kernel_name);
 
     (*kernel) = clCreateKernel(program, kernel_name, &error);
@@ -187,8 +143,8 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 }
 
 
-void dct8x8_gpu(float* src, float* dst, cl_mem* table){
-    // Copy data from memory to gpu
+void srtp_decode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int lenght){
+    /*// Copy data from memory to gpu
     error = clEnqueueWriteBuffer(queue,
             block_src, //memory on gpu
             CL_TRUE,   //blocking write
@@ -213,181 +169,15 @@ void dct8x8_gpu(float* src, float* dst, cl_mem* table){
 
     clEnqueueReadBuffer(queue, block_dst, CL_TRUE, 0, sizeof(cl_float)*64, dst, 0, NULL, NULL);
 
-    clFinish(queue);
-}
-
-void inv_dct8x8_gpu(float* src, float* dst){
-    // Copy data from memory to gpu
-    error = clEnqueueWriteBuffer(queue,
-            block_src, //memory on gpu
-            CL_TRUE,   //blocking write
-            0,         //offset
-            sizeof(cl_float)*64, //size in bytes of copied data
-            src,       //memory data
-            0,         //wait list
-            NULL,      //wait list
-            NULL);     //wait list
-    checkClError(error,"clEnqueueWriteBuffer");
-
-    clSetKernelArg(inv_dct_kernel, 0, sizeof(cl_mem), (void *)&block_src);
-    clSetKernelArg(inv_dct_kernel, 1, sizeof(cl_mem), (void *)&block_dst);
-
-    size_t GWS[2], LWS[2];
-    GWS[0] = 8;
-    GWS[1] = 8;
-    LWS[0] = dct_max_local_work_item_size[0];
-    LWS[1] = dct_max_local_work_item_size[1];
-
-    clEnqueueNDRangeKernel(queue, inv_dct_kernel, 2, NULL, GWS, LWS, 0, NULL, NULL);
-
-    clEnqueueReadBuffer(queue, block_dst, CL_TRUE, 0, sizeof(cl_float)*64, dst, 0, NULL, NULL);
-
-    clFinish(queue);
+    clFinish(queue);*/
 }
 
 
-// ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-
-/* Alocates buffers and loads the image into the gpu memory */
-void load_picture_data_to_gpu(unsigned char* data, unsigned int size){
-    src_rgb = clCreateBuffer(context, CL_MEM_READ_ONLY,
-            sizeof(unsigned char) * size, NULL, &error);
-    checkClError(error, "clCreateBuffer");
-    dst_ycbcr = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-            sizeof(unsigned char) * size, NULL, &error);
-    checkClError(error, "clCreateBuffer");
-
-    error = clEnqueueWriteBuffer(queue,
-            src_rgb, //memory on gpu
-            CL_TRUE,   //blocking write
-            0,         //offset
-            sizeof(unsigned char) * size, //size in bytes of copied data
-            data,      //memory data
-            0,         //wait list
-            NULL,      //wait list
-            NULL);     //wait list
-    checkClError(error,"clEnqueueWriteBuffer");
+void srtp_encode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int length){
 }
-
-void load_ycbcr_data_to_gpu(unsigned char* data, unsigned int size){
-    src_ycbcr = clCreateBuffer(context, CL_MEM_READ_ONLY,
-            sizeof(unsigned char) * size, NULL, &error);
-    checkClError(error, "clCreateBuffer");
-    dst_rgb = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-            sizeof(unsigned char) * size, NULL, &error);
-    checkClError(error, "clCreateBuffer");
-
-    error = clEnqueueWriteBuffer(queue,
-            src_ycbcr, //memory on gpu
-            CL_TRUE,   //blocking write
-            0,         //offset
-            sizeof(unsigned char) * size, //size in bytes of copied data
-            data,      //memory data
-            0,         //wait list
-            NULL,      //wait list
-            NULL);     //wait list
-    checkClError(error,"clEnqueueWriteBuffer");
-}
-
-/* Greatest common divider */
-int gcd (int num1,int num2){
-    int pom;
-
-    if (num1 < num2) {
-        pom = num1;
-        num1 = num2;
-        num2 = pom;
-    }
-
-    if ((num1%num2) == 0)
-        return (num2);
-    else
-        return gcd(num2,(num1%num2));
-}
-
-
-void to_ycbcr_gpu(unsigned char* data, unsigned int width, unsigned int height, unsigned char* dst){
-    load_picture_data_to_gpu(data, width * height * 3);
-
-    clSetKernelArg(kernel_ycbcr, 0, sizeof(cl_mem), (void *)&src_rgb);
-    clSetKernelArg(kernel_ycbcr, 1, sizeof(cl_uint), &(width));
-    clSetKernelArg(kernel_ycbcr, 2, sizeof(cl_uint), &(height));
-    clSetKernelArg(kernel_ycbcr, 3, sizeof(cl_mem), (void *)&dst_ycbcr);
-
-    size_t max_LWS[2];
-    error = clGetKernelWorkGroupInfo (kernel_ycbcr, devices[0],
-                    CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), NULL, max_LWS);
-    checkClError(error,"clGetKernelWorkGroupInfo");
-
-    size_t GWS[2], LWS[2];
-    LWS[0] = min((unsigned int)max_LWS[0],min((unsigned int)max_work_item_size[0], height));
-    LWS[1] = min((unsigned int)max_LWS[0],min((unsigned int)max_work_item_size[1], width));
-    GWS[0] = ceil(((float)height)/((float)LWS[0]))*LWS[0];
-    GWS[1] = ceil(((float)width)/((float)LWS[1]))*LWS[1];
-
-    clEnqueueNDRangeKernel(queue, kernel_ycbcr, 2, NULL, GWS, LWS, 0, NULL, NULL);
-
-    clEnqueueReadBuffer(queue, dst_ycbcr, CL_TRUE, 0, sizeof(unsigned char) * width * height * 3, dst, 0, NULL, NULL);
-
-    clFinish(queue);
-}
-
-void to_rgb_gpu(unsigned char* data, unsigned int width, unsigned int height, unsigned char* dst){
-    load_ycbcr_data_to_gpu(data, width * height * 3);
-
-    clSetKernelArg(kernel_rgb, 0, sizeof(cl_mem), (void *)&src_ycbcr);
-    clSetKernelArg(kernel_rgb, 1, sizeof(cl_uint), &(width));
-    clSetKernelArg(kernel_rgb, 2, sizeof(cl_uint), &(height));
-    clSetKernelArg(kernel_rgb, 3, sizeof(cl_mem), (void *)&dst_rgb);
-
-    size_t max_LWS[2];
-    error = clGetKernelWorkGroupInfo (kernel_ycbcr, devices[0],
-                    CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), NULL, max_LWS);
-    checkClError(error,"clGetKernelWorkGroupInfo");
-
-    size_t GWS[2], LWS[2];
-    LWS[0] = min((unsigned int)max_LWS[0],min((unsigned int)max_work_item_size[0], height));
-    LWS[1] = min((unsigned int)max_LWS[0],min((unsigned int)max_work_item_size[1], width));
-    GWS[0] = ceil(((float)height)/((float)LWS[0]))*LWS[0];
-    GWS[1] = ceil(((float)width)/((float)LWS[1]))*LWS[1];
-
-    clEnqueueNDRangeKernel(queue, kernel_rgb, 2, NULL, GWS, LWS, 0, NULL, NULL);
-
-    clEnqueueReadBuffer(queue, dst_rgb, CL_TRUE, 0, sizeof(unsigned char) * width * height * 3, dst, 0, NULL, NULL);
-
-    clFinish(queue);
-}
-
-/*
-void color_transform_gpu (const char* image) {
-    pixmap *data = loadTGAdata(image);
-    if (data == NULL) return;
-    int size = data->width * data->height;
-
-    unsigned char *dst = new unsigned char[size*3];
-    to_ycbcr_gpu(data->pixels, data->width, data->height, dst);
-
-    pixmap *Y, *Cb, *Cr;
-
-    Y  = createPixmap(data->width, data->height, 1); // 1 byte per pixel
-    Cb = createPixmap(data->width, data->height, 1);
-    Cr = createPixmap(data->width, data->height, 1);
-
-    memcpy ( Y->pixels,            dst, size);
-    memcpy (Cb->pixels,     dst + size, size);
-    memcpy (Cr->pixels, dst + size * 2, size);
-
-    //rgb_to_ycbcr(Y, Cb, Cr, data);
-    saveGrayscalePixmap( Y,  "Y_gpu.tga");
-    saveGrayscalePixmap(Cb, "Cb_gpu.tga");
-    saveGrayscalePixmap(Cr, "Cr_gpu.tga");
-
-}
-*/
 
 /**
- * Vrati retezec pro opencl error kod
+ * Returns string for OpenCL error
  */
 const char *CLErrorString(cl_int _err) {
     switch (_err) {
@@ -488,6 +278,11 @@ const char *CLErrorString(cl_int _err) {
     }
 }
 
+
+/*
+ * checks if OpenCL error occured
+ */
+
 inline void checkClError(cl_int err, char* debug){
     if(err != CL_SUCCESS){
         cout << "ERROR: " << CLErrorString(err) << " " << debug << endl;
@@ -499,6 +294,8 @@ inline void checkClError(cl_int err, char* debug){
     }
 #endif
 }
+
+
 
 void CL_CALLBACK contextCallback(const char *err_info,
                                  const void *private_intfo,
@@ -534,57 +331,30 @@ double get_time(void)
 #endif
 }
 
+
+/* 
+ * Releases OpenCL resources (Context, Memory etc.) 
+ */
 int cleanup()
 {
-	/* Releases OpenCL resources (Context, Memory etc.) */
-    cl_int status;
 
-    status = clReleaseKernel(dct_kernel);
-    checkClError(status, "clReleaseKernel dct_kernel.");
-    status = clReleaseKernel(inv_dct_kernel);
-    checkClError(status, "clReleaseKernel inv_dct_kernel.");
-    status = clReleaseKernel(kernel_ycbcr);
-    checkClError(status, "clReleaseKernel kernel_ycbcr.");
-    status = clReleaseKernel(kernel_rgb);
-    checkClError(status, "clReleaseKernel kernel_rgb.");
+    //status = clReleaseKernel(dct_kernel);
+    //checkClError(status, "clReleaseKernel dct_kernel.");
 
-    status = clReleaseProgram(program);
-    checkClError(status, "clReleaseProgram.");
+    error = clReleaseProgram(program);
+    checkClError(error, "clReleaseProgram.");
 
-    status = clReleaseMemObject(block_src);
-    checkClError(status, "clReleaseMemObject block_src");
+    error = clReleaseMemObject(block_src);
+    checkClError(error, "clReleaseMemObject block_src");
 
-    status = clReleaseMemObject(block_dst);
-    checkClError(status, "clReleaseMemObject block_dst");
+    error = clReleaseMemObject(block_dst);
+    checkClError(error, "clReleaseMemObject block_dst");
 
-    status = clReleaseMemObject(cl_luminace_table);
-    checkClError(status, "clReleaseMemObject cl_luminace_table");
+    error = clReleaseCommandQueue(queue);
+    checkClError(error, "clReleaseCommandQueue.");
 
-    status = clReleaseMemObject(cl_chrominace_table);
-    checkClError(status, "clReleaseMemObject cl_chrominace_table");
-
-    if (src_rgb != NULL) {
-        status = clReleaseMemObject(src_rgb);
-        checkClError(status, "clReleaseMemObject src_rgb");
-    }
-
-    if (dst_ycbcr != NULL) {
-        status = clReleaseMemObject(dst_ycbcr);
-        checkClError(status, "clReleaseMemObject dst_ycbcr");
-    }
-    if (src_ycbcr != NULL) {
-        status = clReleaseMemObject(src_ycbcr);
-        checkClError(status, "clReleaseMemObject src_ycbcr");
-    }
-    if (dst_rgb != NULL) {
-        status = clReleaseMemObject(dst_rgb);
-        checkClError(status, "clReleaseMemObject dst_rgb");
-    }
-    status = clReleaseCommandQueue(queue);
-    checkClError(status, "clReleaseCommandQueue.");
-
-    status = clReleaseContext(context);
-    checkClError(status, "clReleaseContext.");
+    error = clReleaseContext(context);
+    checkClError(error, "clReleaseContext.");
 
     return 0;
 }

@@ -22,24 +22,24 @@
 #include <fstream>
 #include <string>
 
-extern cl_mem cl_luminace_table;
-extern cl_mem cl_chrominace_table;
 
 int initOpenCL();
-double getTime();
 cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_name);
 void checkClError(cl_int err, char* debug);
 const char *CLErrorString(cl_int _err);
+
+
 void CL_CALLBACK contextCallback(const char *err_info,
                                  const void *private_intfo,
                                  size_t cb,
                                  void *user_data);
-void dct8x8_gpu(float* src, float* dst, cl_mem* table);
-void inv_dct8x8_gpu(float* src, float* dst);
-double get_time();
 
-void to_ycbcr_gpu(unsigned char* data, unsigned int width, unsigned int height, unsigned char* dst);
-void to_rgb_gpu(unsigned char* data, unsigned int width, unsigned int height, unsigned char* dst);
+
+void srtp_decode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int length);
+void srtp_encode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int length);
+
+
+double get_time();
 
 int cleanup();
 #endif
