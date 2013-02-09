@@ -11,6 +11,5 @@ typedef unsigned char BYTE;
 
 int srtp_encode(BYTE* src, BYTE* dst, BYTE* key, int length);
 int srtp_decode(BYTE* src, BYTE* dst, BYTE* key, int length);
-void test();
 
 #endif

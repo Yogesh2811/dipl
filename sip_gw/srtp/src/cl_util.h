@@ -7,11 +7,6 @@
 #include <CL/cl.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <sys/time.h>
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,8 +33,6 @@ void CL_CALLBACK contextCallback(const char *err_info,
 void srtp_decode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int length);
 void srtp_encode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int length);
 
-
-double get_time();
 
 int cleanup();
 #endif

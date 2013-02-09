@@ -42,12 +42,12 @@ cl_int getPlatformID()
     checkClError(error, "platformID count");
     if(num_platforms == 0) {
         cout << "ERROR: 0 platforms found\n";
-        exit(1);
+        return CL_OUT_OF_RESOURCES;
     }
     // if there's a platform or more, make space for ID's
     if((platform_ids = (cl_platform_id*)malloc(num_platforms*sizeof(cl_platform_id))) == NULL) {
         cout << "Failed to allocate memory for cl_platform ID's!\n";
-        exit(1);
+        return CL_OUT_OF_RESOURCES;
     }
 
     // get platform info for each platform and trap the NVIDIA platform if found
@@ -306,30 +306,6 @@ void CL_CALLBACK contextCallback(const char *err_info,
 }
 
 
-double get_time(void)
-{
-#if _WIN32
-    static int initialized = 0;
-    static LARGE_INTEGER frequency;
-    LARGE_INTEGER value;
-
-    if (!initialized) {
-        initialized = 1;
-        if (QueryPerformanceFrequency(&frequency) == 0)         {
-            exit(-1);
-        }
-    }
-
-    QueryPerformanceCounter(&value);
-    return (double)value.QuadPart / (double)frequency.QuadPart;
-#else
-    struct timeval tv;
-    if (gettimeofday(&tv, NULL) == -1) {
-        exit(-2);
-    }
-    return (double)tv.tv_sec + (double)tv.tv_usec/1000000.;
-#endif
-}
 
 
 /* 

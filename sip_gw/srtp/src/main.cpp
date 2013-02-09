@@ -1,5 +1,5 @@
 #include "cl_util.h"
-#include "aes.h"
+#include "rtp_interface.h"
 
 #include <vector>
 #include <iostream>
@@ -8,15 +8,18 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     //initOpenCL();
+    int err;
 
-    test();
+    RTP_interface  r(16000,16001,&err);
+    boost::thread rtp(boost::ref(r));
+    printf("\nerror - %d\n", err);
 
-    vector<int> vec;
-    vec.push_back(1);
-    
-    for(auto b : vec){
-	    cout << b; 
-    }
+
+    getchar();
+    r.stop();
+
+    getchar();
+
 
     return 0;
 }
