@@ -351,7 +351,7 @@ int decode_block(BYTE* src, BYTE* dst, BYTE* key){
  *
  * returns 0 for success or error code for failure
  */
-int srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
+void srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
     BYTE ciphered_counter[length*BLOCK_SIZE];
 
     for(int i = 0; i < length; i+=16){
@@ -363,6 +363,6 @@ int srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
     }
 }
 
-int srtp_decode(BYTE* src, BYTE* dst, BYTE* key, int length){
+void srtp_decode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
 
 }

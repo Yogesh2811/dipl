@@ -143,7 +143,7 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 }
 
 
-void srtp_decode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int lenght){
+void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int lenght){
     /*// Copy data from memory to gpu
     error = clEnqueueWriteBuffer(queue,
             block_src, //memory on gpu
@@ -173,7 +173,7 @@ void srtp_decode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key,
 }
 
 
-void srtp_encode_gpu(unsigned char* src, unsigned char* dst, unsigned char* key, int length){
+void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
 }
 
 /**

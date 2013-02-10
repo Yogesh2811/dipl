@@ -1,4 +1,5 @@
 #include "rtp_interface.h"
+#include "srtp_stream.h"
 
 int RTP_interface::count = 0;
 
@@ -36,6 +37,10 @@ RTP_interface::RTP_interface(int rtp, int rtcp, int* err){
 RTP_interface::~RTP_interface(){
     close(rtp_sock);
     close(rtcp_sock);
+
+    for(auto stream : streams){
+        delete stream.second;
+    }
 }
 
 void RTP_interface::init_msg_pool(int id){
@@ -69,19 +74,40 @@ void RTP_interface::release_buffer(int id){
 void RTP_interface::parse_packet(int id, int length){
     buffer_pool[id][length] = '\0';
 
-    int port = ntohs(src_addr_pool[id].sin6_port);
-    char* addr = "::1";
-    printf("from: %s:%d\nmsg: %s\n\n\n",addr,port,buffer_pool[id]);
+    // print out info about the remote socket
+    //char address[500];
+    //inet_ntop(AF_INET6,&(src_addr_pool[id]),address,sizeof(src_addr_pool[id]));
+    //int port = ntohs(src_addr_pool[id].sin6_port);
+    //printf("%d from: %s port: %d\nmsg: %s\n\n\n",id,address,port,buffer_pool[id]);
+
+    // 1) get SSRC and CSRC from packet
+    // 2) find stream or create new stream
+    // 3) send signal to the stream for parsing
+    
+}
+
+/**
+ * Send method is called by SRTP parsing module after the out_buffer_pool[id] is filled 
+ * with data to send back to user
+ *
+ * @param id -- id of buffer from pool
+ * @param size -- size of outgoing data in bytes data
+ */
+void RTP_interface::send(int id, int size){
+    // 1) send msg saved in out_buffer_pool[id]
+    //sendto(rtp_sock, out_buffer_pool[id], size, 0, 
+    //  (sockaddr*)&(src_addr_pool[id]), sizeof(src_addr_pool[id]));
+    //
+    // 2) release buffer id used for this packet
+    // release_buffer(id); 
 }
 
 void RTP_interface::operator()(){
     while(!exit){
-        printf("%d recv rtp\n", id);
         int id = get_buffer_id();
         int bytes = recvmsg(rtp_sock, &(msg_pool[id]), 0);
         if(bytes > 0){
             parse_packet(id, bytes);
         }
-        release_buffer(id);
     }
 }

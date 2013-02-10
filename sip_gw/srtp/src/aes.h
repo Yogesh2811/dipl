@@ -9,7 +9,7 @@
 
 typedef unsigned char BYTE;
 
-int srtp_encode(BYTE* src, BYTE* dst, BYTE* key, int length);
-int srtp_decode(BYTE* src, BYTE* dst, BYTE* key, int length);
+void srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length);
+void srtp_decode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length);
 
 #endif

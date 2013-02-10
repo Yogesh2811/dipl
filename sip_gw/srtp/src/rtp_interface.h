@@ -7,9 +7,12 @@
 #include <unistd.h>
 #include <boost/thread.hpp>
 #include <queue>
+#include <map>
 
 #define PACKET_SIZE 1024
 #define POOL_SIZE 10
+
+class SRTP_stream;
 
 class RTP_interface {
     private:
@@ -23,10 +26,12 @@ class RTP_interface {
         bool exit;
         
         unsigned char buffer_pool[POOL_SIZE][PACKET_SIZE];
+        unsigned char out_buffer_pool[POOL_SIZE][PACKET_SIZE];
         struct sockaddr_in6 src_addr_pool[POOL_SIZE];
         struct iovec iov_pool[POOL_SIZE][1];
         struct msghdr msg_pool[POOL_SIZE];
         std::queue<int> free_buffer_index;
+        std::map<int, SRTP_stream*> streams;
 
         void init_msg_pool(int id);
         int get_buffer_id();
@@ -39,7 +44,10 @@ class RTP_interface {
         ~RTP_interface();
 
         void stop();
-
+        void send(int id, int size);
+        void release_stream();
+        SRTP_stream* create_stream();
+        SRTP_stream* find_stream();
         void operator()();
 };
 
