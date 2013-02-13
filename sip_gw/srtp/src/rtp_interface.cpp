@@ -1,10 +1,16 @@
 #include "rtp_interface.h"
 #include "srtp_stream.h"
+#include "srtp_parser.h"
+
+#include <iostream>
+
+using namespace std;
 
 int RTP_interface::count = 0;
 
-RTP_interface::RTP_interface(int rtp, int rtcp, int* err){
+RTP_interface::RTP_interface(SRTP_parser* parser, int rtp, int rtcp, int* err){
     err = 0;
+    p = parser;
     id = count++;
     exit = false;
     
@@ -57,11 +63,13 @@ void RTP_interface::init_msg_pool(int id){
 
 
 void RTP_interface::stop() {
-    printf("\nstop\n");
+    printf("RTP_interface::stop()\n");
     exit = true;
 }
 
 int RTP_interface::get_buffer_id(){
+    while(free_buffer_index.empty());
+
     int id = free_buffer_index.front(); 
     free_buffer_index.pop();
     return id; 
@@ -74,6 +82,10 @@ void RTP_interface::release_buffer(int id){
 void RTP_interface::parse_packet(int id, int length){
     buffer_pool[id][length] = '\0';
 
+    cout << "parse_packet(" << id << ", " << length << ")\n";
+    
+    p->decode_msg(buffer_pool[id], out_buffer_pool[id], id, length);
+    //encode_srtp_callback(buffer_pool[id], out_buffer_pool[id], NULL, length);
     // print out info about the remote socket
     //char address[500];
     //inet_ntop(AF_INET6,&(src_addr_pool[id]),address,sizeof(src_addr_pool[id]));
@@ -95,12 +107,19 @@ void RTP_interface::parse_packet(int id, int length){
  */
 void RTP_interface::send(int id, int size){
     // 1) send msg saved in out_buffer_pool[id]
-    //sendto(rtp_sock, out_buffer_pool[id], size, 0, 
-    //  (sockaddr*)&(src_addr_pool[id]), sizeof(src_addr_pool[id]));
     //
     // 2) release buffer id used for this packet
-    // release_buffer(id); 
+    // release_buffer(id);
+    
+    sendto(rtp_sock, out_buffer_pool[id], size, 0, 
+      (sockaddr*)&(src_addr_pool[id]), sizeof(src_addr_pool[id]));
+    release_buffer(id);
 }
+
+//void set_parser(SRTP_parser *parser){
+//    p = parser;
+//}
+
 
 void RTP_interface::operator()(){
     while(!exit){

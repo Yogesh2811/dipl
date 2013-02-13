@@ -13,11 +13,16 @@
 #define POOL_SIZE 10
 
 class SRTP_stream;
+class SRTP_parser;
+
+typedef unsigned char BYTE;
+
 
 class RTP_interface {
     private:
         static int count;
         
+        SRTP_parser* p;
         int id;
         int rtp_sock;
         int rtcp_sock;
@@ -40,7 +45,7 @@ class RTP_interface {
 
 
     public:
-        RTP_interface(int rtp_port, int rtcp_port, int* err);
+        RTP_interface(SRTP_parser* p, int rtp_port, int rtcp_port, int* err);
         ~RTP_interface();
 
         void stop();
@@ -48,6 +53,7 @@ class RTP_interface {
         void release_stream();
         SRTP_stream* create_stream();
         SRTP_stream* find_stream();
+        //void set_parser(SRTP_parser* p);
         void operator()();
 };
 

@@ -1,11 +1,17 @@
 #include "srtp_parser.h"
 #include "aes.h"
 #include "cl_util.h"
+#include "rtp_interface.h"
 
+#include <iostream>
 
-SRTP_parser::SRTP_parser(execution_type t){
+using namespace std;
+
+SRTP_parser::SRTP_parser(RTP_interface *iface, execution_type t){
     exit = false;
-    
+
+    i = iface;
+
     if(t == SERIAL_EXECUTION){
         encode = &srtp_encode;
         decode = &srtp_decode;
@@ -28,11 +34,18 @@ void SRTP_parser::quit(){
     exit = true;
 }
 
-void encode_msg(BYTE* src, BYTE* dst, SRTP_stream* stream, int length){
-    printf("SRTP_parser::encode_msg()");
+void SRTP_parser::encode_msg(BYTE* in, BYTE* out, int id, int length){
+    printf("SRTP_parser::encode_msg()\n");
 }
 
-void decode_msg(BYTE* src, BYTE* dst, SRTP_stream* stream, int length){
-    printf("SRTP_parser::decode_msg()");
+void SRTP_parser::set_interface(RTP_interface *iface){
+    i = iface;
+}
+
+void SRTP_parser::decode_msg(BYTE* in, BYTE* out, int id, int length){
+    printf("SRTP_parser::decode_msg()\n");
+    memcpy(out, in, length);
+    out[length] = 'r';
+    i->send(id,length+1);
 }
 
