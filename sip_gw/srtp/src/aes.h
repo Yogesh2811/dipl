@@ -8,8 +8,11 @@
 #define COLUMNS 4
 
 typedef unsigned char BYTE;
+typedef const unsigned char CBYTE;
 
-void srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length);
-void srtp_decode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length);
+namespace AES {
+    void srtp_encode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length);
+    void srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length);
+};
 
 #endif

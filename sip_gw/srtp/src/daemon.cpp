@@ -1,22 +1,14 @@
 #include "daemon.h"
 #include "rtp_interface.h"
 #include "srtp_parser.h"
-
-#include <vector>
-#include <iostream>
-
-using namespace std;
-
-void Daemon::encode_callback(){
-    cout << "callback\n";
-    //p->encode_msg(src, dst, stream, length);
-}
+#include "srtp_stream.h"
+#include "utils.h"
 
 
-Daemon::Daemon(SRTP_parser *parser, RTP_interface *rtp){
+Daemon::Daemon(RTP_interface *rtp, SRTP_parser *parsers[PARSER_COUNT]){
     quit = false;
-    p = parser;
     r = rtp;
+    parser = parsers;
 }
 
 Daemon::~Daemon(){
@@ -27,6 +19,18 @@ void Daemon::operator()(){
 }
 
 void Daemon::stop(){
-    cout << "Daemon::stop()\n";
+    LOG_MSG("Daemon::stop()")
     quit = true;
+}
+
+
+void Daemon::parse_msg(const BYTE* in, BYTE* out, SRTP_stream* s, int id, int length){
+    //select the best parser
+    LOG_MSG("Daemon::parse_msg()")
+    parser[0]->parse_msg(in, out, s, id, length);
+}
+
+
+void Daemon::set_interface(RTP_interface* i){
+    r = i;
 }

@@ -8,25 +8,30 @@ int main(int argc, char* argv[]) {
     //initOpenCL();
     int err;
 
-    SRTP_parser* p;
+    SRTP_parser* p[PARSER_COUNT];
     RTP_interface* r;
-    //Daemon* d;
+    Daemon* d;
     
-    p = new SRTP_parser(r, SRTP_parser::SERIAL_EXECUTION);
-    boost::thread srtp_pars(boost::ref(*p));
+    p[0] = new SRTP_parser(r, SRTP_parser::SERIAL_EXECUTION);
+    p[1] = new SRTP_parser(r, SRTP_parser::PARALEL_EXECUTION);
+    boost::thread srtp_pars1(boost::ref(*p[0]));
+    boost::thread srtp_pars2(boost::ref(*p[1]));
 
-    r = new RTP_interface(p, 16000, 16001, &err);
+    d = new Daemon(r,p);
+    boost::thread daemon(boost::ref(*d));
+    
+    r = new RTP_interface(d, 16000, 16001, &err);
     boost::thread rtp(boost::ref(*r));
     //printf("\nerror - %d\n\n\n", err);
 
     //r->set_parser(p);
-    p->set_interface(r);
-    
+    p[0]->set_interface(r);
+    p[1]->set_interface(r);
+    d->set_interface(r);
+
     //r->send(0,0);
     //p->decode_msg(NULL, NULL, 0, 0);
 
-    //d = new Daemon(p,r);
-    //boost::thread daemon(boost::ref(*d));
 
     getchar();
     r->stop();

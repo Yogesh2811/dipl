@@ -9,28 +9,28 @@ using namespace std;
 
 
 // variables, settings & other stuff
-static cl_platform_id platform;
-static int dev_num = 1;
-static cl_device_id devices[1];
-static cl_uint dev_count;
-static cl_uint dev_limit = 1;
-static cl_context context;
-static cl_command_queue queue;
-static cl_program program;
-static cl_kernel inv_dct_kernel;
-static cl_int error;
+cl_platform_id platform;
+int dev_num = 1;
+cl_device_id devices[1];
+cl_uint dev_count;
+cl_uint dev_limit = 1;
+cl_context context;
+cl_command_queue queue;
+cl_program program;
+cl_kernel inv_dct_kernel;
+cl_int error;
 
 // buffers for dct
-static cl_mem block_src;
-static cl_mem block_dst;
+cl_mem block_src;
+cl_mem block_dst;
 
 // kernels
 cl_kernel encode_kernel;
 cl_kernel decode_kernel;
 
 //max number of local work items
-size_t max_work_item_size[3];
-size_t dct_max_local_work_item_size[3];
+size_t GWS[3] = {8, 8};
+size_t LWS[3];
 
 cl_int getPlatformID()
 {
@@ -77,12 +77,13 @@ size_t set_dct_size(size_t i){
     else return 1;
 }
 
-void set_max_dct_device_worksize(){
+void set_max_device_worksize(){
+    size_t max_work_item_size[3];
     error = clGetDeviceInfo(devices[0], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(max_work_item_size), max_work_item_size, NULL);
     checkClError(error, "clGetDeviceInfo");
-    dct_max_local_work_item_size[0] = set_dct_size(max_work_item_size[0]);
-    dct_max_local_work_item_size[1] = set_dct_size(max_work_item_size[1]);
-    dct_max_local_work_item_size[2] = set_dct_size(max_work_item_size[2]);
+    LWS[0] = set_dct_size(max_work_item_size[0]);
+    LWS[1] = set_dct_size(max_work_item_size[1]);
+    LWS[2] = set_dct_size(max_work_item_size[2]);
 }
 
 
@@ -99,11 +100,12 @@ int initOpenCL(){
         CL_CONTEXT_PLATFORM, (cl_context_properties)platform, 0
     };
     context = clCreateContext(contextProperties, dev_num, devices,
-                                         &contextCallback, NULL, &error);
+                                        &contextCallback, NULL, &error);
+    
     checkClError(error, "clCreateContext");
 
     //sets max number of workgroups
-    set_max_dct_device_worksize();
+    set_max_device_worksize();
 
     // Command-queue
     queue = clCreateCommandQueue(context, devices[0], 0, &error);
@@ -112,8 +114,8 @@ int initOpenCL(){
     // Load kernels
     error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "srtp_decode");
     checkClError(error, "loadKernelFromFile srtp_decode");
-    error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
-    checkClError(error, "loadKernelFromFile srtp_encode");
+    /*error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
+    checkClError(error, "loadKernelFromFile srtp_encode");*/
 
     // Alloc buffers with const size & copy data
     block_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float)*64, NULL, &error);
@@ -134,8 +136,8 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
     checkClError(error, "clCreatePogramWithSource");
 
     error = clBuildProgram(program, dev_count, devices, NULL, NULL, NULL);
-    checkClError(error, /*"clBuildProgram"*/kernel_name);
-
+    checkClError(error, kernel_name);
+    
     (*kernel) = clCreateKernel(program, kernel_name, &error);
     checkClError(error, "clCreateKernel");
 
@@ -143,7 +145,7 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 }
 
 
-void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int lenght){
+void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int lenght){
     /*// Copy data from memory to gpu
     error = clEnqueueWriteBuffer(queue,
             block_src, //memory on gpu
@@ -159,13 +161,7 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int lenght)
     clSetKernelArg(dct_kernel, 1, sizeof(cl_mem), (void *)&block_dst);
     clSetKernelArg(dct_kernel, 2, sizeof(cl_mem), (void *)table);
 
-    size_t GWS[2], LWS[2];
-    GWS[0] = 8;
-    GWS[1] = 8;
-    LWS[0] = dct_max_local_work_item_size[0];
-    LWS[1] = dct_max_local_work_item_size[1];
-
-    clEnqueueNDRangeKernel(queue, dct_kernel, 2, NULL, GWS, LWS, 0, NULL, NULL);
+    clEnqueueNDRangeKernel(queue, decode_kernel, 2, NULL, GWS, LWS, 0, NULL, NULL);
 
     clEnqueueReadBuffer(queue, block_dst, CL_TRUE, 0, sizeof(cl_float)*64, dst, 0, NULL, NULL);
 
@@ -173,7 +169,7 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int lenght)
 }
 
 
-void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
+void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length){
 }
 
 /**

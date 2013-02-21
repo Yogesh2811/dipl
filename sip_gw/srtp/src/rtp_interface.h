@@ -13,16 +13,36 @@
 #define POOL_SIZE 10
 
 class SRTP_stream;
-class SRTP_parser;
+class Parser_interface;
 
 typedef unsigned char BYTE;
 
+namespace RTP{
+    //little endian
+    struct header {
+        BYTE cc : 4;
+        BYTE x  : 1;
+        BYTE p  : 1;
+        BYTE v  : 2;
+     
+        BYTE pt : 7;
+        BYTE m  : 1;
+        
+        unsigned short seq;
+        unsigned int timestamp;
+        unsigned int ssrc;
+        unsigned int csrc[15];
+    };
+    void fix_header(header* h);
+    size_t get_payload(header* h, BYTE* packet, BYTE* payload);
+    unsigned int swap_int(unsigned int i);
+}
 
 class RTP_interface {
     private:
         static int count;
         
-        SRTP_parser* p;
+        Parser_interface* p;
         int id;
         int rtp_sock;
         int rtcp_sock;
@@ -36,7 +56,7 @@ class RTP_interface {
         struct iovec iov_pool[POOL_SIZE][1];
         struct msghdr msg_pool[POOL_SIZE];
         std::queue<int> free_buffer_index;
-        std::map<int, SRTP_stream*> streams;
+        std::map<unsigned int, SRTP_stream*> streams;
 
         void init_msg_pool(int id);
         int get_buffer_id();
@@ -45,7 +65,8 @@ class RTP_interface {
 
 
     public:
-        RTP_interface(SRTP_parser* p, int rtp_port, int rtcp_port, int* err);
+        RTP_interface(Parser_interface* p, int rtp_port, int rtcp_port, int* err);
+
         ~RTP_interface();
 
         void stop();

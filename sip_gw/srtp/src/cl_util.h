@@ -19,6 +19,7 @@
 
 
 typedef unsigned char BYTE;
+typedef const BYTE CBYTE;
 
 int initOpenCL();
 cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_name);
@@ -32,8 +33,8 @@ void CL_CALLBACK contextCallback(const char *err_info,
                                  void *user_data);
 
 
-void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length);
-void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length);
+void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length);
+void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length);
 
 
 int cleanup();

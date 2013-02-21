@@ -1,6 +1,7 @@
 #include "rtp_interface.h"
 #include "srtp_stream.h"
-#include "srtp_parser.h"
+#include "parser_interface.h"
+#include "utils.h"
 
 #include <iostream>
 
@@ -8,7 +9,28 @@ using namespace std;
 
 int RTP_interface::count = 0;
 
-RTP_interface::RTP_interface(SRTP_parser* parser, int rtp, int rtcp, int* err){
+unsigned int RTP::swap_int(unsigned int i){
+    return (i >> 24) | ((i<<8) & 0x00FF0000) | ((i>>8) & 0x0000FF00) | (i << 24);
+}
+
+void RTP::fix_header(RTP::header* h){
+    h->seq = h->seq >> 8 | h->seq << 8;
+    h->timestamp = RTP::swap_int(h->timestamp);
+    h->ssrc = RTP::swap_int(h->ssrc);
+    if(h->cc > 0){
+        for(int i=0; i<h->cc; i++){
+            h->csrc[i] = RTP::swap_int(h->csrc[i]);
+        }
+    }
+}
+
+size_t RTP::get_payload(RTP::header* h, BYTE* packet, BYTE* payload){
+    size_t header_size = sizeof(RTP::header) - (15-h->cc)*sizeof(unsigned int);
+    payload = packet + header_size;
+    return header_size;
+}
+
+RTP_interface::RTP_interface(Parser_interface* parser, int rtp, int rtcp, int* err){
     err = 0;
     p = parser;
     id = count++;
@@ -63,7 +85,7 @@ void RTP_interface::init_msg_pool(int id){
 
 
 void RTP_interface::stop() {
-    printf("RTP_interface::stop()\n");
+    LOG_MSG("RTP_interface::stop()")
     exit = true;
 }
 
@@ -80,22 +102,23 @@ void RTP_interface::release_buffer(int id){
 }
 
 void RTP_interface::parse_packet(int id, int length){
-    buffer_pool[id][length] = '\0';
+    //1) get SSRC and CSRC from packet
+    //2) find stream or create new stream
+    //3) get payload
+    //4) send signal to the stream for parsing
 
-    cout << "parse_packet(" << id << ", " << length << ")\n";
-    
-    p->decode_msg(buffer_pool[id], out_buffer_pool[id], id, length);
-    //encode_srtp_callback(buffer_pool[id], out_buffer_pool[id], NULL, length);
-    // print out info about the remote socket
-    //char address[500];
-    //inet_ntop(AF_INET6,&(src_addr_pool[id]),address,sizeof(src_addr_pool[id]));
-    //int port = ntohs(src_addr_pool[id].sin6_port);
-    //printf("%d from: %s port: %d\nmsg: %s\n\n\n",id,address,port,buffer_pool[id]);
+    LOG_MSG("RTP_interface::parse_packet()")
 
-    // 1) get SSRC and CSRC from packet
-    // 2) find stream or create new stream
-    // 3) send signal to the stream for parsing
-    
+    RTP::header* rtp_h = (RTP::header*)buffer_pool[id];
+    RTP::fix_header(rtp_h);
+
+    BYTE* payload;
+    size_t header_size = RTP::get_payload(rtp_h, buffer_pool[id], payload);
+
+    if(streams[rtp_h->ssrc] == NULL){
+        streams[rtp_h->ssrc] = new SRTP_stream(SRTP_stream::DECODE);
+    }
+    p->parse_msg(payload, out_buffer_pool[id], streams[rtp_h->ssrc], id, length-header_size);
 }
 
 /**
@@ -107,10 +130,10 @@ void RTP_interface::parse_packet(int id, int length){
  */
 void RTP_interface::send(int id, int size){
     // 1) send msg saved in out_buffer_pool[id]
-    //
     // 2) release buffer id used for this packet
     // release_buffer(id);
-    
+    LOG_MSG("RTP_interface::send()");
+
     sendto(rtp_sock, out_buffer_pool[id], size, 0, 
       (sockaddr*)&(src_addr_pool[id]), sizeof(src_addr_pool[id]));
     release_buffer(id);

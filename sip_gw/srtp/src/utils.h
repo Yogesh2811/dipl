@@ -7,7 +7,10 @@
 #include <sys/time.h>
 #endif
 
+#define LOG_MSG(msg) printf(msg); printf("\n");
 
 double get_time();
+
+
 
 #endif

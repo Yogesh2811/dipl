@@ -1,4 +1,5 @@
 #include "aes.h"
+#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -176,7 +177,7 @@ static unsigned char rcon[] = {
 //////////////////////////////////////////////////////////////////////////////////////////////
 // AES helper functions
 //////////////////////////////////////////////////////////////////////////////////////////////
-void rotate_row(BYTE* src, BYTE* dst, int n){
+void rotate_row(CBYTE* src, BYTE* dst, int n){
     int max = COLUMNS-n;
     for(int i = 0; i < max; i++){
         dst[i] = src[i+n];    
@@ -186,7 +187,7 @@ void rotate_row(BYTE* src, BYTE* dst, int n){
     }
 }
 
-void rotate_column(BYTE* src_state, BYTE* dst_state, int col1, int col2, int n){
+void rotate_column(CBYTE* src_state, BYTE* dst_state, int col1, int col2, int n){
     int max = ROWS-n;
     for(int i = 0; i < max; i++){
         dst_state[i*COLUMNS + col1] = src_state[(i+n)*COLUMNS + col2];
@@ -196,11 +197,11 @@ void rotate_column(BYTE* src_state, BYTE* dst_state, int col1, int col2, int n){
     }
 }
 
-void get_first_rk(BYTE* key, BYTE* round_key){
+void get_first_rk(CBYTE* key, BYTE* round_key){
     memcpy(round_key, key, 16*sizeof(BYTE));
 }
 
-void get_next_rk(BYTE* previous_key, BYTE* round_key, BYTE rcon){
+void get_next_rk(CBYTE* previous_key, BYTE* round_key, BYTE rcon){
     rotate_column(previous_key, round_key, 0, 3, 1);
     for(int r = 0; r<ROWS; r++){
        round_key[r*COLUMNS] = sbox[round_key[r*COLUMNS]] ^ previous_key[r*COLUMNS]; 
@@ -214,7 +215,7 @@ void get_next_rk(BYTE* previous_key, BYTE* round_key, BYTE rcon){
     }
 }
 
-void print_state(BYTE* state){
+void print_state(CBYTE* state){
     for(int r = 0; r < ROWS; r++){
         for(int c = 0; c < COLUMNS; c++){
              printf("%2X ", state[c+r*COLUMNS]);
@@ -234,19 +235,19 @@ end*/
 //////////////////////////////////////////////////////////////////////////////////////////////
 // AES functions
 //////////////////////////////////////////////////////////////////////////////////////////////
-void sub_bytes(BYTE* src, BYTE* dst){
+void sub_bytes(CBYTE* src, BYTE* dst){
     for(int i = 0; i < BLOCK_SIZE; i++){
         dst[i] = sbox[src[i]];
     }
 }
 
-void shift_rows(BYTE* src, BYTE* dst){   
+void shift_rows(CBYTE* src, BYTE* dst){   
     for(int row = 0; row < ROWS; row++){
         rotate_row(src+(row*COLUMNS), dst+(row*COLUMNS), row);
     }
 }
 
-void mix_columns(BYTE* src, BYTE* dst){
+void mix_columns(CBYTE* src, BYTE* dst){
     for(int col = 0; col < COLUMNS; col++){ 
         unsigned char a0 = src[col]; 
         unsigned char a1 = src[col+4];
@@ -260,26 +261,26 @@ void mix_columns(BYTE* src, BYTE* dst){
     }
 }
 
-void xor_key(BYTE* src, BYTE* dst, BYTE* key){
+void xor_key(CBYTE* src, BYTE* dst, CBYTE* key){
     for(int i = 0; i < BLOCK_SIZE; i++){
         dst[i] = src[i] ^ key[i];
     }
 }
 
 
-void sub_bytes_inv(BYTE* src, BYTE* dst){
+void sub_bytes_inv(CBYTE* src, BYTE* dst){
     for(int i = 0; i < BLOCK_SIZE; i++){
         dst[i] = sbox_inv[src[i]];
     }
 }
 
-void shift_rows_inv(BYTE* src, BYTE* dst){   
+void shift_rows_inv(CBYTE* src, BYTE* dst){   
     for(int row = 0; row < ROWS; row++){
         rotate_row(src+(row*COLUMNS), dst+(row*COLUMNS), ROWS-row);
     }
 }
 
-void mix_columns_inv(BYTE* src, BYTE* dst){
+void mix_columns_inv(CBYTE* src, BYTE* dst){
     for(int col = 0; col < COLUMNS; col++){ 
         unsigned char a0 = src[col]; 
         unsigned char a1 = src[col+4];
@@ -295,14 +296,14 @@ void mix_columns_inv(BYTE* src, BYTE* dst){
 //////////////////////////////////////////////////////////////////////////////////////////////
 // AES algorithm
 //////////////////////////////////////////////////////////////////////////////////////////////
-int expand_key(BYTE* master_key, BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE]){
+int expand_key(CBYTE* master_key, BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE]){
     get_first_rk(master_key, round_key[0]);
     for(int i = 1; i<ROUND_KEY_SIZE; i++){
         get_next_rk(round_key[i-1], round_key[i], rcon[i]);
     }
 }
 
-int encode_block(BYTE* src, BYTE* dst, BYTE* key){
+int encode_block(CBYTE* src, BYTE* dst, CBYTE* key){
     unsigned char round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
     unsigned char temp[BLOCK_SIZE];
     int result = expand_key(key,round_key);
@@ -321,7 +322,7 @@ int encode_block(BYTE* src, BYTE* dst, BYTE* key){
     return result;
 }
 
-int decode_block(BYTE* src, BYTE* dst, BYTE* key){
+int decode_block(CBYTE* src, BYTE* dst, CBYTE* key){
     unsigned char round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
     unsigned char temp[BLOCK_SIZE];
     int result = expand_key(key,round_key);
@@ -351,8 +352,9 @@ int decode_block(BYTE* src, BYTE* dst, BYTE* key){
  *
  * returns 0 for success or error code for failure
  */
-void srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
-    BYTE ciphered_counter[length*BLOCK_SIZE];
+void AES::srtp_encode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length){
+    LOG_MSG("AES::srtp_encode()");
+    /*BYTE ciphered_counter[length*BLOCK_SIZE];
 
     for(int i = 0; i < length; i+=16){
         encode_block(counter+i, ciphered_counter+i, key+i);
@@ -360,9 +362,9 @@ void srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
 
     for(int i = 0; i < length; i++){
         dst[i] = src[i] ^ ciphered_counter[i];
-    }
+    }*/
 }
 
-void srtp_decode(BYTE* src, BYTE* dst, BYTE* key, BYTE* counter, int length){
-
+void AES::srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length){
+    LOG_MSG("AES::srtp_decode()");
 }
