@@ -14,25 +14,35 @@ class SRTP_stream {
             ENCODE_DECODE
         };
 
+        enum Status {
+            INIT,
+            SESSION,
+            END
+        };
+
         enum Encryption {
-            AES_CTR_128
+            AES128_CTR
         };
 
         SRTP_stream(Stream_type type);
         ~SRTP_stream();
         Stream_type get_type();
 
+    
+        unsigned int roc;
+    
     private:
+        Status state;
         Stream_type type;
-        int roc;
-        int highest_seq;
+        unsigned int highest_seq;
         Encryption alg;
-        BYTE replay_list[LIST_SIZE][PACKET_SIZE];
-        int MKI;
         BYTE master_key[16];
-        int master_key_counter;
+        unsigned int master_key_counter;
         BYTE session_key[16];
+        
+        BYTE replay_list[LIST_SIZE][PACKET_SIZE];
         BYTE master_salt[16];
+        unsigned int MKI;
 };
 
 

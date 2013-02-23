@@ -33,8 +33,8 @@ void CL_CALLBACK contextCallback(const char *err_info,
                                  void *user_data);
 
 
-void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length);
-void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length);
+void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
+void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
 
 
 int cleanup();

@@ -16,27 +16,8 @@ class SRTP_stream;
 class Parser_interface;
 
 typedef unsigned char BYTE;
+typedef const BYTE CBYTE;
 
-namespace RTP{
-    //little endian
-    struct header {
-        BYTE cc : 4;
-        BYTE x  : 1;
-        BYTE p  : 1;
-        BYTE v  : 2;
-     
-        BYTE pt : 7;
-        BYTE m  : 1;
-        
-        unsigned short seq;
-        unsigned int timestamp;
-        unsigned int ssrc;
-        unsigned int csrc[15];
-    };
-    void fix_header(header* h);
-    size_t get_payload(header* h, BYTE* packet, BYTE* payload);
-    unsigned int swap_int(unsigned int i);
-}
 
 class RTP_interface {
     private:

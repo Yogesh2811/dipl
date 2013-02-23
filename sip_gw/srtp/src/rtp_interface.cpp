@@ -2,6 +2,7 @@
 #include "srtp_stream.h"
 #include "parser_interface.h"
 #include "utils.h"
+#include "srtp_header.h"
 
 #include <iostream>
 
@@ -9,26 +10,6 @@ using namespace std;
 
 int RTP_interface::count = 0;
 
-unsigned int RTP::swap_int(unsigned int i){
-    return (i >> 24) | ((i<<8) & 0x00FF0000) | ((i>>8) & 0x0000FF00) | (i << 24);
-}
-
-void RTP::fix_header(RTP::header* h){
-    h->seq = h->seq >> 8 | h->seq << 8;
-    h->timestamp = RTP::swap_int(h->timestamp);
-    h->ssrc = RTP::swap_int(h->ssrc);
-    if(h->cc > 0){
-        for(int i=0; i<h->cc; i++){
-            h->csrc[i] = RTP::swap_int(h->csrc[i]);
-        }
-    }
-}
-
-size_t RTP::get_payload(RTP::header* h, BYTE* packet, BYTE* payload){
-    size_t header_size = sizeof(RTP::header) - (15-h->cc)*sizeof(unsigned int);
-    payload = packet + header_size;
-    return header_size;
-}
 
 RTP_interface::RTP_interface(Parser_interface* parser, int rtp, int rtcp, int* err){
     err = 0;
@@ -83,7 +64,6 @@ void RTP_interface::init_msg_pool(int id){
     msg_pool[id].msg_controllen=0;
 }
 
-
 void RTP_interface::stop() {
     LOG_MSG("RTP_interface::stop()")
     exit = true;
@@ -109,16 +89,19 @@ void RTP_interface::parse_packet(int id, int length){
 
     LOG_MSG("RTP_interface::parse_packet()")
 
-    RTP::header* rtp_h = (RTP::header*)buffer_pool[id];
-    RTP::fix_header(rtp_h);
+    SRTP::header* rtp_h = (SRTP::header*)buffer_pool[id];
+    SRTP::fix_header(rtp_h);
 
-    BYTE* payload;
-    size_t header_size = RTP::get_payload(rtp_h, buffer_pool[id], payload);
+    //printf("v:%u p:%u seq:%u\n", rtp_h->v, rtp_h->p, rtp_h->seq);
+
+    BYTE* payload = nullptr;
+    size_t header_size = SRTP::get_payload(rtp_h, buffer_pool[id], &payload);
 
     if(streams[rtp_h->ssrc] == NULL){
         streams[rtp_h->ssrc] = new SRTP_stream(SRTP_stream::DECODE);
     }
-    p->parse_msg(payload, out_buffer_pool[id], streams[rtp_h->ssrc], id, length-header_size);
+    p->parse_msg(payload, rtp_h, out_buffer_pool[id], 
+                 streams[rtp_h->ssrc], id, length-header_size);
 }
 
 /**

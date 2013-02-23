@@ -22,7 +22,8 @@ class SRTP_parser: public Parser_interface {
 
         void quit();
         void set_interface(RTP_interface *iface);
-        void parse_msg(const BYTE* in, BYTE* out, SRTP_stream* s, int id, int length);
+        void parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s, 
+                       int id, int length);
 
         bool exit;
 

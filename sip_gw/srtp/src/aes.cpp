@@ -303,12 +303,12 @@ int expand_key(CBYTE* master_key, BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE]){
     }
 }
 
-int encode_block(CBYTE* src, BYTE* dst, CBYTE* key){
+int encode_block(CBYTE* counter, BYTE* dst, CBYTE* key){
     unsigned char round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
     unsigned char temp[BLOCK_SIZE];
     int result = expand_key(key,round_key);
 
-    xor_key(src, temp, round_key[0]);
+    xor_key(counter, temp, round_key[0]);
     for(int i = 1; i < ROUNDS; i++){
         sub_bytes(temp, dst);
         shift_rows(dst, temp);
@@ -322,12 +322,12 @@ int encode_block(CBYTE* src, BYTE* dst, CBYTE* key){
     return result;
 }
 
-int decode_block(CBYTE* src, BYTE* dst, CBYTE* key){
+int decode_block(CBYTE* counter, BYTE* dst, CBYTE* key){
     unsigned char round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
     unsigned char temp[BLOCK_SIZE];
     int result = expand_key(key,round_key);
 
-    xor_key(src,temp,round_key[ROUNDS]);
+    xor_key(counter,temp,round_key[ROUNDS]);
     shift_rows_inv(temp,dst);
     sub_bytes_inv(dst,temp);
 
@@ -341,30 +341,63 @@ int decode_block(CBYTE* src, BYTE* dst, CBYTE* key){
 
     return result;
 }
+
+void update_counter(BYTE counter[BLOCK_SIZE]){
+    counter[15]++;
+    if(counter[15] == 0){
+        counter[14]++;
+    }
+}
+
 /*
  * Encodes payload of SRTP packet AES128-CTR
  * 
  * @src - packet payload
  * @dst - encoded payload
  * @key - pointer to the keys array
- * @couter - counter for AES
+ * @iv - initial vector for counter mode in packet for AES
  * @length - length of payload in bytes
  *
  * returns 0 for success or error code for failure
  */
-void AES::srtp_encode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length){
+void AES::srtp_encode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
     LOG_MSG("AES::srtp_encode()");
-    /*BYTE ciphered_counter[length*BLOCK_SIZE];
+    BYTE counter[BLOCK_SIZE];
+    memcpy(counter, iv, BLOCK_SIZE);
 
-    for(int i = 0; i < length; i+=16){
-        encode_block(counter+i, ciphered_counter+i, key+i);
+    int i = 0, j = 0;
+
+    for( ; i < length; i+=BLOCK_SIZE){
+        encode_block(counter, dst+i, key);
+        xor_key(dst+i,dst+i,src+i);
+        update_counter(counter);
     }
 
-    for(int i = 0; i < length; i++){
-        dst[i] = src[i] ^ ciphered_counter[i];
-    }*/
+    BYTE last_block[BLOCK_SIZE];
+    encode_block(counter, last_block, key);
+    for(i=i-BLOCK_SIZE; i < length; i++, j++){
+        dst[i] = last_block[j] ^ src[i];
+    }
+
 }
 
-void AES::srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* counter, int length){
+void AES::srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
     LOG_MSG("AES::srtp_decode()");
+    BYTE counter[BLOCK_SIZE];
+    memcpy(counter, iv, BLOCK_SIZE);
+
+    int i = 0, j = 0;
+
+    for( ; i < length; i+=BLOCK_SIZE){
+        decode_block(counter, dst+i, key);
+        xor_key(dst+i,dst+i,src+i);
+        update_counter(counter);
+    }
+
+    BYTE last_block[BLOCK_SIZE];
+    decode_block(counter, last_block, key);
+    for(i=i-BLOCK_SIZE; i < length; i++, j++){
+        dst[i] = last_block[j] ^ src[i];
+    }
+
 }

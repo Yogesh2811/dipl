@@ -17,7 +17,8 @@ class Daemon: public Parser_interface {
         ~Daemon();
         void operator()();
         void stop();
-        void parse_msg(const BYTE* in, BYTE* out, SRTP_stream* s, int id, int length);
+        void parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s, 
+                       int id, int length);
         void set_interface(RTP_interface* i);
 
     private:

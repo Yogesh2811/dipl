@@ -41,7 +41,8 @@ void SRTP_parser::set_interface(RTP_interface *iface){
     i = iface;
 }
 
-void SRTP_parser::parse_msg(const BYTE* in, BYTE* out, SRTP_stream* s, int id, int length){
+void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s, 
+                            int id, int len){
     LOG_MSG("SRTP_parser::parse_msg()");
     
     //1) find counter and key for encryption
@@ -49,24 +50,29 @@ void SRTP_parser::parse_msg(const BYTE* in, BYTE* out, SRTP_stream* s, int id, i
     //3) send for processing
     //4) send output
     
-    int size = (ceil(length/16.0))*16;
-    BYTE counter[size];
-    BYTE key[size];
+    //int size = (ceil(length/16.0))*16;
+    BYTE pi[6];
+    BYTE iv[16];
+    SRTP::get_packet_index(s->roc, h->seq, pi);
+    SRTP::get_iv(nullptr, h->ssrc, pi, iv);
+    
+    BYTE key[16];
+
 
     switch(s->get_type()){
         case SRTP_stream::ENCODE :
-            encode(in, out, key, counter, length);
+            encode(in, out, key, iv, len);
             break;
         case SRTP_stream::DECODE :
-            decode(in, out, key, counter, length);
+            decode(in, out, key, iv, len);
             break;
         case SRTP_stream::ENCODE_DECODE : 
-            encode_decode(in, out, key, counter, length);
+            encode_decode(in, out, key, iv, len);
             break;
         default: //forward
-            memcpy(out, in, length);
+            memcpy(out, in, len);
             break;
     };
-    i->send(id,length);
+    i->send(id,len);
 }
 

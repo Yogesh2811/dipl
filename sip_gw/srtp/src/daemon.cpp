@@ -24,10 +24,11 @@ void Daemon::stop(){
 }
 
 
-void Daemon::parse_msg(const BYTE* in, BYTE* out, SRTP_stream* s, int id, int length){
+void Daemon::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s,
+                       int id, int length){
     //select the best parser
     LOG_MSG("Daemon::parse_msg()")
-    parser[0]->parse_msg(in, out, s, id, length);
+    parser[0]->parse_msg(in, h, out, s, id, length);
 }
 
 
