@@ -27,7 +27,7 @@ class SRTP_stream {
         SRTP_stream(Stream_type type);
         ~SRTP_stream();
         Stream_type get_type();
-
+        const unsigned char* get_key();
     
         unsigned int roc;
     

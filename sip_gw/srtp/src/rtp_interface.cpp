@@ -100,6 +100,8 @@ void RTP_interface::parse_packet(int id, int length){
     if(streams[rtp_h->ssrc] == NULL){
         streams[rtp_h->ssrc] = new SRTP_stream(SRTP_stream::DECODE);
     }
+    
+    //memset(out_buffer_pool[id],0,PACKET_SIZE);
     p->parse_msg(payload, rtp_h, out_buffer_pool[id], 
                  streams[rtp_h->ssrc], id, length-header_size);
 }

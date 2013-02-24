@@ -52,11 +52,11 @@ void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_str
     
     //int size = (ceil(length/16.0))*16;
     BYTE pi[6];
-    BYTE iv[16];
+    BYTE iv[16] = {0};
     SRTP::get_packet_index(s->roc, h->seq, pi);
     SRTP::get_iv(nullptr, h->ssrc, pi, iv);
     
-    BYTE key[16];
+    CBYTE *key =  s->get_key();
 
 
     switch(s->get_type()){

@@ -5,7 +5,7 @@
 
 
 int main(int argc, char* argv[]) {
-    //initOpenCL();
+    initOpenCL();
     int err;
 
     SRTP_parser* p[PARSER_COUNT];

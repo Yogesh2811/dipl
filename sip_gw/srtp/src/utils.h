@@ -8,6 +8,7 @@
 #endif
 
 #define LOG_MSG(msg) printf(msg); printf("\n");
+//#define LOG_MSG(msg)
 
 double get_time();
 

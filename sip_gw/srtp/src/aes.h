@@ -11,6 +11,7 @@ typedef unsigned char BYTE;
 typedef const unsigned char CBYTE;
 
 namespace AES {
+    void expand_key(CBYTE* master_key, BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE]);
     void srtp_encode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
     void srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
 };

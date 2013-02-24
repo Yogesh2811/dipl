@@ -1,4 +1,6 @@
 #include "cl_util.h"
+#include "utils.h"
+#include "aes.h"
 
 #include <math.h>
 
@@ -21,15 +23,15 @@ cl_kernel inv_dct_kernel;
 cl_int error;
 
 // buffers for dct
-cl_mem block_src;
-cl_mem block_dst;
+//cl_mem block_src;
+//cl_mem block_dst;
 
 // kernels
 cl_kernel encode_kernel;
 cl_kernel decode_kernel;
 
 //max number of local work items
-size_t GWS[3] = {8, 8};
+size_t GWS[3] = {16};
 size_t LWS[3];
 
 cl_int getPlatformID()
@@ -64,8 +66,8 @@ cl_int getPlatformID()
 }
 
 
-size_t set_dct_size(size_t i){
-    if(i>=8){
+size_t set_size(size_t i){
+    /*if(i>=8){
         return 8;
     }
     else if(i<8 && i>=4){
@@ -74,16 +76,25 @@ size_t set_dct_size(size_t i){
     else if(i<4 && i>=2){
         return 2;
     }
-    else return 1;
+    else return 1;*/
+    if(i<16){
+        return i;
+    }
+    return 16;
 }
 
 void set_max_device_worksize(){
-    size_t max_work_item_size[3];
-    error = clGetDeviceInfo(devices[0], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(max_work_item_size), max_work_item_size, NULL);
+    error = clGetDeviceInfo(devices[0], CL_DEVICE_MAX_WORK_ITEM_SIZES,
+            sizeof(LWS), LWS, NULL);
+
+    size_t size;
+    error = clGetDeviceInfo(devices[0], CL_DEVICE_MAX_WORK_GROUP_SIZE,
+            sizeof(size), &size, NULL);
+
+    LWS[0] = 1;//set_size(LWS[0]);
+    LWS[1] = 1;
+    LWS[2] = 1;
     checkClError(error, "clGetDeviceInfo");
-    LWS[0] = set_dct_size(max_work_item_size[0]);
-    LWS[1] = set_dct_size(max_work_item_size[1]);
-    LWS[2] = set_dct_size(max_work_item_size[2]);
 }
 
 
@@ -116,12 +127,6 @@ int initOpenCL(){
     checkClError(error, "loadKernelFromFile srtp_decode");
     /*error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
     checkClError(error, "loadKernelFromFile srtp_encode");*/
-
-    // Alloc buffers with const size & copy data
-    block_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_float)*64, NULL, &error);
-    checkClError(error, "clCreateBuffer src");
-    block_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float)*64, NULL, &error);
-    checkClError(error, "clCreateBuffer dst");
 }
 
 cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_name){
@@ -145,27 +150,116 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 }
 
 
-void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int lenght){
-    /*// Copy data from memory to gpu
-    error = clEnqueueWriteBuffer(queue,
-            block_src, //memory on gpu
+void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){ 
+    // Alloc buffers with specified size & copy data
+    cl_int err;
+
+    size_t packet_size = sizeof(cl_uchar)*length;
+
+    cl_mem payload_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*length,
+                NULL, &err);
+    checkClError(err, "clCreateBuffer src");
+    
+    cl_mem payload_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*length, 
+                NULL, &err);
+    checkClError(err, "clCreateBuffer dst");
+
+    cl_mem key_gpu = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer key");
+    
+    cl_mem iv_gpu = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer iv");
+    
+    cl_mem rk = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16*11, NULL, &err);
+    checkClError(err, "clCreateBuffer rk");
+    
+    cl_mem t1 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer t1");
+    cl_mem t2 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer t2");
+   
+    BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
+    AES::expand_key(key, round_key);
+    
+    // Copy data from memory to gpu
+    err = clEnqueueWriteBuffer(queue,
+            payload_src, //memory on gpu
             CL_TRUE,   //blocking write
             0,         //offset
-            sizeof(cl_float)*64, //size in bytes of copied data
+            sizeof(cl_uchar)*length, //size in bytes of copied data
             src,       //memory data
             0,         //wait list
             NULL,      //wait list
             NULL);     //wait list
 
-    clSetKernelArg(dct_kernel, 0, sizeof(cl_mem), (void *)&block_src);
-    clSetKernelArg(dct_kernel, 1, sizeof(cl_mem), (void *)&block_dst);
-    clSetKernelArg(dct_kernel, 2, sizeof(cl_mem), (void *)table);
+    err = clEnqueueWriteBuffer(queue,
+            key_gpu, //memory on gpu
+            CL_TRUE,   //blocking write
+            0,         //offset
+            sizeof(cl_uchar)*length, //size in bytes of copied data
+            key,       //memory data
+            0,         //wait list
+            NULL,      //wait list
+            NULL);     //wait list
+    
+    err = clEnqueueWriteBuffer(queue,
+            iv_gpu, //memory on gpu
+            CL_TRUE,   //blocking write
+            0,         //offset
+            sizeof(cl_uchar)*length, //size in bytes of copied data
+            iv,       //memory data
+            0,         //wait list
+            NULL,      //wait list
+            NULL);     //wait list
 
-    clEnqueueNDRangeKernel(queue, decode_kernel, 2, NULL, GWS, LWS, 0, NULL, NULL);
+    err = clEnqueueWriteBuffer(queue,
+            rk, //memory on gpu
+            CL_TRUE,   //blocking write
+            0,         //offset
+            sizeof(cl_uchar)*ROUND_KEY_SIZE*BLOCK_SIZE, //size in bytes of copied data
+            (BYTE*)round_key, //memory data
+            0,         //wait list
+            NULL,      //wait list
+            NULL);     //wait list
 
-    clEnqueueReadBuffer(queue, block_dst, CL_TRUE, 0, sizeof(cl_float)*64, dst, 0, NULL, NULL);
 
-    clFinish(queue);*/
+    clSetKernelArg(decode_kernel, 0, sizeof(cl_mem), (void *)&payload_src);
+    clSetKernelArg(decode_kernel, 1, sizeof(cl_mem), (void *)&payload_dst);
+    clSetKernelArg(decode_kernel, 2, sizeof(cl_mem), (void *)&key_gpu);
+    clSetKernelArg(decode_kernel, 3, sizeof(cl_mem), (void *)&iv_gpu);
+    clSetKernelArg(decode_kernel, 4, sizeof(int),    (void *)&length);
+    clSetKernelArg(decode_kernel, 5, sizeof(cl_mem), (void *)&rk);
+    clSetKernelArg(decode_kernel, 6, sizeof(cl_mem), (void *)&t1);
+    clSetKernelArg(decode_kernel, 7, sizeof(cl_mem), (void *)&t2);
+
+    clEnqueueNDRangeKernel(queue, decode_kernel, 1, NULL, GWS, LWS, 0, NULL, NULL);
+    
+    // copy result back from gpu to host
+    clEnqueueReadBuffer(queue, payload_dst, CL_TRUE, 0, sizeof(cl_uchar)*16, 
+                        dst, 0, NULL, NULL);
+
+    clFinish(queue);
+
+    err = clReleaseMemObject(payload_src);
+    checkClError(err, "clReleaseMemObject block_src");
+
+    err = clReleaseMemObject(payload_dst);
+    checkClError(err, "clReleaseMemObject block_dst");
+
+    err = clReleaseMemObject(key_gpu);
+    checkClError(err, "clReleaseMemObject key");
+
+    err = clReleaseMemObject(iv_gpu);
+    checkClError(err, "clReleaseMemObject iv");
+    
+    err = clReleaseMemObject(rk);
+    checkClError(err, "clReleaseMemObject rk");
+
+    err = clReleaseMemObject(t1);
+    checkClError(err, "clReleaseMemObject t1");
+    
+    err = clReleaseMemObject(t2);
+    checkClError(err, "clReleaseMemObject t2");
 }
 
 
@@ -315,12 +409,6 @@ int cleanup()
 
     error = clReleaseProgram(program);
     checkClError(error, "clReleaseProgram.");
-
-    error = clReleaseMemObject(block_src);
-    checkClError(error, "clReleaseMemObject block_src");
-
-    error = clReleaseMemObject(block_dst);
-    checkClError(error, "clReleaseMemObject block_dst");
 
     error = clReleaseCommandQueue(queue);
     checkClError(error, "clReleaseCommandQueue.");
