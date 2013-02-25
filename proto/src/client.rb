@@ -31,26 +31,25 @@ def measure_start(s, seq)
                       "\x45\x92\x29\x67")
     t = Time.now.to_ms
     @t1[seq] = t
-    s.send(msg, 0, "127.0.0.1", 16000)
+    s.send(msg, 0, "::1", 16000)
 end
 
 def measure_stop(s)
     packet = s.recvfrom(1024)
     t = Time.now.to_ms
-    seq = packet[0].to_i
-    @t2[seq] = t
+    p packet
+    #seq = packet[0].to_i
+    #@t2[seq] = t
 end
 
-#s = UDPSocket.new(Socket::AF_INET6)
-#s.send(msg, 0, "::1", 16000)
 
-s = UDPSocket.new(Socket::AF_INET)
+s = UDPSocket.new(Socket::AF_INET6)
 
-for i in 0..10
+for i in 0...1
     measure_start(s, i)
     measure_stop(s)
 end
 
 @t1.each_with_index { |t1, seq|
-    puts "#{@t2[seq]-t1}"
+    #puts "#{@t2[seq]-t1}"
 }
