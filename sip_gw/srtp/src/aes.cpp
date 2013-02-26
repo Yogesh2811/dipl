@@ -215,13 +215,14 @@ void get_next_rk(CBYTE* previous_key, BYTE* round_key, BYTE rcon){
     }
 }
 
-void print_state(CBYTE* state){
+void AES::print_state(CBYTE* state){
     for(int r = 0; r < ROWS; r++){
         for(int c = 0; c < COLUMNS; c++){
              printf("%2X ", state[c+r*COLUMNS]);
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,4 +391,29 @@ void AES::srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
         dst[i] = last_block[j] ^ src[i];
     }
 
+}
+
+void AES::test(){
+    BYTE src[] = {0x01, 0x02, 0x03, 0x04, 
+                  0x05, 0x06, 0x07, 0x08,
+                  0x09, 0x10, 0x11, 0x12,
+                  0x13, 0x14, 0x15, 0x16};
+    BYTE key[] = {0x05, 0x06, 0x07, 0x08,
+                  0x01, 0x02, 0x03, 0x04,
+                  0x09, 0x10, 0x11, 0x12,
+                  0x13, 0x14, 0x15, 0x16};
+    BYTE dst[16];
+
+
+    sub_bytes(src, dst);
+    AES::print_state(dst);
+
+    shift_rows(src, dst); 
+    AES::print_state(dst);
+
+    mix_columns_inv(src, dst);
+    AES::print_state(dst);
+    
+    xor_key(src, dst, key);
+    AES::print_state(dst);
 }

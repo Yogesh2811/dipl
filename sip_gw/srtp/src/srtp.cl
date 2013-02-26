@@ -179,48 +179,20 @@ __constant unsigned char rcon[] = {
 };
 
 
-void rotate_row(__global CBYTE* src, __global BYTE* dst, int n);
-void rotate_column(__global CBYTE* src_state, __global BYTE* dst_state, 
-                    int col1, int col2, int n);
-
 void sub_bytes(__global CBYTE* src, __global BYTE* dst);
 void shift_rows(__global CBYTE* src, __global BYTE* dst);   
 void mix_columns(__global CBYTE* src, __global BYTE* dst);
 void xor_key(__global CBYTE* src, __global BYTE* dst, __global CBYTE* key);
+
 void sub_bytes_inv(__global CBYTE* src, __global BYTE* dst);
 void shift_rows_inv(__global CBYTE* src, __global BYTE* dst);   
 void mix_columns_inv(__global CBYTE* src, __global BYTE* dst);
-void update_counter(__global BYTE *counter);
 
+void update_counter(__global BYTE *counter);
 void encode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* key,
                   __global BYTE* temp, __global BYTE* round_key);
 void decode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* key,
                   __global BYTE* temp, __global BYTE* round_key);
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// AES helper functions
-//////////////////////////////////////////////////////////////////////////////////////////////
-void rotate_row(__global CBYTE* src, __global BYTE* dst, int n){
-    int max = COLUMNS-n;
-    for(int i = 0; i < max; i++){
-        dst[i] = src[i+n];    
-    }
-    for(int i = max; i < COLUMNS; i++){
-        dst[i] = src[i-max];
-    }
-}
-
-void rotate_column(__global CBYTE* src_state, __global BYTE* dst_state,
-                        int col1, int col2, int n){
-    int max = ROWS-n;
-    for(int i = 0; i < max; i++){
-        dst_state[i*COLUMNS + col1] = src_state[(i+n)*COLUMNS + col2];
-    }
-    for(int i = max; i < ROWS; i++){
-        dst_state[i*COLUMNS + col1] = src_state[(i-max)*COLUMNS + col2];
-    }
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // AES functions
@@ -231,23 +203,48 @@ void sub_bytes(__global CBYTE* src, __global BYTE* dst){
 }
 
 void shift_rows(__global CBYTE* src, __global BYTE* dst){   
-    for(int row = 0; row < ROWS; row++){
-        rotate_row(src+(row*COLUMNS), dst+(row*COLUMNS), row);
+    int i = get_global_id(0);
+    int row = i/4;
+    int col = i%4;
+
+    if(row == 0){
+        dst[i] = src[i];
+    } else if(row == 1) {
+        if(col == 3)
+            dst[i] = src[i-3];
+        else
+            dst[i] = src[i+1];
+    } else if(row == 2) {
+        if(col <= 1)
+            dst[i] = src[i+2];
+        else
+            dst[i] = src[i-2];
+    } else if(row == 3) {
+        if(col > 0)
+            dst[i] = src[i-1];
+        else
+            dst[i] = src[i+3];
     }
 }
 
 void mix_columns(__global CBYTE* src, __global BYTE* dst){
-    for(int col = 0; col < COLUMNS; col++){ 
-        unsigned char a0 = src[col]; 
-        unsigned char a1 = src[col+4];
-        unsigned char a2 = src[col+8];
-        unsigned char a3 = src[col+12];
+    int i = get_global_id(0);
+    int row = i/4;
+    int col = i%4;
+    
+    unsigned char a0 = src[col]; 
+    unsigned char a1 = src[col+4];
+    unsigned char a2 = src[col+8];
+    unsigned char a3 = src[col+12];
 
-        dst[col]    = g2[a0] ^ g3[a1] ^ a2     ^ a3;
-        dst[col+4]  = a0     ^ g2[a1] ^ g3[a2] ^ a3;
-        dst[col+8]  = a0     ^ a1     ^ g2[a2] ^ g3[a3];
-        dst[col+12] = g3[a0] ^ a1     ^ a2     ^ g2[a3];
-    }
+    if(row == 0)
+        dst[i] = g2[a0] ^ g3[a1] ^ a2     ^ a3;
+    if(row == 1)
+        dst[i] = a0     ^ g2[a1] ^ g3[a2] ^ a3;
+    if(row == 2)
+        dst[i] = a0     ^ a1     ^ g2[a2] ^ g3[a3];
+    if(row == 3)
+        dst[i] = g3[a0] ^ a1     ^ a2     ^ g2[a3];
 }
 
 void xor_key(__global CBYTE* src, __global BYTE* dst, __global CBYTE* key){
@@ -262,23 +259,48 @@ void sub_bytes_inv(__global CBYTE* src, __global BYTE* dst){
 }
 
 void shift_rows_inv(__global CBYTE* src, __global BYTE* dst){   
-    for(int row = 0; row < ROWS; row++){
-        rotate_row(src+(row*COLUMNS), dst+(row*COLUMNS), ROWS-row);
+    int i = get_global_id(0);
+    int row = i/4;
+    int col = i%4;
+
+    if(row == 0){
+        dst[i] = src[i];
+    } else if(row == 1) {
+        if(col == 0)
+            dst[i] = src[i+3];
+        else
+            dst[i] = src[i-1];
+    } else if(row == 2) {
+        if(col <= 1)
+            dst[i] = src[i+2];
+        else
+            dst[i] = src[i-2];
+    } else if(row == 3) {
+        if(col <= 2)
+            dst[i] = src[i+1];
+        else
+            dst[i] = src[i-3];
     }
 }
 
 void mix_columns_inv(__global CBYTE* src, __global BYTE* dst){
-    for(int col = 0; col < COLUMNS; col++){ 
-        unsigned char a0 = src[col]; 
-        unsigned char a1 = src[col+4];
-        unsigned char a2 = src[col+8];
-        unsigned char a3 = src[col+12];
+    int i = get_global_id(0);
+    int row = i/4;
+    int col = i%4;
+    
+    unsigned char a0 = src[col]; 
+    unsigned char a1 = src[col+4];
+    unsigned char a2 = src[col+8];
+    unsigned char a3 = src[col+12];
 
-        dst[col]    = g14[a0] ^ g9[a3] ^ g13[a2] ^ g11[a1];
-        dst[col+4]  = g14[a1] ^ g9[a0] ^ g13[a3] ^ g11[a2];
-        dst[col+8]  = g14[a2] ^ g9[a1] ^ g13[a0] ^ g11[a3];
-        dst[col+12] = g14[a3] ^ g9[a2] ^ g13[a1] ^ g11[a0];
-    }
+    if(row == 0)
+        dst[i] = g14[a0] ^ g9[a3] ^ g13[a2] ^ g11[a1];
+    if(row == 1)
+        dst[i] = g14[a1] ^ g9[a0] ^ g13[a3] ^ g11[a2];
+    if(row == 2)
+        dst[i] = g14[a2] ^ g9[a1] ^ g13[a0] ^ g11[a3];
+    if(row == 3)
+        dst[i] = g14[a3] ^ g9[a2] ^ g13[a1] ^ g11[a0];
 }
 
 
@@ -366,6 +388,34 @@ __kernel void srtp_decode(__global BYTE* src, __global BYTE* dst,
     int gi = get_global_id(0);
   
     if(gi < 16){
+        dst[gi] = src[gi];
+        int i = 0, j = 0;
+
+        for( ; i < length; i+=BLOCK_SIZE){
+            barrier(CLK_GLOBAL_MEM_FENCE);
+            decode_block(counter, dst+i, key, temp, round_key);
+            xor_key(dst+i,dst+i,src+i);
+            if(gi == 0)
+                update_counter(counter);
+        }
+
+        decode_block(counter, temp2, key, temp, round_key);
+        for(i=i-BLOCK_SIZE; i < length; i++, j++){
+            dst[i] = temp2[j] ^ src[i];
+        }
+    }
+}
+
+__kernel void srtp_encode(__global BYTE* src, __global BYTE* dst,
+                          __global BYTE* key, __global BYTE* counter, int length,
+                          __global BYTE* round_key,
+                          __global BYTE* temp, 
+                          __global BYTE* temp2){
+
+    int gi = get_global_id(0);
+  
+    if(gi < 16){
+        dst[gi] = src[gi];
         int i = 0, j = 0;
 
         for( ; i < length; i+=BLOCK_SIZE){
@@ -383,28 +433,13 @@ __kernel void srtp_decode(__global BYTE* src, __global BYTE* dst,
     }
 }
 
-__kernel void srtp_encode(__global BYTE* src, __global BYTE* dst,
-                          __global BYTE* key, __global BYTE* counter, int length,
-                          __global BYTE* round_key,
-                          __global BYTE* temp, 
-                          __global BYTE* temp2){
 
-    /*int i = 0, j = 0;
+__kernel void test(__global BYTE* src, __global BYTE* dst, __global BYTE* key){
+    int gi = get_global_id(0);
 
-    for( ; i < length; i+=BLOCK_SIZE){
-        decode_block(counter, dst+i, key, temp, round_key);
-        xor_key(dst+i,dst+i,src+i);
-        update_counter(counter);
+    if(gi < 16){
+        mix_columns_inv(src, dst);
     }
-
-    //BYTE last_block[BLOCK_SIZE];
-    decode_block(counter, temp2, key, temp, round_key);
-    for(i=i-BLOCK_SIZE; i < length; i++, j++){
-        dst[i] = temp2[j] ^ src[i];
-    }*/
 }
-
-
-
 
 

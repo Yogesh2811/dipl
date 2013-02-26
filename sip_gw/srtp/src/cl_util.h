@@ -38,4 +38,9 @@ void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
 
 
 int cleanup();
+
+namespace GPU {
+    void test();
+}
+
 #endif
