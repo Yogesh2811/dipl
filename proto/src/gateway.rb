@@ -17,7 +17,7 @@ while true do
     remote_port = packet[1][1].to_i
     response = parse_packet(packet[0])
     #sleep(0.001)
-    puts response
+    #puts response
     s.send(response, 0, remote_address, remote_port)
 end
 
