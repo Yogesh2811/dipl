@@ -8,9 +8,9 @@ int main(int argc, char* argv[]) {
     initOpenCL();
     int err;
 
-    AES::test();
-    GPU::test();
-/*    SRTP_parser* p[PARSER_COUNT];
+//    AES::test();
+//    GPU::test();
+    SRTP_parser* p[PARSER_COUNT];
     RTP_interface* r;
     Daemon* d;
     
@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     r->stop();
     //p->stop();
     //d->stop();
-*/
+
     return 0;
 }
 

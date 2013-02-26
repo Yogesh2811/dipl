@@ -15,7 +15,7 @@ double get_time(void)
     return (double)value.QuadPart / (double)frequency.QuadPart;
 #else
     struct timeval tv;
-    if (gettimeofday(&tv, NULL) == -1) {
+    if (gettimeofday(&tv, nullptr) == -1) {
         //cerr << "time error\n";
     }
     return (double)tv.tv_sec + (double)tv.tv_usec/1000000.;

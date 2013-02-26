@@ -23,9 +23,10 @@ ifeq ($(OS), CYGWIN_NT-5.1)
 	CL_FLAGS=
 else
 	LIBS=-lOpenCL
-	CL_FLAGS=-I/usr/local/cuda/include/ #-L/opt/AMDAPP/lib/ -I/opt/AMDAPP/include/
-	OBJ_CL_FLAGS=-I/usr/local/cuda/include/
+	CL_FLAGS=-L/opt/AMDAPP/lib/x86/ -I/opt/AMDAPP/include/
+	OBJ_CL_FLAGS=-I/opt/AMDAPP/include/
 	OBJ_LIBS=-lOpenCL
+	BOOST_FLAGS=-l boost_thread-mt -lboost_system-mt
 endif
 endif
 
