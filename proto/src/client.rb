@@ -32,6 +32,7 @@ def measure_start(s, seq)
     t = Time.now.to_ms
     @t1[seq] = t
     s.send(msg, 0, "127.0.0.1", 16000)
+    #s.send(msg, 0, "::1", 16000)
 end
 
 def measure_stop(s)
@@ -42,8 +43,6 @@ def measure_stop(s)
 end
 
 #s = UDPSocket.new(Socket::AF_INET6)
-#s.send(msg, 0, "::1", 16000)
-
 s = UDPSocket.new(Socket::AF_INET)
 
 for i in 0..10
