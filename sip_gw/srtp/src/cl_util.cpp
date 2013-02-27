@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 
 
 using namespace std;
@@ -124,7 +124,7 @@ int initOpenCL(){
 
     // Load kernels
     //error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "srtp_decode");
-    error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "test");
+    error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "srtp_decode");
     checkClError(error, "loadKernelFromFile srtp_decode");
     /*error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
     checkClError(error, "loadKernelFromFile srtp_encode");*/
