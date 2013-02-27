@@ -99,7 +99,7 @@ void set_max_device_worksize(){
     error = clGetDeviceInfo(devices[0], CL_DEVICE_MAX_WORK_GROUP_SIZE,
             sizeof(size), &size, NULL);
 
-    LWS[0] = 1;//set_size(LWS[0]);
+    LWS[0] = set_size(LWS[0]);
     LWS[1] = 1;
     LWS[2] = 1;
     checkClError(error, "clGetDeviceInfo");
