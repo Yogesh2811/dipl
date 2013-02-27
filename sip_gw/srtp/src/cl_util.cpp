@@ -23,8 +23,13 @@ cl_kernel inv_dct_kernel;
 cl_int error;
 
 // buffers for dct
-//cl_mem block_src;
-//cl_mem block_dst;
+cl_mem payload_src;
+cl_mem payload_dst;
+cl_mem key_gpu;
+cl_mem iv_gpu;
+cl_mem rk;
+cl_mem t1;
+cl_mem t2;
 
 // kernels
 cl_kernel encode_kernel;
@@ -91,7 +96,7 @@ void set_max_device_worksize(){
     error = clGetDeviceInfo(devices[0], CL_DEVICE_MAX_WORK_GROUP_SIZE,
             sizeof(size), &size, NULL);
 
-    LWS[0] = set_size(LWS[0]);
+    LWS[0] = 1;//set_size(LWS[0]);
     LWS[1] = 1;
     LWS[2] = 1;
     checkClError(error, "clGetDeviceInfo");
@@ -128,6 +133,30 @@ int initOpenCL(){
     checkClError(error, "loadKernelFromFile srtp_decode");
     /*error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
     checkClError(error, "loadKernelFromFile srtp_encode");*/
+   
+    int length = 320;
+    cl_int err;
+    payload_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*length,
+                NULL, &err);
+    checkClError(err, "clCreateBuffer src");
+    
+    payload_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*length, 
+                NULL, &err);
+    checkClError(err, "clCreateBuffer dst");
+
+    key_gpu = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer key");
+    
+    iv_gpu = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer iv");
+    
+    rk = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16*11, NULL, &err);
+    checkClError(err, "clCreateBuffer rk");
+    
+    t1 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer t1");
+    t2 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+    checkClError(err, "clCreateBuffer t2");
 }
 
 cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_name){
@@ -157,27 +186,6 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
 
     size_t packet_size = sizeof(cl_uchar)*length;
 
-    cl_mem payload_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*length,
-                NULL, &err);
-    checkClError(err, "clCreateBuffer src");
-    
-    cl_mem payload_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*length, 
-                NULL, &err);
-    checkClError(err, "clCreateBuffer dst");
-
-    cl_mem key_gpu = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*16, NULL, &err);
-    checkClError(err, "clCreateBuffer key");
-    
-    cl_mem iv_gpu = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
-    checkClError(err, "clCreateBuffer iv");
-    
-    cl_mem rk = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16*11, NULL, &err);
-    checkClError(err, "clCreateBuffer rk");
-    
-    cl_mem t1 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
-    checkClError(err, "clCreateBuffer t1");
-    cl_mem t2 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
-    checkClError(err, "clCreateBuffer t2");
    
     BYTE round_key[ROUND_KEY_SIZE][BLOCK_SIZE];
     AES::expand_key(key, round_key);
@@ -193,16 +201,6 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
             NULL,      //wait list
             NULL);     //wait list
 
-    /*err = clEnqueueWriteBuffer(queue,
-            key_gpu, //memory on gpu
-            CL_TRUE,   //blocking write
-            0,         //offset
-            sizeof(cl_uchar)*length, //size in bytes of copied data
-            key,       //memory data
-            0,         //wait list
-            NULL,      //wait list
-            NULL);     //wait list*/
-    
     err = clEnqueueWriteBuffer(queue,
             iv_gpu, //memory on gpu
             CL_TRUE,   //blocking write
@@ -241,26 +239,26 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
 
     clFinish(queue);
 
-    err = clReleaseMemObject(payload_src);
-    checkClError(err, "clReleaseMemObject block_src");
+    //err = clReleaseMemObject(payload_src);
+    //checkClError(err, "clReleaseMemObject block_src");
 
-    err = clReleaseMemObject(payload_dst);
-    checkClError(err, "clReleaseMemObject block_dst");
+    //err = clReleaseMemObject(payload_dst);
+    //checkClError(err, "clReleaseMemObject block_dst");
 
-    err = clReleaseMemObject(key_gpu);
-    checkClError(err, "clReleaseMemObject key");
+    //err = clReleaseMemObject(key_gpu);
+    //checkClError(err, "clReleaseMemObject key");
 
-    err = clReleaseMemObject(iv_gpu);
-    checkClError(err, "clReleaseMemObject iv");
+    //err = clReleaseMemObject(iv_gpu);
+    //checkClError(err, "clReleaseMemObject iv");
     
-    err = clReleaseMemObject(rk);
-    checkClError(err, "clReleaseMemObject rk");
+    //err = clReleaseMemObject(rk);
+    //checkClError(err, "clReleaseMemObject rk");
 
-    err = clReleaseMemObject(t1);
-    checkClError(err, "clReleaseMemObject t1");
+    //err = clReleaseMemObject(t1);
+    //checkClError(err, "clReleaseMemObject t1");
     
-    err = clReleaseMemObject(t2);
-    checkClError(err, "clReleaseMemObject t2");
+    //err = clReleaseMemObject(t2);
+    //checkClError(err, "clReleaseMemObject t2");
 }
 
 
