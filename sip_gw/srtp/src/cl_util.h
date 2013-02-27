@@ -16,7 +16,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include <queue>
 
 typedef unsigned char BYTE;
 typedef const BYTE CBYTE;
@@ -40,6 +40,8 @@ void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
 int cleanup();
 
 namespace GPU {
+    int alloc_buffer();
+    void release_buffer(int id); 
     void test();
 }
 

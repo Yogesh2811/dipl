@@ -74,9 +74,9 @@ void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_str
             break;
     };
     
-    char sseq[10];
-    sprintf(sseq, "%d", h->seq);
-    memcpy(out,sseq,10);
+    //char sseq[10];
+    //sprintf(sseq, "%d", h->seq);
+    //memcpy(out,sseq,10);
     //printf("[%s] %d [%d]\n", out, len, h->seq);
     i->send(id,len);
 }

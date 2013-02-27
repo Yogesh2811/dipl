@@ -315,6 +315,7 @@ void decode_block(CBYTE* counter, BYTE* dst, CBYTE round_key[ROUND_KEY_SIZE][BLO
     unsigned char temp[BLOCK_SIZE];
 
     xor_key(counter,temp,round_key[ROUNDS]);
+    //memcpy(dst, round_key[ROUNDS], 16);
     shift_rows_inv(temp,dst);
     sub_bytes_inv(dst,temp);
 
@@ -394,7 +395,7 @@ void AES::srtp_decode(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
 }
 
 void AES::test(){
-    BYTE src[] = {0x01, 0x02, 0x03, 0x04, 
+    CBYTE src[] = {0x01, 0x02, 0x03, 0x04, 
                   0x05, 0x06, 0x07, 0x08,
                   0x09, 0x10, 0x11, 0x12,
                   0x13, 0x14, 0x15, 0x16};
@@ -402,18 +403,24 @@ void AES::test(){
                   0x01, 0x02, 0x03, 0x04,
                   0x09, 0x10, 0x11, 0x12,
                   0x13, 0x14, 0x15, 0x16};
-    BYTE dst[16];
-
-
-    sub_bytes(src, dst);
-    AES::print_state(dst);
-
-    shift_rows(src, dst); 
-    AES::print_state(dst);
-
-    mix_columns_inv(src, dst);
-    AES::print_state(dst);
+    BYTE rk[11][16];
+    AES::expand_key(key, rk);
     
-    xor_key(src, dst, key);
+    BYTE dst[16];
+    
+    sub_bytes_inv(src,dst);
+    //AES::print_state(dst);
+
+    decode_block(src, dst, rk);
+    /*AES::print_state(rk[0]);
+    AES::print_state(rk[1]);
+    AES::print_state(rk[2]);
+    AES::print_state(rk[3]);
+    AES::print_state(rk[4]);
+    AES::print_state(rk[5]);
+    AES::print_state(rk[6]);
+    AES::print_state(rk[7]);
+    AES::print_state(rk[8]);
+    AES::print_state(rk[9]);*/
     AES::print_state(dst);
 }

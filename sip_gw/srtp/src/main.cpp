@@ -8,8 +8,8 @@ int main(int argc, char* argv[]) {
     initOpenCL();
     int err;
 
-//    AES::test();
-//    GPU::test();
+    //AES::test();
+    //GPU::test();
     SRTP_parser* p[PARSER_COUNT];
     RTP_interface* r;
     Daemon* d;

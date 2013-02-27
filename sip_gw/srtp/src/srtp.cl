@@ -189,9 +189,9 @@ void shift_rows_inv(__global CBYTE* src, __global BYTE* dst);
 void mix_columns_inv(__global CBYTE* src, __global BYTE* dst);
 
 void update_counter(__global BYTE *counter);
-void encode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* key,
+void encode_block(__global CBYTE* counter, __global BYTE* dst, 
                   __global BYTE* temp, __global BYTE* round_key);
-void decode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* key,
+void decode_block(__global CBYTE* counter, __global BYTE* dst,
                   __global BYTE* temp, __global BYTE* round_key);
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,7 +308,7 @@ void mix_columns_inv(__global CBYTE* src, __global BYTE* dst){
 // AES algorithm
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-void encode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* key, 
+void encode_block(__global CBYTE* counter, __global BYTE* dst, 
                   __global BYTE* temp, __global BYTE* round_key){
 
     xor_key(counter, temp, round_key);
@@ -337,21 +337,21 @@ void encode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* k
     xor_key(temp,dst,round_key+(ROUNDS*BLOCK_SIZE));
 }
 
-void decode_block(__global CBYTE* counter, __global BYTE* dst, __global CBYTE* key,
+void decode_block(__global CBYTE* counter, __global BYTE* dst,
                   __global BYTE* temp, __global BYTE* round_key){
     xor_key(counter,temp,round_key+(ROUNDS*BLOCK_SIZE));
     barrier(CLK_LOCAL_MEM_FENCE);
     
     shift_rows_inv(temp,dst);
-    barrier(CLK_LOCAL_MEM_FENCE);
-    
+    barrier(CLK_LOCAL_MEM_FENCE);   
+
     sub_bytes_inv(dst,temp);
     barrier(CLK_LOCAL_MEM_FENCE);
 
     for(int i = ROUNDS-1; i > 0; i--){ 
         xor_key(temp, dst, round_key+(i*BLOCK_SIZE));
         barrier(CLK_LOCAL_MEM_FENCE);
-    
+   
         mix_columns_inv(dst, temp);
         barrier(CLK_LOCAL_MEM_FENCE);
         
@@ -380,7 +380,7 @@ void update_counter(__global BYTE *counter){
 // Kernels
 //////////////////////////////////////////////////////////////////////////////////////////////
 __kernel void srtp_decode(__global BYTE* src, __global BYTE* dst,
-                          __global BYTE* key, __global BYTE* counter, int length,
+                          __global BYTE* counter, int length,
                           __global BYTE* round_key,
                           __global BYTE* temp, 
                           __global BYTE* temp2){
@@ -393,13 +393,13 @@ __kernel void srtp_decode(__global BYTE* src, __global BYTE* dst,
 
         for( ; i < length; i+=BLOCK_SIZE){
             barrier(CLK_LOCAL_MEM_FENCE);
-            decode_block(counter, dst+i, key, temp, round_key);
+            decode_block(counter, dst+i, temp, round_key);
             xor_key(dst+i,dst+i,src+i);
             if(gi == 0)
                 update_counter(counter);
         }
 
-        decode_block(counter, temp2, key, temp, round_key);
+        decode_block(counter, temp2, temp, round_key);
         for(i=i-BLOCK_SIZE; i < length; i++, j++){
             dst[i] = temp2[j] ^ src[i];
         }
@@ -407,7 +407,7 @@ __kernel void srtp_decode(__global BYTE* src, __global BYTE* dst,
 }
 
 __kernel void srtp_encode(__global BYTE* src, __global BYTE* dst,
-                          __global BYTE* key, __global BYTE* counter, int length,
+                          __global BYTE* counter, int length,
                           __global BYTE* round_key,
                           __global BYTE* temp, 
                           __global BYTE* temp2){
@@ -420,13 +420,13 @@ __kernel void srtp_encode(__global BYTE* src, __global BYTE* dst,
 
         for( ; i < length; i+=BLOCK_SIZE){
             barrier(CLK_LOCAL_MEM_FENCE);
-            encode_block(counter, dst+i, key, temp, round_key);
+            encode_block(counter, dst+i, temp, round_key);
             xor_key(dst+i,dst+i,src+i);
             if(gi == 0)
                 update_counter(counter);
         }
 
-        encode_block(counter, temp2, key, temp, round_key);
+        encode_block(counter, temp2, temp, round_key);
         for(i=i-BLOCK_SIZE; i < length; i++, j++){
             dst[i] = temp2[j] ^ src[i];
         }
@@ -434,11 +434,22 @@ __kernel void srtp_encode(__global BYTE* src, __global BYTE* dst,
 }
 
 
-__kernel void test(__global BYTE* src, __global BYTE* dst, __global BYTE* key){
+__kernel void test(__global BYTE* src, __global BYTE* dst, __global BYTE* key, __global BYTE* tmp){
     int gi = get_global_id(0);
 
     if(gi < 16){
-        mix_columns_inv(src, dst);
+        decode_block(src, dst, tmp, key);
+        //xor_key(src, dst, key);
+        //barrier(CLK_LOCAL_MEM_FENCE);
+    
+        //mix_columns_inv(src, dst);
+        //barrier(CLK_LOCAL_MEM_FENCE);
+        
+        //shift_rows_inv(src, dst);
+        //barrier(CLK_LOCAL_MEM_FENCE);
+        
+        //sub_bytes_inv(src, dst);
+        //barrier(CLK_LOCAL_MEM_FENCE);
     }
 }
 
