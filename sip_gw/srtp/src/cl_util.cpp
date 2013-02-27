@@ -193,7 +193,7 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
             NULL,      //wait list
             NULL);     //wait list
 
-    err = clEnqueueWriteBuffer(queue,
+    /*err = clEnqueueWriteBuffer(queue,
             key_gpu, //memory on gpu
             CL_TRUE,   //blocking write
             0,         //offset
@@ -201,13 +201,13 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
             key,       //memory data
             0,         //wait list
             NULL,      //wait list
-            NULL);     //wait list
+            NULL);     //wait list*/
     
     err = clEnqueueWriteBuffer(queue,
             iv_gpu, //memory on gpu
             CL_TRUE,   //blocking write
             0,         //offset
-            sizeof(cl_uchar)*length, //size in bytes of copied data
+            sizeof(cl_uchar)*16, //size in bytes of copied data
             iv,       //memory data
             0,         //wait list
             NULL,      //wait list
