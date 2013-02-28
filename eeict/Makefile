@@ -1,4 +1,4 @@
-DOC   = presentation
+DOC   = prispevek
 
 
 doc: $(DOC).tex
