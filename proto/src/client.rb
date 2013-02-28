@@ -43,6 +43,28 @@ require 'socket'
 
 #@payload="12345678901234567890123456789012345678901234567890"
 
+module Enumerable
+
+    def sum
+      self.inject(0){|accum, i| accum + i }
+    end
+
+    def mean
+      self.sum/self.length.to_f
+    end
+
+    def sample_variance
+      m = self.mean
+      sum = self.inject(0){|accum, i| accum +(i-m)**2 }
+      sum/(self.length - 1).to_f
+    end
+
+    def standard_deviation
+      return Math.sqrt(self.sample_variance)
+    end
+
+end 
+
 @t1 = Array.new
 @t2 = Array.new
 
@@ -87,14 +109,34 @@ end
 s = UDPSocket.new(Socket::AF_INET6)
 #s = UDPSocket.new(Socket::AF_INET)
 
-for i in 0..1000
+for i in 0..2
     measure_start(s, i)
     measure_stop(s)
 end
 
 diff = @t1.zip(@t2).map {|x| x[1]-x[0]}
-puts "min max: #{diff.minmax}"
-puts "average: #{diff.inject(:+)/diff.size}"
+mean = diff.inject(:+)/diff.size
+
+above = 0
+under = 0
+
+variance = diff.standard_deviation/2
+
+for val in diff
+    if (val > mean+variance)
+        above += 1
+    end
+    if (val < mean-variance)
+        under += 1
+    end
+end
+
+
+#puts "min max: #{diff.minmax}"
+#puts "down up: #{mean - variance/2} #{mean + variance}"
+#puts "above: #{above} under: #{under} total: #{diff.size}"
+
+puts "[\'#{ARGV[0]}\', #{diff.min}, #{mean-(variance)}, #{mean}, #{mean+(variance)}, #{diff.max}, #{above}]"
 
 #@t1.each_with_index { |t1, seq|
 #    puts "#{@t2[seq]-t1}"

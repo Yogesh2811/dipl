@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#define POOL_SIZE 10
+#define POOL_SIZE 30
 #define DEBUG
 
 
@@ -212,7 +212,7 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
     // Copy data from memory to gpu
     err = clEnqueueWriteBuffer(cl_queue,
             payload_src[index], //memory on gpu
-            CL_TRUE,   //blocking write
+            CL_FALSE,   //blocking write
             0,         //offset
             sizeof(cl_uchar)*length, //size in bytes of copied data
             src,       //memory data
@@ -222,7 +222,7 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
 
     err = clEnqueueWriteBuffer(cl_queue,
             iv_gpu[index], //memory on gpu
-            CL_TRUE,   //blocking write
+            CL_FALSE,   //blocking write
             0,         //offset
             sizeof(cl_uchar)*16, //size in bytes of copied data
             iv,       //memory data
@@ -232,7 +232,7 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
 
     err = clEnqueueWriteBuffer(cl_queue,
             rk[index], //memory on gpu
-            CL_TRUE,   //blocking write
+            CL_FALSE,   //blocking write
             0,         //offset
             sizeof(cl_uchar)*16*11,
             round_key, //memory data

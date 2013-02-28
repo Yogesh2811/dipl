@@ -1,43 +1,12 @@
 #!/bin/sh
 
-#ruby gateway.rb &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb 
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb >> /dev/null &
-ruby client.rb 
+function test () {
+  for i in $(seq 0 $1)
+  do
+    ruby client.rb $1 >> /dev/null &
+  done
+  ruby client.rb $1
+}
+
+test 10
+
