@@ -15,9 +15,11 @@
 \documentclass{eeict}
 \inputencoding{cp1250}
 \usepackage[bf]{caption2}
+\usepackage{url}
+
 %--------------------------------------------------------------------------------
 
-\title{TITLE OF THE PAPER - IN ENGLISH}
+\title{Design and Performance Analysis of Parallel Processing of SRTP Packets}
 \author{Jan Wozniak}
 \programme{Master Degree Programme (2), FIT BUT}
 \emails{xwozni00@stud.fit.vutbr.cz}
@@ -27,12 +29,12 @@
 
 \abstract{Encryption of real-time multimedia data transferes is one
   of the tasks for telecommunication infrastructure which should be considered
-  in order to provide essential level of security. Execution time of ciphering 
+  in order to reach essential level of security. Execution time of ciphering 
   algorithm could play fundamental role in delay of the packets, therefore, it 
   provides interesting challenge in terms of optimization methods. This work 
   focuses on paralellization possibilities of processing SRTP for the 
   purposes of private gateway with the usage of OpenCL framework, utilization
-  gateway`s resources and analysis of potential improvement.}
+  gateway's resources and analysis of potential improvement.}
 \keywords{AES, SRTP, general-purpose GPU, OpenCL, parallel computations, 
   gateway, VoIP.}
 
@@ -44,7 +46,7 @@
 %-------------------------------------------------------------------------------
 \selectlanguage{english}
 \section{Introduction}
-One of the essential metrics for measuring VoIP Gateway performance is 
+One of the essential metrics for measuring VoIP gateway's performance is 
 the number of simultaneous calls. It is affected mostly by the
 computational demands of used communication protocols and number of registered
 users. While the count of registered users provides very limited room for 
@@ -65,28 +67,101 @@ interest of this paper.
 
 \section{SRTP Processing}
 Secure Real-time Transport Protocol was designed as an extension over RTP protocol
-to obtain security and confidentiality for multimedia sessions. 
+to obtain security and confidentiality for multimedia sessions on application layer
+of ISO/OSI model. The packet has usual structure cosisting of the SRTP header,
+authentication extension and only encrypted data payload. The default, and as
+this paper was written, the only defined cipher is 128bit AES. 
 
--- packet consists of multiple independent blocks.
+In VoIP communication the time has essential impact on the quality of
+transmitted information, therefore, it is important that ensuring the 
+security of RTP wouldn't increase the latency over the acceptable level.
+Among typical limitations of real-time communications 
+belong \cite{perkins:rtp2003}:
+\vspace{-0.5em}
+\begin{itemize}
+\vspace{-0.5em}
+\item Maximal tolerable latency of round-trip time 300ms.
+\vspace{-0.5em}
+\item Smaller packet loss than 5\%.
+\vspace{-0.5em}
+\item Sensitivity to factors that are difficult to objectively measure
+such as jitter.
+\end{itemize}
+\vspace{-0.5em}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=14cm]{eeit.pdf}
+\caption{SRTP Processing Scheme: the data from network are captured in the \textit{network interface}
+running in its own thread. With corresponding \textit{stream}, input and output buffer
+are passed to the \textit{daemon} which can select one of three types of \textit{SRTP parser} 
+according to the application configuration. Index to output buffer is passed back to the
+\textit{network interface} and result is sent to the desired address.}
+\label{lcpstack}
+\end{figure}
+
+The exact size of payload in SRTP packet can differ widely according to the 
+used codec, its bit rate, and sampling frequency. The basic multimedia codec 
+is G.711, which should be supported by every multimedia device and with standardly 
+used 20ms sampling period, the length of payload is 160 bytes. Due to it's wide
+support it has been chosen and used for evaluation and comparison of two aproaches 
+for encryption and decryption.
 
 \subsection{AES}
--- parallelization of computation of cells in AES block.
+The counter-mode for AES has been selected for the VoIP sessions due to its invariacy
+to delay and even possible loss of packets. This provides flexibility in SRTP processing
+for packets received out of order as well. 
+
+Each byte in the block of AES cipher can be computed separately. The local dependency
+of bytes is limited to the distinct steps of the algorithm which requires usage of
+barriers for local synchronization.
 
 \subsection{Persistent Thread}
--- larger kernels to minimize negative influence of startup execution of the kernel.
+For massive parallel applications the obvious aproach would be to utilize as much
+of machine's power as possible to gain the largest speed-up in every single
+execution. However, the aim of this paper is to minimize large delays for multiple 
+sessions which requires rather carefull allocation of resources. Persistent threads
+is special type of programing paradigm combining both, the possible gain of mapping
+the program for parallel computation and considerate usage of resources \cite{pt}.
 
-\section{Gateway Design}
--- integration of SRTP stack to the VoIP gateway.
+Since the initialization of computational kernel can consume significant amount of
+time compared to the actual execution, larger kernel reusing its resources
+for multiple similar computations could render the initialization negligible trading
+off portion of parallelization.
+
+This approach has been chosen for packet parsing, while instead of mapping 160 OpenCL
+work-items on the entire G.711 packet's payload it uses 16 work-items in a loop that 
+goes through the entire packet.
 
 \section{Conclusion}
--- results of testing.
+The commercial gateway with optimized hardware can hold around 120 concurrent
+calls\footnote{\url{http://www.athlsolutions.com/web/en/Products/tabid/128/ProdID/38/Hipath\_4000.aspx}}. 
+The implementation proposed as backup for this paper evaluation can be sumarized
+in following graphs of distributed packet latencies. Measured was round-trip time latency
+of each packet during 50 to 150 concurrent calls that all lasted 20 seconds. 
+The range of latencies seem to be unreliable however more than 95\% of the
+recceived packets falls between the smaller range of the column which is
+visualized thicker.
 
+The tests were all done on the machine with processor intel i5 2500k with HD3000 graphics chip
+running OpenSUSE 12.2 and OpenCL version 1.2.
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=13cm]{gpu.png}
+
+\vspace{4em}
+
+\includegraphics[width=13cm]{cpu.png}
+\caption{Top graph visualizes delay for prallel processing using OpenCL, bottom graph
+is for serial processing.}
+\label{lcpstack}
+\end{figure}
 
 %------------
 % Citace
 %
-\begin{thebibliography}{9}
+%\begin{thebibliography}{9}
 %  \bibitem{rybicka} Rybièka, J.: \LaTeX pro zaèáteèníky, Brno, Konvoj 1999,
 %            ISBN 80-85615-77-0
 %  \bibitem{orsag} Orság, F.: Vision für die Zukunft. Biometrie, Kreutztal,
@@ -95,6 +170,8 @@ to obtain security and confidentiality for multimedia sessions.
 %    Robustness of the Finger-print and Speech Technologies. In: BT 2004 - 
 %    International Workshop on Biometric Technologies, Calgary, CA, 2004,
 %    s. 99-103
-\end{thebibliography}
+%\end{thebibliography}
 
+\bibliography{literatura} % viz. literatura.bib
+\bibliographystyle{plain}
 \end{document}
