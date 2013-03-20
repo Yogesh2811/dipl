@@ -14,7 +14,7 @@
 %
 \documentclass{eeict}
 \inputencoding{cp1250}
-\usepackage[bf]{caption2}
+\usepackage[bf]{caption}
 \usepackage{url}
 
 %--------------------------------------------------------------------------------
@@ -47,14 +47,14 @@
 \selectlanguage{english}
 \section{Introduction}
 One of the essential metrics for measuring VoIP gateway's performance is 
-the number of simultaneous calls. It is affected mostly by the
+the number and quality of simultaneous calls. It is affected mostly by the
 computational demands of used communication protocols and number of registered
 users. While the count of registered users provides very limited room for 
 improvement by the nature of the problem itself, there could be wide variety
 of aproaches in implementing the protocol stacks. 
 
 Significant amount of resources are utilized during indirect simultaneous call
-sessions by processing multimedia packets. Since security has recently grown 
+sessions by processing multimedia packets \cite{analysis}. Since security has recently grown 
 to be necessary feature in VoIP communication, and the encryption and decryption
 processes are designed with the idea of optimization, it is primary scope of 
 interest of this paper.
@@ -68,9 +68,7 @@ interest of this paper.
 \section{SRTP Processing}
 Secure Real-time Transport Protocol was designed as an extension over RTP protocol
 to obtain security and confidentiality for multimedia sessions on application layer
-of ISO/OSI model. The packet has usual structure cosisting of the SRTP header,
-authentication extension and only encrypted data payload. The default, and as
-this paper was written, the only defined cipher is 128bit AES. 
+of ISO/OSI model. 
 
 In VoIP communication the time has essential impact on the quality of
 transmitted information, therefore, it is important that ensuring the 
@@ -80,38 +78,41 @@ belong \cite{perkins:rtp2003}:
 \vspace{-0.5em}
 \begin{itemize}
 \vspace{-0.5em}
-\item Maximal tolerable latency of round-trip time 300ms.
+\item Maximal tolerable latency of round-trip time 300~ms.
 \vspace{-0.5em}
 \item Smaller packet loss than 5\%.
 \vspace{-0.5em}
 \item Sensitivity to factors that are difficult to objectively measure
 such as jitter.
 \end{itemize}
-\vspace{-0.5em}
+\vspace{-1em}
 
-\begin{figure}[h!]
-\centering
-\includegraphics[width=14cm]{eeit.pdf}
-\caption{SRTP Processing Scheme: the data from network are captured in the \textit{network interface}
-running in its own thread. With corresponding \textit{stream}, input and output buffer
-are passed to the \textit{daemon} which can select one of three types of \textit{SRTP parser} 
-according to the application configuration. Index to output buffer is passed back to the
-\textit{network interface} and result is sent to the desired address.}
-\label{lcpstack}
-\end{figure}
-
+The designed application captures data from network in the \textit{network interface}
+running in its own thread. With corresponding \textit{stream}, input and output buffers
+are passed to the \textit{daemon} which selects one of three types of \textit{SRTP parser} 
+according to the application configuration. Index to output buffer is passed to the
+\textit{network interface} and result is sent to the desired address as visualized in 
+figure \ref{lcpstack}.
 The exact size of payload in SRTP packet can differ widely according to the 
 used codec, its bit rate, and sampling frequency. The basic multimedia codec 
 is G.711, which should be supported by every multimedia device and with standardly 
 used 20ms sampling period, the length of payload is 160 bytes. Due to it's wide
-support it has been chosen and used for evaluation and comparison of two aproaches 
-for encryption and decryption.
+support it has been chosen and used for evaluation and comparison of two approaches 
+for encryption and decryption -- serial and parallel.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=13cm]{eeit.pdf}
+\caption{SRTP Processing Scheme.}
+\label{lcpstack}
+\end{figure}
+
+\vspace{-1em}
 
 \subsection{AES}
-The counter-mode for AES has been selected for the VoIP sessions due to its invariacy
-to delay and even possible loss of packets. This provides flexibility in SRTP processing
-for packets received out of order as well. 
-
+The CTR has been selected for the VoIP sessions due to its invariacy
+for delay and even possible loss of packets and it provides flexibility in SRTP processing
+for packets received out of order. 
 Each byte in the block of AES cipher can be computed separately. The local dependency
 of bytes is limited to the distinct steps of the algorithm which requires usage of
 barriers for local synchronization.
@@ -128,36 +129,49 @@ Since the initialization of computational kernel can consume significant amount 
 time compared to the actual execution, larger kernel reusing its resources
 for multiple similar computations could render the initialization negligible trading
 off portion of parallelization.
-
 This approach has been chosen for packet parsing, while instead of mapping 160 OpenCL
-work-items on the entire G.711 packet's payload it uses 16 work-items in a loop that 
-goes through the entire packet.
+work-items on the G.711 packet's payload it uses 16 work-items in a loop that 
+goes through the data.
 
-\section{Conclusion}
+\section{Results}
 The commercial gateway with optimized hardware can hold around 120 concurrent
-calls\footnote{\url{http://www.athlsolutions.com/web/en/Products/tabid/128/ProdID/38/Hipath\_4000.aspx}}. 
-The implementation proposed as backup for this paper evaluation can be sumarized
+calls \cite{hp4k}.
+The evaluation of implementation proposed as backup for this paper is sumarized
 in following graphs of distributed packet latencies. Measured was round-trip time latency
-of each packet during 50 to 150 concurrent calls that all lasted 20 seconds. 
-The range of latencies seem to be unreliable however more than 95\% of the
-recceived packets falls between the smaller range of the column which is
-visualized thicker.
+of each packet during 50 to 150 concurrent calls that all lasted 20 seconds,  
+results for 150 concurrent calls for serial implementation were excessively 
+large thus not included in the graph. The thicker part of the column guarantees 
+to contain 95\% of the packets which was earlier presented as one of requirements
+for reliable session. 
 
 The tests were all done on the machine with processor intel i5 2500k with HD3000 graphics chip
 running OpenSUSE 12.2 and OpenCL version 1.2.
 
+
 \begin{figure}[h!]
 \centering
-\includegraphics[width=13cm]{gpu.png}
-
-\vspace{4em}
-
-\includegraphics[width=13cm]{cpu.png}
-\caption{Top graph visualizes delay for prallel processing using OpenCL, bottom graph
-is for serial processing.}
-\label{lcpstack}
+\includegraphics[width=14.5cm]{gpu.png}
+\vspace{-0.5em}
+\caption{Latencies for parallel implementation.}
 \end{figure}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=14.5cm]{cpu.png}
+\vspace{-0.5em}
+\caption{Latencies for serial implementation.}
+\end{figure}
+
+\vspace{-1.1em}
+
+\section{Conclusion}
+Proposed parallel implementation can reduce packet latency caused by encryption 
+to half or third depending on number of concurrent calls. Even though 
+optimizations are far from being complete the results are promising and can bring
+opportunities for improvement in related tasks, e.g. transcoding.
+
+\vspace{-0.2em}
+%\footnote{\url{http://www.athlsolutions.com/web/en/Products/tabid/128/ProdID/38/Hipath\_4000.aspx}}. 
 %------------
 % Citace
 %
@@ -173,5 +187,5 @@ is for serial processing.}
 %\end{thebibliography}
 
 \bibliography{literatura} % viz. literatura.bib
-\bibliographystyle{plain}
+\bibliographystyle{ieeetr}
 \end{document}
