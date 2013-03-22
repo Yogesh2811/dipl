@@ -87,12 +87,14 @@ such as jitter.
 \end{itemize}
 \vspace{-1em}
 
-The designed application captures data from network in the \textit{network interface}
-running in its own thread. With corresponding \textit{stream}, input and output buffers
-are passed to the \textit{daemon} which selects one of three types of \textit{SRTP parser} 
-according to the application configuration. Index to output buffer is passed to the
-\textit{network interface} and result is sent to the desired address as visualized in 
-figure \ref{lcpstack}.
+The designed application captures data from network in the \textit{network layer} which 
+ensures communication with both endpoints and is running in its own thread. It contains
+buffer pools for incomming and outgoing data to ensure maximal level of parallelization
+in each layer of application. Pointers for input and output buffers are passed for further
+packet processing where are extracted information such as header from the packet, copied 
+data from the memory to OpenCL data structures and serial implementation of AES key schedule.
+Parallel processing of payload 
+Graph visualizes only packet encoding, however, decoding is executed in similar manner.
 The exact size of payload in SRTP packet can differ widely according to the 
 used codec, its bit rate, and sampling frequency. The basic multimedia codec 
 is G.711, which should be supported by every multimedia device and with standardly 
@@ -102,7 +104,7 @@ for encryption and decryption -- serial and parallel.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=13cm]{eeit.pdf}
+\includegraphics[width=13cm]{paral_scheme.pdf}
 \caption{SRTP Processing Scheme.}
 \label{lcpstack}
 \end{figure}
