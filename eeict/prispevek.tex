@@ -27,12 +27,12 @@
 \supervisor{Peter Jurneèka}
 \emailv{ijurnecka@fit.vutbr.cz}
 
-\abstract{Encryption of real-time multimedia data transferes is one
+\abstract{Encryption of real-time multimedia data transfers is one
   of the tasks for telecommunication infrastructure which should be considered
   in order to reach essential level of security. Execution time of ciphering 
   algorithm could play fundamental role in delay of the packets, therefore, it 
   provides interesting challenge in terms of optimization methods. This work 
-  focuses on paralellization possibilities of processing SRTP for the 
+  focuses on parallelization possibilities of processing SRTP for the 
   purposes of private gateway with the usage of OpenCL framework, utilization
   gateway's resources and analysis of potential improvement.}
 \keywords{AES, SRTP, general-purpose GPU, OpenCL, parallel computations, 
@@ -51,7 +51,7 @@ the number and quality of simultaneous calls. It is affected mostly by the
 computational demands of used communication protocols and number of registered
 users. While the count of registered users provides very limited room for 
 improvement by the nature of the problem itself, there could be wide variety
-of aproaches in implementing the protocol stacks. 
+of approaches in implementing the protocol stacks. 
 
 Significant amount of resources are utilized during indirect simultaneous call
 sessions by processing multimedia packets \cite{analysis}. Since security has recently grown 
@@ -88,13 +88,20 @@ such as jitter.
 \vspace{-1em}
 
 The designed application captures data from network in the \textit{network layer} which 
-ensures communication with both endpoints and is running in its own thread. It contains
-buffer pools for incomming and outgoing data to ensure maximal level of parallelization
-in each layer of application. Pointers for input and output buffers are passed for further
-packet processing where are extracted information such as header from the packet, copied 
-data from the memory to OpenCL data structures and serial implementation of AES key schedule.
-Parallel processing of payload 
-Graph visualizes only packet encoding, however, decoding is executed in similar manner.
+ensures communication with both endpoints of multimedia session and is running in its own 
+thread. It contains buffer pools for incoming and outgoing data to ensure maximal level 
+of parallelization in each layer of application. Pointers for input and output buffers are 
+passed for further packet processing where are extracted information such as header and payload 
+from the packet, copied data from the memory to OpenCL data structures and serial implementation 
+of AES key schedule. Parallel processing of payload is executed in precisely 16 work-items
+while the application follows paradigm of persistent thread implementation. 
+
+In the scheme in figure \ref{scheme} gray blocks visualize serial implementation in C/C++ and
+yellow blocks are parallel implementation in OpenCL. The arrows represent data flows between
+and inside of blocks. Thin purple lines depict usage of barriers -- tools
+for local synchronization between work-items.
+
+Scheme \ref{scheme} visualizes only packet encoding, however, decoding is executed in similar manner.
 The exact size of payload in SRTP packet can differ widely according to the 
 used codec, its bit rate, and sampling frequency. The basic multimedia codec 
 is G.711, which should be supported by every multimedia device and with standardly 
@@ -104,15 +111,15 @@ for encryption and decryption -- serial and parallel.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=13cm]{paral_scheme.pdf}
+\includegraphics[width=15cm]{paral_scheme.pdf}
 \caption{SRTP Processing Scheme.}
-\label{lcpstack}
+\label{scheme}
 \end{figure}
 
 \vspace{-1em}
 
 \subsection{AES}
-The CTR has been selected for the VoIP sessions due to its invariacy
+The CTR has been selected for the VoIP sessions due to its invariace
 for delay and even possible loss of packets and it provides flexibility in SRTP processing
 for packets received out of order. 
 Each byte in the block of AES cipher can be computed separately. The local dependency
@@ -120,10 +127,10 @@ of bytes is limited to the distinct steps of the algorithm which requires usage 
 barriers for local synchronization.
 
 \subsection{Persistent Thread}
-For massive parallel applications the obvious aproach would be to utilize as much
+For massive parallel applications the obvious approach would be to utilize as much
 of machine's power as possible to gain the largest speed-up in every single
 execution. However, the aim of this paper is to minimize large delays for multiple 
-sessions which requires rather carefull allocation of resources. Persistent threads
+sessions which requires rather careful allocation of resources. Persistent threads
 is special type of programing paradigm combining both, the possible gain of mapping
 the program for parallel computation and considerate usage of resources \cite{pt}.
 
@@ -138,7 +145,7 @@ goes through the data.
 \section{Results}
 The commercial gateway with optimized hardware can hold around 120 concurrent
 calls \cite{hp4k}.
-The evaluation of implementation proposed as backup for this paper is sumarized
+The evaluation of implementation proposed as backup for this paper is summarized
 in following graphs of distributed packet latencies. Measured was round-trip time latency
 of each packet during 50 to 150 concurrent calls that all lasted 20 seconds,  
 results for 150 concurrent calls for serial implementation were excessively 
@@ -152,16 +159,9 @@ running OpenSUSE 12.2 and OpenCL version 1.2.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=14.5cm]{gpu.png}
+\includegraphics[width=14.7cm]{compare.png}
 \vspace{-0.5em}
-\caption{Latencies for parallel implementation.}
-\end{figure}
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=14.5cm]{cpu.png}
-\vspace{-0.5em}
-\caption{Latencies for serial implementation.}
+\caption{Latencies for parallel implementation in blue color and serial in yellow color.}
 \end{figure}
 
 \vspace{-1.1em}
