@@ -98,8 +98,7 @@ while the application follows paradigm of persistent thread implementation.
 
 In the scheme in figure \ref{scheme} gray blocks visualize serial implementation in C/C++ and
 yellow blocks are parallel implementation in OpenCL. The arrows represent data flows between
-and inside of blocks. Thin purple lines depict usage of barriers -- tools
-for local synchronization between work-items.
+and inside of blocks. Thin purple lines depict usage of barriers.
 
 Scheme \ref{scheme} visualizes only packet encoding, however, decoding is executed in similar manner.
 The exact size of payload in SRTP packet can differ widely according to the 
