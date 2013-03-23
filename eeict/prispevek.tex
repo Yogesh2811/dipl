@@ -138,8 +138,8 @@ time compared to the actual execution, larger kernel reusing its resources
 for multiple similar computations could render the initialization negligible trading
 off portion of parallelization.
 This approach has been chosen for packet parsing, while instead of mapping 160 OpenCL
-work-items on the G.711 packet's payload it uses 16 work-items in a loop that 
-goes through the data.
+work-items on the G.711 packet's payload it uses one work-item for each AES block cell
+in a loop that goes through the data.
 
 \section{Results}
 The commercial gateway with optimized hardware can hold around 120 concurrent
