@@ -103,13 +103,13 @@ def measure_stop(s)
     seq = packet[0].to_i
     #p seq
     @t2[seq] = t
-    #sleep(0.020)
+    sleep(0.018)
 end
 
 s = UDPSocket.new(Socket::AF_INET6)
 #s = UDPSocket.new(Socket::AF_INET)
 
-for i in 0..2
+for i in 0..1000
     measure_start(s, i)
     measure_stop(s)
 end
@@ -136,7 +136,7 @@ end
 #puts "down up: #{mean - variance/2} #{mean + variance}"
 #puts "above: #{above} under: #{under} total: #{diff.size}"
 
-puts "[\'#{ARGV[0]}\', #{diff.min}, #{mean-(variance)}, #{mean}, #{mean+(variance)}, #{diff.max}, #{above}]"
+puts "[\'#{ARGV[0]}\', #{diff.min}, #{mean-(variance)}, #{mean+(variance)}, #{diff.max}, #{above}]"
 
 #@t1.each_with_index { |t1, seq|
 #    puts "#{@t2[seq]-t1}"
