@@ -3,10 +3,12 @@
 #include "srtp_parser.h"
 #include "daemon.h"
 #include "aes.h"
+#include "plugins.h"
 
 int main(int argc, char* argv[]) {
-    initOpenCL();
-    int err;
+    //initOpenCL();
+    Plugins::init();
+    /*int err;
 
     //AES::test();
     //GPU::test();
@@ -38,7 +40,7 @@ int main(int argc, char* argv[]) {
     getchar();
     r->stop();
     //p->stop();
-    //d->stop();
+    //d->stop();*/
 
     return 0;
 }

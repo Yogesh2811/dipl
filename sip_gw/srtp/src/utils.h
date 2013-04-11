@@ -7,8 +7,9 @@
 #include <sys/time.h>
 #endif
 
-//#define LOG_MSG(msg) printf(msg); printf("\n");
-#define LOG_MSG(msg)
+#define LOG_MSG(...) printf("LOG "); printf(__VA_ARGS__); printf("\n");
+#define LOG_ERROR(...) printf("ERR "); printf(__VA_ARGS__); printf("\n");
+//#define LOG_MSG(msg)
 
 double get_time();
 
