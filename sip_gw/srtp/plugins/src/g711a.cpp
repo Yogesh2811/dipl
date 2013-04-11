@@ -2,27 +2,27 @@
 
 #include <cstdio>
 
-//codec basic info
+//codec basic plugin info
 const char* encoding_name = "PCMA";
 const int PT = 8;
 
-//plugin interface functions
-int transcode_function(const unsigned char* src, 
-              unsigned char* dst, 
-              int len_src, 
-              int* len_dst, 
-              int codec){
-    printf("dynamic g711a\n");
+
+//functions for plugin interface
+int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
+    printf("dynamic %s %d\n", encoding_name, PT);
     return 0;
 }
-int (*transcode)(const unsigned char* src, 
-              unsigned char* dst, 
-              int len_src, 
-              int* len_dst, 
-              int codec) = &transcode_function;
 
-void to_raw(const unsigned char* src, unsigned char* raw, int len_src, int* len_dst){
+void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst){
 }
 
-void from_raw(const unsigned char* raw, unsigned char* dst, int len_src, int* len_dst){
+void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst){
 }
+
+
+
+
+//public interface of the plugin
+int (*transcode)(CBYTE*, BYTE*, int, int*, int) = &transcode_f;
+void (*to_raw)(CBYTE*, BYTE*, int, int*) = &to_raw_f;
+void (*from_raw)(CBYTE*, BYTE*, int, int*) = &from_raw_f;

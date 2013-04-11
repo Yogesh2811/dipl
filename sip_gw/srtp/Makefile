@@ -14,7 +14,7 @@ OBJS  = $(shell ls src/*cpp | sed s/src/bin/g | sed s/cpp/o/g)
 
 
 ifeq ($(OS), Darwin)
-	LIBS=-framework OpenCL
+	LIBS=-framework OpenCL 
 	CL_FLAGS=-I/usr/local/share/cuda/include/
 	BOOST_FLAGS=-l boost_thread-mt -lboost_system-mt
 else
@@ -22,7 +22,7 @@ ifeq ($(OS), CYGWIN_NT-5.1)
 	LIBS=
 	CL_FLAGS=
 else
-	LIBS=-lOpenCL
+	LIBS=-lOpenCL -ldl 
 	CL_FLAGS=-L/opt/AMDAPP/lib/x86/ -I/opt/AMDAPP/include/
 	OBJ_CL_FLAGS=-I/opt/AMDAPP/include/
 	OBJ_LIBS=-lOpenCL
