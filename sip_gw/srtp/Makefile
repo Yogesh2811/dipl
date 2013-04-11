@@ -22,7 +22,7 @@ ifeq ($(OS), CYGWIN_NT-5.1)
 	LIBS=
 	CL_FLAGS=
 else
-	LIBS=-lOpenCL
+	LIBS=-lOpenCL -ldl 
 	CL_FLAGS=-L/opt/AMDAPP/lib/x86/ -I/opt/AMDAPP/include/
 	OBJ_CL_FLAGS=-I/opt/AMDAPP/include/
 	OBJ_LIBS=-lOpenCL

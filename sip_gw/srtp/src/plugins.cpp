@@ -48,12 +48,25 @@ int set_plugin(void* plugin){
     char** encoding_name = (char**)dlsym(plugin, "encoding_name");
     if((error = dlerror()) != NULL) {return 2;}
 
-    int (**transcode)(CBYTE* src, BYTE* dst, int len_src, int* len_dst, int codec);
-    transcode = (int(**)(CBYTE*, BYTE*, int, int*, int))dlsym(plugin, "transcode");
+    int (**transcode)(CBYTE*, BYTE*, int, int*, int);
+    transcode = (int(**)(CBYTE*,BYTE*,int,int*,int))dlsym(plugin, "transcode");
     if((error = dlerror()) != NULL) {return 3;}
-    (**transcode)(NULL, NULL, 1, NULL, 0);
 
-    LOG_MSG("Plugin::set_plugin() PT:%d encoding_name:%s", pt, (*encoding_name));
+    void (**to_raw)(CBYTE*, BYTE*, int, int*);
+    to_raw = (void(**)(CBYTE*,BYTE*,int,int*))dlsym(plugin, "to_raw");
+    if((error = dlerror()) != NULL) {return 4;}
+ 
+    void (**from_raw)(CBYTE*, BYTE*, int, int*);
+    from_raw = (void(**)(CBYTE*,BYTE*,int,int*))dlsym(plugin, "from_raw");
+    if((error = dlerror()) != NULL) {return 5;}
+
+    transcode_plugins[pt].PT = pt; 
+    transcode_plugins[pt].encoding_name = (*encoding_name);
+    transcode_plugins[pt].transcode = (*transcode);
+    transcode_plugins[pt].to_raw = (*to_raw);
+    transcode_plugins[pt].from_raw = (*from_raw);
+
+    LOG_MSG("Plugin::set_plugin() PT:%d name:%s", pt, (*encoding_name));
     return 0;
 }
 
@@ -73,27 +86,38 @@ void Plugins::init(){
                 if(plugin != NULL) {
                     int err = set_plugin(plugin);
                     if(err != 0){ 
-                        LOG_ERROR("Plugins::init() %s %d", dlerror(), err) break; 
+                        LOG_ERROR("Plugins::init()%s %d", dlerror(), err) break;
                     }
+                    int pt = get_PT(plugin);
 
-                    //transcode_plugins[pt] = plugin;
+                    BYTE src[10], dst[10];
+                    int len;
+                    (*transcode_plugins[pt].transcode)(src, dst, 10, &len, pt);
+                    (*transcode_plugins[pt].to_raw)(src, dst, 10, &len);    
+                    (*transcode_plugins[pt].from_raw)(src, dst, 10, &len);
                 }
             }
         }
         
         closedir(dir);
-        /*for (; itr != end_itr; itr++ ) {
-            if ( is_plugin_file_name(itr->path().string())) {
-                //LOG_MSG("Plugins::init() %s loaded",itr->path().string().c_str());
-                //transcode_plugins[ get_PT(itr->path()) ] = get_plugin(itr->path());
-            }
-        }*/
 
     } else {
         LOG_ERROR("Plugins::init() does not exist");
     }
 }
 
+int Plugins::transcode(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt_src, int pt_dst){
+    if(transcode_plugins[pt_src].encoding_name != NULL &&
+       transcode_plugins[pt_dst].encoding_name != NULL ) {
+        int result = (*transcode_plugins[pt_src].transcode)(src, dst, l_src, l_dst, pt_dst);
+        if(result < 1){
+            BYTE* raw;
+            int l_raw;
+            (*transcode_plugins[pt_src].to_raw)(src, raw, l_src, &l_raw);
+            (*transcode_plugins[pt_dst].from_raw)(raw, dst, l_raw, l_dst);
+        }
+    }
+}
 
 void Plugins::cleanup(){
     for(int i = 0; i<PAYLOAD_TYPES; i++){
