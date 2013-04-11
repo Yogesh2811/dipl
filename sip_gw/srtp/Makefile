@@ -5,18 +5,18 @@
 
 
 OS    = $(shell uname)
-PROJ  = jpeg_conv
+PROJ  = srtp_stack
 SRC   = src/
 BIN   = bin/
-FLAGS = -std=c++11 -Wall -pedantic -w
+FLAGS = -std=c++11 -Wall -pedantic -w 
 CC    = g++-4.7
 OBJS  = $(shell ls src/*cpp | sed s/src/bin/g | sed s/cpp/o/g)
 
 
 ifeq ($(OS), Darwin)
-	LIBS=-framework OpenCL
+	LIBS=-framework OpenCL -ldl
 	CL_FLAGS=-I/usr/local/share/cuda/include/
-	BOOST_FLAGS=-l boost_thread-mt -lboost_system-mt
+	BOOST_FLAGS=-lboost_thread-mt -lboost_system-mt
 else
 ifeq ($(OS), CYGWIN_NT-5.1)
 	LIBS=
