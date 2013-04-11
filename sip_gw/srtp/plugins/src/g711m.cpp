@@ -7,14 +7,16 @@ const int PT = 0;
 
 //functions for plugin interface
 int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
-    printf("dynamic %s %d\n", encoding_name, PT);
+    printf("dynamic transcode %s %d\n", encoding_name, PT);
     return 0;
 }
 
 void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst){
+    printf("dynamic to_raw %s %d\n", encoding_name, PT);
 }
 
 void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst){
+    printf("dynamic from_raw %s %d\n", encoding_name, PT);
 }
 
 
