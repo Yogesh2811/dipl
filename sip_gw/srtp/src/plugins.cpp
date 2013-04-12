@@ -107,15 +107,32 @@ void Plugins::init(){
 }
 
 int Plugins::transcode(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt_src, int pt_dst){
+    int result = -1;
     if(transcode_plugins[pt_src].encoding_name != NULL &&
        transcode_plugins[pt_dst].encoding_name != NULL ) {
-        int result = (*transcode_plugins[pt_src].transcode)(src, dst, l_src, l_dst, pt_dst);
-        if(result < 1){
+        result = (*transcode_plugins[pt_src].transcode)(src, dst, l_src, l_dst, pt_dst);
+        if(result < 1){ //must convert through PCM
             BYTE* raw;
             int l_raw;
             (*transcode_plugins[pt_src].to_raw)(src, raw, l_src, &l_raw);
             (*transcode_plugins[pt_dst].from_raw)(raw, dst, l_raw, l_dst);
         }
+    }
+    return result;
+}
+
+void* Plugins::get_transcode_function(int pt, int result, bool to_pcm){
+    if(result == 1){
+        return (void*)transcode_plugins[pt].transcode;
+    }
+    else if(result == 0){
+        if(to_pcm == true)
+            return (void*)transcode_plugins[pt].to_raw;
+        else
+            return (void*)transcode_plugins[pt].from_raw;
+    }
+    else{ // if(result == -1)
+        return NULL;
     }
 }
 

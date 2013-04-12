@@ -30,7 +30,7 @@ extern const int PT;
 extern int (*transcode)(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt);
 
 /*
- * Transcodes codec to raw LPC
+ * Transcodes codec to raw PCM
  *
  * @param src - source data
  * @param dst - expects allocated buffer with big enough size
@@ -40,7 +40,7 @@ extern int (*transcode)(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt);
 extern void (*to_raw)(CBYTE* src, BYTE* raw, int len_src, int* len_dst);
 
 /*
- * Transcodes raw LPC to codec
+ * Transcodes raw PCM to codec
  *
  * @param src - source data
  * @param dst - expects NULL, if fails or unable to convert, sets to NULL

@@ -1,4 +1,6 @@
 #include "transcode_plugin.h"
+
+#include <netinet/in.h>
 #include <cstdio>
 #include <cstring>
 
@@ -47,7 +49,7 @@ BYTE u2a[128] = {
 
 void transcode_g711a(CBYTE* src, BYTE* dst, int length){
     for(int i = 0; i<length; i++){
-        dst[i] = ((src[i] & 0x80) ? (0xD5 ^ u2a[src[i] ^ 0xFF] - 1) : (0x55 ^ u2a[src[i] ^ 0x7F] - 1));
+        dst[i]=((src[i]&0x80)?(0xD5^u2a[src[i]^0xFF]-1):(0x55^u2a[src[i]^0x7F]-1));
     }
 }
 
