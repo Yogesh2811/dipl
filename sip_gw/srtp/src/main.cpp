@@ -35,9 +35,9 @@ int main(int argc, char* argv[]) {
     //Plugins::transcode(buff[1], buff[2], len[1], &len[2], 8, 0);
 
     void (*to_pcm)(CBYTE* src, BYTE* raw, int len_src, int* len_dst) = 
-        (void (*)(CBYTE*, BYTE*, int, int*))Plugins::get_transcode_function(8, 0, true);
+        (void (*)(CBYTE*, BYTE*, int, int*))Plugins::get_transcode_function(0, 0, true);
     void (*from_pcm)(CBYTE* src, BYTE* raw, int len_src, int* len_dst) = 
-        (void (*)(CBYTE*, BYTE*, int, int*))Plugins::get_transcode_function(8, 0, false);
+        (void (*)(CBYTE*, BYTE*, int, int*))Plugins::get_transcode_function(0, 0, false);
     
     (*to_pcm)(buff[0], buff[1], len[0], &len[1]);
     (*from_pcm)(buff[1], buff[2], len[1], &len[2]);

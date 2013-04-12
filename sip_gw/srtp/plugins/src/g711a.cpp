@@ -25,11 +25,7 @@ void (*from_raw)(CBYTE*, BYTE*, int, int*) = &from_raw_f;
 ////////////////////////////////////////////////////////////////////////////////////////////
 //                                   IMPLEMENTATION                                       //
 ////////////////////////////////////////////////////////////////////////////////////////////
-#define	SIGN_BIT	(0x80)		/* Sign bit for a A-law byte. */
-#define	QUANT_MASK	(0xf)		/* Quantization field mask. */
-#define	NSEGS		(8)		/* Number of A-law segments. */
-#define	SEG_SHIFT	(4)		/* Left shift for segment number. */
-#define	SEG_MASK	(0x70)		/* Segment field mask. */
+#define ALAW_MAX 0xFFF
 
 /* A- to u-law conversions */
 static CBYTE a2u[128] = {         
@@ -50,10 +46,6 @@ static CBYTE a2u[128] = {
 112, 113, 114, 115, 116, 117, 118, 119,
 120, 121, 122, 123, 124, 125, 126, 127};
 
-static short seg_aend[8] = {0x1F, 0x3F, 0x7F, 0xFF,
-			    0x1FF, 0x3FF, 0x7FF, 0xFFF};
-
-#define ALAW_MAX 0xFFF
 
 
 void transcode_g711u(CBYTE* src, BYTE* dst, int length){
@@ -62,12 +54,6 @@ void transcode_g711u(CBYTE* src, BYTE* dst, int length){
     }
 }
 
-short search(short val, short *table, short size){
-    for(short i = 0; i<size; i++) {
-        if(val <= *table++)
-	    return(i);
-    }
-}
 
 int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
     if(pt == 8){

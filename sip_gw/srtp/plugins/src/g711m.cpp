@@ -28,6 +28,9 @@ void (*from_raw)(CBYTE*, BYTE*, int, int*) = &from_raw_f;
 //                                   IMPLEMENTATION                                       //
 ////////////////////////////////////////////////////////////////////////////////////////////
 /* u- to A-law conversions */
+#define MULAW_MAX  0x1FFF
+#define MULAW_BIAS 33
+
 BYTE u2a[128] = {         
 1,   1,   2,   2,   3,   3,   4,   4,
 5,   5,   6,   6,   7,   7,   8,   8,
@@ -67,12 +70,57 @@ int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
     return 0;
 }
 
+short ulaw_to_pcm(BYTE number){
+    BYTE sign = 0, position = 0;
+    short decoded = 0;
+    number = ~number;
+    if (number & 0x80){
+        number &= ~(1 << 7);
+        sign = -1;
+    }
+    position = ((number & 0xF0) >> 4) + 5;
+    decoded = ((1 << position) | ((number & 0x0F) << (position - 4))
+              | (1 << (position - 5))) - MULAW_BIAS;
+    return (sign == 0) ? (decoded) : (-(decoded));
+}
+
 void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst){
-    printf("dynamic to_raw %s %d\n", encoding_name, PT);
+    (*len_dst) = len_src*2;
+    BYTE aval;
+    short t, seg, pcm;
+
+    for(int i = 0, ii = 0; i<len_src; i++, ii+=2){
+	pcm = ulaw_to_pcm(src[i]);
+	raw[ii]   = (pcm >> 8); ;
+	raw[ii+1] = pcm;
+    }
+}
+
+BYTE pcm_to_ulaw(short number){
+    short mask = 0x1000;
+    BYTE sign = 0, position = 12, lsb = 0;
+    if (number < 0) {
+       number = -number;
+       sign = 0x80;
+    }
+    number += MULAW_BIAS;
+    if (number > MULAW_MAX) {
+        number = MULAW_MAX;
+    }
+    for (; ((number & mask) != mask && position >= 5); mask >>= 1, position--);
+    lsb = (number >> (position - 4)) & 0x0f;
+    return (~(sign | ((position - 5) << 4) | lsb));
 }
 
 void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst){
-    printf("dynamic from_raw %s %d\n", encoding_name, PT);
+    (*len_dst) = len_src/2;
+    short pcm, seg, mask;
+    BYTE aval;
+
+    for(int i = 0, ii = 0; i<len_src; i+=2, ii++){
+	pcm = ((short)raw[i])<<8 | (short)raw[i+1];
+	dst[ii] = pcm_to_ulaw(pcm);
+    }
 }
 
 
