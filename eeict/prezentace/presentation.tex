@@ -1,0 +1,147 @@
+\documentclass[10pt, xcolor=pdflatex, dvipsnames, table]{beamer}
+%------------------  xcolor,         jmena barev, colortbl/rowcolors
+
+%\usepackage{czech}    % pokud chceme ceske labely
+\usepackage{graphicx}  % obrazky
+\usepackage{newcent}   % Century Gothic FONT
+
+\usetheme[tocnumbers]{FIT} 
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{palatino}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{wrapfig}
+
+\title{Design and Performance Analysis of Parallel
+Processing of SRTP Packets}
+\author{Jan Wozniak}
+\institute[FIT VUT]{Vysoké učení technické v~Brně\\
+Fakulta informační technologií}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{Task Definition}
+\textbf{Requirements}
+\begin{itemize}
+\item improve concurrent calls on VoIP gateway
+\item utilize HighPath 4000 softgate's standard hardware
+\item integrable with current solution
+\end{itemize}
+
+\vspace{1em}
+
+\textbf{SRTP parsing}
+\begin{itemize}
+\item usual size 2 to 10 AES blocks
+\item careful allocation of resources vs. massive parallelization 
+\item minimize average delay caused by packet processing on gateway
+\end{itemize}
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Application Design}
+\begin{figure}[H]
+\centering
+\includegraphics[width=10cm,keepaspectratio]{img/paral_scheme.pdf}
+\end{figure}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Parallel Programing Paradigm}
+\textbf{Persistent Thread}
+\begin{itemize}
+\item kernel uses at most as many blocks as can be concurrently scheduled
+\item schedules work through queues, not hardware
+\item provides "global synchronization"
+\item work-item's lifetime through the entire execution of kernel
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=9cm,height=5cm]{img/paral_scheme.pdf}
+\end{figure}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Results}
+\footnotesize{Following graph visualizes distribution of packet delays in \textit{ms} over
+\textit{number of concurrent calls} using G.711 with sampling period 20ms during test.}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=10.5cm,keepaspectratio]{img/compare.png}
+
+\footnotesize{\textbf{Figure:} Comparison of parallel and serial implementation.}
+\end{figure}
+
+\textbf{Average packet delay caused by SRTP encryption}
+  \begin{itemize}
+    \item dropped to one third during 140 concurrent calls 
+    \item at least to half during smaller amount of concurrent calls
+  \end{itemize}
+\end{frame}
+
+
+
+
+
+
+
+\frame[plain]{\bluepage{}}
+
+\begin{frame}
+\frametitle{Related Tasks}
+\textbf{Transcoding}
+\begin{itemize}
+\item dynamically linked plugins
+\item common interface
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{OpenCL}
+\begin{wrapfigure}[3]{r}[0em]{0em}
+\includegraphics[width=3cm]{img/OpenCL_Logo.png}
+\end{wrapfigure}
+\textbf{Open Computing Language} 
+\begin{itemize}
+\item standard for parallel computations
+\item wide support of HW and SW
+\item active contributions 
+\item many important vendors (including Apple, AMD, intel)
+\end{itemize} 
+\end{frame}
+
+\begin{frame}
+\frametitle{Used Resources}
+\textbf{Compiled and tested using:}
+\begin{itemize}
+\item processor -- intel core i5 2500k
+\item operating system -- OpenSUSE 12.2
+\item used languages, frameworks and libraries 
+  \begin{itemize}
+  \item C/C++ std=c++11 (compiled with gcc 4.7)
+  \item OpenCL 1.2
+  \item Boost 1.53.0
+  \end{itemize}
+\end{itemize}
+\end{frame}
+\end{document}
