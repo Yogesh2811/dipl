@@ -1,2 +1,2 @@
-\beamer@endinputifotherversion {3.07pt}
+\beamer@endinputifotherversion {3.20pt}
 \select@language {czech}
