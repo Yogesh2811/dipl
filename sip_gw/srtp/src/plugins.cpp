@@ -1,5 +1,6 @@
 #include "plugins.h"
 #include "utils.h"
+#include "rtp_interface.h" //macro PACKET_SIZE
 #include <map>
 
 #include <dirent.h>
@@ -14,7 +15,6 @@ namespace ba = boost::algorithm;
 
 static Plugins::Codec transcode_plugins[PAYLOAD_TYPES];
 const char *plugin_dir = "../plugins/bin/"; 
-
 
 bool is_plugin_file_name(string plugin_path){
     if(/*is_file &&*/ ba::ends_with(plugin_path,".so")){
@@ -88,13 +88,6 @@ void Plugins::init(){
                     if(err != 0){ 
                         LOG_ERROR("Plugins::init()%s %d", dlerror(), err) break;
                     }
-                    int pt = get_PT(plugin);
-
-                    BYTE src[10], dst[10];
-                    int len;
-                    (*transcode_plugins[pt].transcode)(src, dst, 10, &len, pt);
-                    (*transcode_plugins[pt].to_raw)(src, dst, 10, &len);    
-                    (*transcode_plugins[pt].from_raw)(src, dst, 10, &len);
                 }
             }
         }
@@ -106,35 +99,44 @@ void Plugins::init(){
     }
 }
 
-int Plugins::transcode(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt_src, int pt_dst){
+int Plugins::transcode(BYTE* src, BYTE* dst, int l_src, int* l_dst, int pt_src, int pt_dst){
     int result = -1;
     if(transcode_plugins[pt_src].encoding_name != NULL &&
        transcode_plugins[pt_dst].encoding_name != NULL ) {
         result = (*transcode_plugins[pt_src].transcode)(src, dst, l_src, l_dst, pt_dst);
         if(result < 1){ //must convert through PCM
-            BYTE* raw;
+            BYTE pcm_buffer[PACKET_SIZE];
             int l_raw;
-            (*transcode_plugins[pt_src].to_raw)(src, raw, l_src, &l_raw);
-            (*transcode_plugins[pt_dst].from_raw)(raw, dst, l_raw, l_dst);
+            (*transcode_plugins[pt_src].to_raw)(src, pcm_buffer, l_src, &l_raw);
+            (*transcode_plugins[pt_dst].from_raw)(pcm_buffer, dst, l_raw, l_dst);
         }
     }
     return result;
 }
 
-void* Plugins::get_transcode_function(int pt, int result, bool to_pcm){
+/*void* Plugins::get_transcode_function(int pt_src, int pt_dst){
+    LOG_MSG("Plugins::get_transcode_function()");
+    int result = -1;
+    if(transcode_plugins[pt_src].encoding_name != NULL &&
+       transcode_plugins[pt_dst].encoding_name != NULL ) {
+        int tmp;
+        LOG_MSG("Plugins::get_transcode_function() - getting result");
+        result = (*transcode_plugins[pt_src].transcode)(NULL, NULL, 0, &tmp, pt_dst);
+    }
+
     if(result == 1){
-        return (void*)transcode_plugins[pt].transcode;
+        LOG_MSG("Plugins::get_transcode_function() - transcode");
+        return (void*)transcode_plugins[pt_src].transcode;
     }
     else if(result == 0){
-        if(to_pcm == true)
-            return (void*)transcode_plugins[pt].to_raw;
-        else
-            return (void*)transcode_plugins[pt].from_raw;
+        LOG_MSG("Plugins::get_transcode_function() - transcode_via_pcm");
+        return (void*)transcode_plugins[pt_src].transcode_via_pcm;
     }
     else{ // if(result == -1)
+        LOG_MSG("Plugins::get_transcode_function() - NULL");
         return NULL;
     }
-}
+}*/
 
 void Plugins::cleanup(){
     for(int i = 0; i<PAYLOAD_TYPES; i++){

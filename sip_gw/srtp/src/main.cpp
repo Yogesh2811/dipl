@@ -31,16 +31,8 @@ int main(int argc, char* argv[]) {
 
     memcpy(buff[0], all_data, sizeof(BYTE)*256);
     int len[3] = {256, 0, 0};
-    //Plugins::transcode(buff[0], buff[1], len[0], &len[1], 0, 8);
-    //Plugins::transcode(buff[1], buff[2], len[1], &len[2], 8, 0);
-
-    void (*to_pcm)(CBYTE* src, BYTE* raw, int len_src, int* len_dst) = 
-        (void (*)(CBYTE*, BYTE*, int, int*))Plugins::get_transcode_function(0, 0, true);
-    void (*from_pcm)(CBYTE* src, BYTE* raw, int len_src, int* len_dst) = 
-        (void (*)(CBYTE*, BYTE*, int, int*))Plugins::get_transcode_function(0, 0, false);
-    
-    (*to_pcm)(buff[0], buff[1], len[0], &len[1]);
-    (*from_pcm)(buff[1], buff[2], len[1], &len[2]);
+    Plugins::transcode(buff[0], buff[1], len[0], &len[1], 0, 8);
+    Plugins::transcode(buff[1], buff[2], len[1], &len[2], 8, 0);
 
     for(int b=0; b<3; b++){
         for(int i=0; i<len[b]; i++){

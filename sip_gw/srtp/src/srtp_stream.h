@@ -32,7 +32,9 @@ class SRTP_stream {
 
         SRTP_stream(Stream_type type);
         ~SRTP_stream();
+        
         Stream_type get_type();
+        void set_transcoding();
         const unsigned char* get_key();
     
         unsigned int roc;
@@ -54,7 +56,7 @@ class SRTP_stream {
         Transcoding tr_state;
         int src_pt;
         int dst_pt;
-        void* transcode_fun;
+        void* transcode_function;
 };
 
 

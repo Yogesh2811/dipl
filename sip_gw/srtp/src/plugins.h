@@ -23,7 +23,7 @@ namespace Plugins{
     void init();
     void cleanup();
     int transcode(BYTE* src, BYTE* dst, int len_src, int* len_dst, int pt_src, int pt_dst);
-    void* get_transcode_function(int pt, int result, bool to_pcm=true);
+    //void* get_transcode_function(int pt_src, int pt_dst);
 }
 
 

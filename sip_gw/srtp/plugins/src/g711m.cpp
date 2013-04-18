@@ -57,7 +57,7 @@ void transcode_g711a(CBYTE* src, BYTE* dst, int length){
 }
 
 int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
-    if(pt == 0){
+    /*if(pt == 0){
         *l_dst = l_src;
         memcpy(dst, src, sizeof(BYTE)*l_src);
         return 1;
@@ -66,7 +66,7 @@ int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
         *l_dst = l_src;
         transcode_g711a(src, dst, l_src);
         return 1;
-    }
+    }*/
     return 0;
 }
 
