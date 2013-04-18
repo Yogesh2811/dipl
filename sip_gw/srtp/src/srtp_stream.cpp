@@ -1,5 +1,5 @@
 #include "srtp_stream.h"
-
+#include "plugins.h"
 
 SRTP_stream::SRTP_stream(Stream_type t){
     type = t; 
@@ -8,6 +8,8 @@ SRTP_stream::SRTP_stream(Stream_type t){
     alg = AES128_CTR;
     
     memset(session_key, 0, 16);
+
+    transcode_fun = &(Plugins::transcode);
 }
 
 

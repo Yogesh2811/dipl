@@ -1,55 +1,46 @@
-This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+This is BibTeX, Version 0.99d (TeX Live 2012)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: prispevek.aux
-I couldn't open database file literatura.bib
----line 27 of file prispevek.aux
- : \bibdata{literatura
- :                    }
-I'm skipping whatever remains of this command
 The style file: ieeetr.bst
-I found no database files---while reading file prispevek.aux
-Warning--I didn't find a database entry for "analysis"
-Warning--I didn't find a database entry for "perkins:rtp2003"
-Warning--I didn't find a database entry for "pt"
-Warning--I didn't find a database entry for "hp4k"
-You've used 0 entries,
+Database file #1: literatura.bib
+You've used 4 entries,
             1876 wiz_defined-function locations,
-            481 strings with 3507 characters,
-and the built_in function-call counts, 20 in all, are:
-= -- 0
-> -- 0
+            499 strings with 4087 characters,
+and the built_in function-call counts, 875 in all, are:
+= -- 78
+> -- 27
 < -- 0
-+ -- 0
-- -- 0
-* -- 2
-:= -- 9
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
++ -- 11
+- -- 7
+* -- 53
+:= -- 119
+add.period$ -- 6
+call.type$ -- 4
+change.case$ -- 3
 chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 1
-format.name$ -- 0
-if$ -- 1
+cite$ -- 4
+duplicate$ -- 51
+empty$ -- 103
+format.name$ -- 7
+if$ -- 222
 int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 3
-num.names$ -- 0
-pop$ -- 0
+int.to.str$ -- 4
+missing$ -- 4
+newline$ -- 17
+num.names$ -- 3
+pop$ -- 29
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 1
+skip$ -- 27
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
+substring$ -- 32
+swap$ -- 15
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 0
-width$ -- 0
-write$ -- 2
-(There were 2 error messages)
+while$ -- 6
+width$ -- 5
+write$ -- 37

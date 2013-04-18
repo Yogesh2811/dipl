@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  17 APR 2013 20:54
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012) (format=pdflatex 2012.6.30)  17 APR 2013 20:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1153,14 +1153,11 @@ Package pdftex.def Info: img/plugins.pdf used on input line 127.
 File: img/OpenCL_Logo.png Graphic file (type png)
 
 <use img/OpenCL_Logo.png>
-Package pdftex.def Info: img/OpenCL_Logo.png used on input line 141.
+Package pdftex.def Info: img/OpenCL_Logo.png used on input line 155.
 (pdftex.def)             Requested size: 85.35826pt x 81.14496pt.
  [8
 
  <./img/fitlogo3.pdf> <./img/OpenCL_Logo.png>]
-[9
-
- <./img/fitlogo3.pdf>]
 \tf@nav=\write6
 \openout6 = `presentation.nav'.
 
@@ -1172,7 +1169,8 @@ Package pdftex.def Info: img/OpenCL_Logo.png used on input line 141.
 
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 157.
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 157.
- (./presentation.aux)
+
+(./presentation.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 157.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 157.
 Package rerunfilecheck Info: File `presentation.out' has not changed.
@@ -1180,10 +1178,10 @@ Package rerunfilecheck Info: File `presentation.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 157.
  ) 
 Here is how much of TeX's memory you used:
- 18671 strings out of 493488
- 335412 string characters out of 3141326
- 408719 words of memory out of 3000000
- 21492 multiletter control sequences out of 15000+200000
+ 18667 strings out of 493488
+ 335379 string characters out of 3141326
+ 410719 words of memory out of 3000000
+ 21490 multiletter control sequences out of 15000+200000
  21404 words of font info for 38 fonts, out of 3000000 for 9000
  957 hyphenation exceptions out of 8191
  55i,16n,53p,397b,874s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -1192,10 +1190,10 @@ exlive/2012/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2
 012/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/local/texlive/2012/tex
 mf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2012/texmf-dist
 /fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on presentation.pdf (9 pages, 435435 bytes).
+Output written on presentation.pdf (8 pages, 432765 bytes).
 PDF statistics:
- 269 PDF objects out of 1000 (max. 8388607)
- 223 compressed objects within 3 object streams
- 17 named destinations out of 1000 (max. 500000)
- 114 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 260 PDF objects out of 1000 (max. 8388607)
+ 216 compressed objects within 3 object streams
+ 15 named destinations out of 1000 (max. 500000)
+ 109 words of extra memory for PDF output out of 10000 (max. 10000000)
 
