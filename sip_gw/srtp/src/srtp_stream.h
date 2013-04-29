@@ -11,7 +11,9 @@ class SRTP_stream {
             FORWARD,
             ENCODE,
             DECODE,
-            ENCODE_DECODE
+            TRANSCODE_ENCODE,
+            DECODE_TRANSCODE,
+            DECODE_TRANSCODE_ENCODE,
         };
 
         enum Status {

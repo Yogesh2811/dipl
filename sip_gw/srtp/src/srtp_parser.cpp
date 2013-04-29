@@ -66,9 +66,9 @@ void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_str
         case SRTP_stream::DECODE :
             decode(in, out, key, iv, len);
             break;
-        case SRTP_stream::ENCODE_DECODE : 
+        /*case SRTP_stream::ENCODE_DECODE : 
             encode_decode(in, out, key, iv, len);
-            break;
+            break;*/
         default: //forward
             memcpy(out, in, len);
             break;
