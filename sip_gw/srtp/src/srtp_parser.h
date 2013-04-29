@@ -4,11 +4,11 @@
 #include <map>
 
 #include "parser_interface.h"
-
+#include "plugins.h"
 
 class RTP_interface;
 class SRTP_stream;
-
+class RTP_item; 
 
 class SRTP_parser: public Parser_interface { 
     public:
@@ -22,8 +22,7 @@ class SRTP_parser: public Parser_interface {
 
         void quit();
         void set_interface(RTP_interface *iface);
-        void parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s, 
-                       int id, int length);
+        void parse_msg(RTP_item* item, SRTP::header *h, SRTP_stream* s, int id, int length);
 
         bool exit;
 
@@ -33,12 +32,10 @@ class SRTP_parser: public Parser_interface {
     private:
         execution_type type;
         RTP_interface *i;
-        void (*encode)(const BYTE* in, BYTE* out, const BYTE* key, 
-                       const BYTE* counter, int length);
-        void (*decode)(const BYTE* in, BYTE* out, const BYTE* key,
-                       const BYTE* counter, int length);
-        void (*encode_decode)(const BYTE* in, BYTE* out, const BYTE* key,
-                              const BYTE* counter, int length);
+        void (*encode)(BYTE* in, BYTE* out, BYTE* key, 
+                       BYTE* counter, int length);
+        void (*decode)(BYTE* in, BYTE* out, BYTE* key,
+                       BYTE* counter, int length);
 };
 
 

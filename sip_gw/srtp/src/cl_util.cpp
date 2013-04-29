@@ -198,7 +198,7 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 }
 
 
-void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){ 
+void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){ 
     // Alloc buffers with specified size & copy data
     cl_int err;
 
@@ -288,7 +288,7 @@ void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
 }
 
 
-void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length){
+void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
 }
 
 /**

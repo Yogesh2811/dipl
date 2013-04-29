@@ -26,8 +26,8 @@ BYTE all_data[] = {
 
 int main(int argc, char* argv[]) {
     //initOpenCL();
-    Plugins::init();
-    BYTE buff[3][1024];
+    //Plugins::init();
+    /*BYTE buff[3][1024];
 
     memcpy(buff[0], all_data, sizeof(BYTE)*256);
     int len[3] = {256, 0, 0};
@@ -39,9 +39,9 @@ int main(int argc, char* argv[]) {
             printf("%2X ", (unsigned int)buff[b][i]);
         }
         printf("\n\n\n");
-    }
+    }*/
 
-    /*int err;
+    int err;
 
     //AES::test();
     //GPU::test();
@@ -59,21 +59,15 @@ int main(int argc, char* argv[]) {
     
     r = new RTP_interface(d, 16000, 16001, &err);
     boost::thread rtp(boost::ref(*r));
-    //printf("\nerror - %d\n\n\n", err);
 
-    //r->set_parser(p);
-    p[0]->set_interface(r);
-    p[1]->set_interface(r);
-    d->set_interface(r);
-
-    //r->send(0,0);
-    //p->decode_msg(NULL, NULL, 0, 0);
-
+    //p[0]->set_interface(r);
+    //p[1]->set_interface(r);
+    //d->set_interface(r);
 
     getchar();
     r->stop();
     //p->stop();
-    //d->stop();*/
+    //d->stop();
 
     return 0;
 }

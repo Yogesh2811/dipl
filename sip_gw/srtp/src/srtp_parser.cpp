@@ -16,12 +16,10 @@ SRTP_parser::SRTP_parser(RTP_interface *iface, execution_type t){
     if(t == SERIAL_EXECUTION){
         encode = &AES::srtp_encode;
         decode = &AES::srtp_decode;
-        //encode_decode = &srtp_encode_decode;
     }
     else{
         encode = &srtp_encode_gpu;
-        decode = &srtp_decode_gpu;
-        //encode_decode = &srtp_encode_decode_gpu;
+	decode = &srtp_decode_gpu;
     }
 }
 
@@ -41,10 +39,11 @@ void SRTP_parser::set_interface(RTP_interface *iface){
     i = iface;
 }
 
-void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s, 
-                            int id, int len){
+void SRTP_parser::parse_msg(RTP_item* item, SRTP::header* h, SRTP_stream* s, int id, int len){
     LOG_MSG("SRTP_parser::parse_msg()");
-    
+    BYTE* in = item->payload;
+    BYTE* out = item->dst; 
+
     //1) find counter and key for encryption
     //2) get counter and expand to be the same length as input aligned to 128bits
     //3) send for processing
@@ -56,7 +55,7 @@ void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_str
     SRTP::get_packet_index(s->roc, h->seq, pi);
     SRTP::get_iv(nullptr, h->ssrc, pi, iv);
     
-    CBYTE *key =  s->get_key();
+    BYTE *key =  s->get_key();
 
     //transcoding temp vars
     int len_dst;
@@ -70,16 +69,16 @@ void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_str
             decode(in, out, key, iv, len);
             break;
         case SRTP_stream::TRANSCODE_ENCODE:
-            transcode(in, out, len, &len_dst, s->pt_src, s->pt_dst);
+            Plugins::transcode(in, out, len, &len_dst, s->src_pt, s->dst_pt);
             encode(out, out, key, iv, len_dst);
             break;
         case SRTP_stream::DECODE_TRANSCODE:
             decode(in, out, key, iv, len);
-            transcode(out, out, len, &len_dst, s->pt_src, s->pt_dst);
+            Plugins::transcode(out, out, len, &len_dst, s->src_pt, s->dst_pt);
             break;
         case SRTP_stream::DECODE_TRANSCODE_ENCODE:
             decode(in, out, key, iv, len);
-            transcode(out, out, len, &len_dst, s->pt_src, s->pt_dst);
+            Plugins::transcode(out, out, len, &len_dst, s->src_pt, s->dst_pt);
             encode(out, out, key, iv, len_dst);
             break;
         default: //forward

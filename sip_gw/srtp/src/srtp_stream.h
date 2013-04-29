@@ -31,7 +31,7 @@ class SRTP_stream {
         
         Stream_type get_type();
         void set_transcoding();
-        const unsigned char* get_key();
+        unsigned char* get_key();
     
         unsigned int roc;
     
