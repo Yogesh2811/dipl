@@ -58,17 +58,30 @@ void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_str
     
     CBYTE *key =  s->get_key();
 
+    //transcoding temp vars
+    int len_dst;
 
     switch(s->get_type()){
+        //TODO: use temp buffers in transcoding
         case SRTP_stream::ENCODE :
             encode(in, out, key, iv, len);
             break;
         case SRTP_stream::DECODE :
             decode(in, out, key, iv, len);
             break;
-        /*case SRTP_stream::ENCODE_DECODE : 
-            encode_decode(in, out, key, iv, len);
-            break;*/
+        case SRTP_stream::TRANSCODE_ENCODE:
+            transcode(in, out, len, &len_dst, s->pt_src, s->pt_dst);
+            encode(out, out, key, iv, len_dst);
+            break;
+        case SRTP_stream::DECODE_TRANSCODE:
+            decode(in, out, key, iv, len);
+            transcode(out, out, len, &len_dst, s->pt_src, s->pt_dst);
+            break;
+        case SRTP_stream::DECODE_TRANSCODE_ENCODE:
+            decode(in, out, key, iv, len);
+            transcode(out, out, len, &len_dst, s->pt_src, s->pt_dst);
+            encode(out, out, key, iv, len_dst);
+            break;
         default: //forward
             memcpy(out, in, len);
             break;

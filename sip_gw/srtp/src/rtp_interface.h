@@ -18,6 +18,30 @@ class Parser_interface;
 typedef unsigned char BYTE;
 typedef const BYTE CBYTE;
 
+//TODO: refractor buffer pools
+struct Buffer_item {
+    BYTE src[PACKET_SIZE];
+    BYTE dst[PACKET_SIZE];
+    BYTE temp[PACKET_SIZE];
+    
+    struct sockaddr_in6 src_addr;
+    struct iovec iov[1];
+    struct msghdr msg;
+};
+
+class Buffer_pool {
+    private:
+        Buffer_item *item[POOL_SIZE];
+        std::queue<int> free_buffer_index;
+        void init_buffer(int id);
+
+    public:
+        Buffer_pool();
+        ~Buffer_pool();
+        int get_buffer_id();
+        Buffer_item* get_buffer_item();
+        void release_buffer(int id);
+};
 
 class RTP_interface {
     private:
