@@ -14,14 +14,14 @@
 
 class SRTP_stream;
 class Parser_interface;
-template<typename t> class Buffer_pool;
+//template<class t> class Buffer_pool;
 
 typedef unsigned char BYTE;
 
 class RTP_item {
     public:
         BYTE src[PACKET_SIZE];
-	BYTE payload[PACKET_SIZE];
+	BYTE *payload;
         BYTE dst[PACKET_SIZE];
         BYTE temp[PACKET_SIZE];
     
@@ -29,9 +29,49 @@ class RTP_item {
         struct iovec iov[1];
         struct msghdr msg;
 
-	RTP_item();
+	void init();
 };
 
+template <class buffer_item> class Buffer_pool {
+    private:
+        buffer_item **pool = NULL;
+        std::queue<int> free_buffer_index;
+	int pool_size;
+
+    public:
+        Buffer_pool(int pool_size) {
+	    pool = (buffer_item**)malloc(sizeof(buffer_item)*pool_size);
+            for(int i=0; i<pool_size; i++){
+		pool[i] = new buffer_item();
+		free_buffer_index.push(i);
+	    }
+	}
+        ~Buffer_pool() {
+	    if(pool != NULL){ 
+		free(pool);
+		for(int i = 0; i<pool_size; i++){
+		    if(pool[i] != NULL) delete pool[i];
+		}
+	    }
+	}
+        int get_buffer_id() {
+	    while(free_buffer_index.empty());
+
+	    int id = free_buffer_index.front(); 
+	    free_buffer_index.pop();
+	    return id; 
+	}
+	int get_pool_size(){
+            return pool_size;
+	}
+        
+	buffer_item* get_item(int id) {
+	    return pool[id];
+	}
+        void release_buffer(int id) {
+	    free_buffer_index.push(id);
+	}
+};
 
 class RTP_interface {
     private:
@@ -73,7 +113,6 @@ class RTP_interface {
         SRTP_stream* find_stream();
         //void set_parser(SRTP_parser* p);
         void operator()();
-	void run();
 };
 
 

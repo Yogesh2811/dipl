@@ -371,7 +371,7 @@ void AES::srtp_encode(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
 }
 
 void AES::srtp_decode(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
-    LOG_MSG("AES::srtp_decode()");
+    LOG_MSG("AES::srtp_decode(%s, %s, %s, %s, %d)",src,dst,key,iv,length);
     BYTE counter[BLOCK_SIZE] = {0};
     memcpy(counter, iv, BLOCK_SIZE);
 
@@ -391,7 +391,6 @@ void AES::srtp_decode(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
     for(i=i-BLOCK_SIZE; i < length; i++, j++){
         dst[i] = last_block[j] ^ src[i];
     }
-
 }
 
 void AES::test(){

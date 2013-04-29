@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <queue>
 
-template <typename buffer_item> class Buffer_pool {
+template <class buffer_item> class Buffer_pool {
     private:
         buffer_item **pool = NULL;
         std::queue<int> free_buffer_index;
@@ -14,11 +14,17 @@ template <typename buffer_item> class Buffer_pool {
         Buffer_pool(int pool_size) {
 	    pool = (buffer_item**)malloc(sizeof(buffer_item)*pool_size);
             for(int i=0; i<pool_size; i++){
+		pool[i] = new buffer_item();
 		free_buffer_index.push(i);
 	    }
 	}
         ~Buffer_pool() {
-	    if(pool != NULL) free(pool);
+	    if(pool != NULL){ 
+		free(pool);
+		for(int i = 0; i<pool_size; i++){
+		    if(pool[i] != NULL) delete pool[i];
+		}
+	    }
 	}
         int get_buffer_id() {
 	    while(free_buffer_index.empty());
