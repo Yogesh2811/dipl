@@ -47,41 +47,39 @@ void SRTP_parser::parse_msg(RTP_item* item, SRTP::header* h, SRTP_stream* s, int
     //3) send for processing
     //4) send output
     
-    //int size = (ceil(length/16.0))*16;
-    //BYTE pi[6];
-    //BYTE iv[16] = {0};
-    //SRTP::get_packet_index(s->roc, h->seq, pi);
-    //SRTP::get_iv(nullptr, h->ssrc, pi, iv);
+    //int size = (ceil(len/16.0))*16;
+    BYTE pi[6];
+    BYTE iv[16] = {0};
+    SRTP::get_packet_index(s->roc, h->seq, pi);
+    SRTP::get_iv(nullptr, h->ssrc, pi, iv);
     
-    //BYTE *key =  s->get_key();
+    BYTE *key =  s->get_key();
 
     //transcoding temp vars
-    //int len_dst;
+    int len_dst;
 
     switch(s->get_type()){
-        //TODO: use temp buffers in transcoding
         case SRTP_stream::ENCODE :
-            //encode(in, out, key, iv, len);
+            encode(item->src, item->dst, key, iv, len);
             break;
         case SRTP_stream::DECODE :
-            //decode(in, out, key, iv, len);
-	    //memcpy(item->dst, item->payload, len);
+            decode(item->src, item->dst, key, iv, len);
             break;
         case SRTP_stream::TRANSCODE_ENCODE:
-            //Plugins::transcode(item->, out, len, &len_dst, s->src_pt, s->dst_pt);
-            //encode(out, out, key, iv, len_dst);
+            Plugins::transcode(item->src, item->temp, len, &len_dst, s->src_pt, s->dst_pt);
+            encode(item->temp, item->dst, key, iv, len_dst);
             break;
         case SRTP_stream::DECODE_TRANSCODE:
-            //decode(in, out, key, iv, len);
-            //Plugins::transcode(out, out, len, &len_dst, s->src_pt, s->dst_pt);
+            decode(item->src, item->temp, key, iv, len);
+            Plugins::transcode(item->temp, item->dst, len, &len_dst, s->src_pt, s->dst_pt);
             break;
         case SRTP_stream::DECODE_TRANSCODE_ENCODE:
-            //decode(in, out, key, iv, len);
-            //Plugins::transcode(out, out, len, &len_dst, s->src_pt, s->dst_pt);
-            //encode(out, out, key, iv, len_dst);
+            decode(item->src, item->dst, key, iv, len);
+            Plugins::transcode(item->dst, item->temp, len, &len_dst, s->src_pt, s->dst_pt);
+            encode(item->temp, item->dst, key, iv, len_dst);
             break;
         default: //forward
-            //memcpy(out, in, len);
+            memcpy(item->src, item->dst, len);
             break;
     };
     

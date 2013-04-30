@@ -3,7 +3,7 @@
 #include "parser_interface.h"
 #include "utils.h"
 #include "srtp_header.h"
-//#include "buffer_pool.h"
+#include "buffer_pool.h"
 
 #include <iostream>
 
@@ -39,10 +39,12 @@ RTP_interface::RTP_interface(Parser_interface* parser, int rtp, int rtcp, int* e
     if (bind(rtcp_sock, (sockaddr*)&rtcp_addr, sizeof(rtcp_addr))==-1)
         *err = 2;
 
+    
     pool = new Buffer_pool<RTP_item>(POOL_SIZE);
-    for(int i = 0; i<POOL_SIZE; i++){
+    //item = new RTP_item();
+    /*for(int i = 0; i<POOL_SIZE; i++){
 	pool->get_item(i)->init();
-    }
+    }*/
 }
 
 RTP_interface::~RTP_interface(){
@@ -53,10 +55,10 @@ RTP_interface::~RTP_interface(){
         delete stream.second;
     }
 
-    if(pool != NULL) free(pool);
+    //if(pool != NULL) delete pool;
 }
 
-void RTP_item::init(){
+RTP_item::RTP_item(){
     iov[0].iov_base=src;
     iov[0].iov_len=PACKET_SIZE;
 
@@ -66,6 +68,9 @@ void RTP_item::init(){
     msg.msg_iovlen=1;
     msg.msg_control=0;
     msg.msg_controllen=0;
+}
+
+RTP_item::~RTP_item() {
 }
 
 void RTP_interface::stop() {
@@ -81,20 +86,18 @@ void RTP_interface::parse_packet(int id, int length){
 
     LOG_MSG("RTP_interface::parse_packet()")
 
-    RTP_item* item = pool->get_item(id);
-    SRTP::header* rtp_h = (SRTP::header*)item->src;
-    LOG_MSG("%s",item->src);
+    RTP_item* i = pool->get_item(id);
+    SRTP::header* rtp_h = (SRTP::header*)i->src;
     SRTP::fix_header(rtp_h);
 
-    size_t header_size = SRTP::get_payload(rtp_h, item->src, &(item->payload));
+    size_t header_size = SRTP::get_payload(rtp_h, i->src, &(i->payload));
 
-    LOG_MSG("payload:%s seq:%d", item->payload, rtp_h->seq);
 
     if(streams[rtp_h->ssrc] == NULL){
         streams[rtp_h->ssrc] = new SRTP_stream(SRTP_stream::DECODE);
     }
     
-    p->parse_msg(item, rtp_h, streams[rtp_h->ssrc], id, length-header_size);
+    p->parse_msg(i, rtp_h, streams[rtp_h->ssrc], id, length-header_size);
 }
 
 /**
@@ -110,26 +113,22 @@ void RTP_interface::send(int id, int size){
     // release_buffer(id);
     LOG_MSG("RTP_interface::send(id=%d, size=%d)", id, size);
 	 
-    if(pool == NULL){
-    	printf("NULL%d\n", pool);
-    }
-    else{
-	RTP_item* item = pool->get_item(id);
+    RTP_item* i = pool->get_item(id);
 
-	sendto(rtp_sock, item->dst, size, 0, 
-	(sockaddr*)&(item->src_addr), sizeof(item->src_addr));
-	pool->release_buffer(id);
-    }
+    int err = sendto(rtp_sock, i->dst, size, 0, 
+    (sockaddr*)&(i->src_addr), sizeof(i->src_addr));
+    //pool->release_buffer(id);
 }
 
 void RTP_interface::operator()(){
     LOG_MSG("RTP_interface::capturing");
+    int id, bytes;
+    RTP_item* item;
     while(!exit){
-        int id = pool->get_buffer_id();
-	RTP_item *item = pool->get_item(id);
-        int bytes = recvmsg(rtp_sock, &(item->msg), 0);
+        id = pool->get_buffer_id();
+        item = pool->get_item(id);
+        bytes = recvmsg(rtp_sock, &(item->msg), 0);
         if(bytes > 0){
-	    LOG_MSG("RTP_interface::msg_captured")
             parse_packet(id, bytes);
         }
     }

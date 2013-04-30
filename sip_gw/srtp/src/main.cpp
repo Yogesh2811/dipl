@@ -26,7 +26,7 @@ BYTE all_data[] = {
 
 int main(int argc, char* argv[]) {
     //initOpenCL();
-    //Plugins::init();
+    Plugins::init();
     /*BYTE buff[3][1024];
 
     memcpy(buff[0], all_data, sizeof(BYTE)*256);
@@ -60,9 +60,9 @@ int main(int argc, char* argv[]) {
     r = new RTP_interface(d, 16000, 16001, &err);
     boost::thread rtp(boost::ref(*r));
 
-    //p[0]->set_interface(r);
-    //p[1]->set_interface(r);
-    //d->set_interface(r);
+    p[0]->set_interface(r);
+    p[1]->set_interface(r);
+    d->set_interface(r);
 
     getchar();
     r->stop();

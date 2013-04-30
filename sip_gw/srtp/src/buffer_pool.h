@@ -12,7 +12,7 @@ template <class buffer_item> class Buffer_pool {
 
     public:
         Buffer_pool(int pool_size) {
-	    pool = (buffer_item**)malloc(sizeof(buffer_item)*pool_size);
+	    pool = (buffer_item**)malloc(sizeof(buffer_item*)*pool_size);
             for(int i=0; i<pool_size; i++){
 		pool[i] = new buffer_item();
 		free_buffer_index.push(i);
@@ -20,10 +20,10 @@ template <class buffer_item> class Buffer_pool {
 	}
         ~Buffer_pool() {
 	    if(pool != NULL){ 
-		free(pool);
 		for(int i = 0; i<pool_size; i++){
 		    if(pool[i] != NULL) delete pool[i];
 		}
+		free(pool);
 	    }
 	}
         int get_buffer_id() {
