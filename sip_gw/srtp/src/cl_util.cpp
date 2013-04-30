@@ -1,6 +1,7 @@
 #include "cl_util.h"
 #include "utils.h"
 #include "aes.h"
+#include "buffer_pool.h"
 
 #include <math.h>
 
@@ -23,20 +24,30 @@ static cl_program program;
 static cl_kernel inv_dct_kernel;
 static cl_int error;
  
-// buffers for dct
-static cl_mem payload_src[POOL_SIZE];
+// buffers for srtp
+class cl_item{
+    public:
+	cl_mem payload_src;
+	cl_mem payload_dst;
+	cl_mem iv_gpu;
+	cl_mem rk;
+	cl_mem t1;
+	cl_mem t2;
+};
+static Buffer_pool<cl_item> cl_buffer_pool(POOL_SIZE);
+/*static cl_mem payload_src[POOL_SIZE];
 static cl_mem payload_dst[POOL_SIZE];
 static cl_mem iv_gpu[POOL_SIZE];
 static cl_mem rk[POOL_SIZE];
 static cl_mem t1[POOL_SIZE];
-static cl_mem t2[POOL_SIZE];
+static cl_mem t2[POOL_SIZE];*/
  
 // kernels
 static cl_kernel encode_kernel;
 static cl_kernel decode_kernel;
 
 
-std::queue<int> free_buffers;
+//std::queue<int> free_buffers;
 
 //max number of local work items
 size_t GWS[3] = {16};
@@ -51,12 +62,12 @@ cl_int getPlatformID()
     cl_int error = clGetPlatformIDs (0, NULL, &num_platforms);
     checkClError(error, "platformID count");
     if(num_platforms == 0) {
-        cout << "ERROR: 0 platforms found\n";
+        LOG_ERROR("ERROR: 0 platforms found");
         return CL_OUT_OF_RESOURCES;
     }
     // if there's a platform or more, make space for ID's
     if((platform_ids = (cl_platform_id*)malloc(num_platforms*sizeof(cl_platform_id))) == NULL) {
-        cout << "Failed to allocate memory for cl_platform ID's!\n";
+        LOG_ERROR("Failed to allocate memory for cl_platform ID's!");
         return CL_OUT_OF_RESOURCES;
     }
 
@@ -106,7 +117,7 @@ void set_max_device_worksize(){
 }
 
 
-int GPU::alloc_buffer(){
+/*int GPU::alloc_buffer(){
     while(free_buffers.empty());
 
     int id = free_buffers.front(); 
@@ -116,7 +127,7 @@ int GPU::alloc_buffer(){
 
 void GPU::release_buffer(int id){
     free_buffers.push(id);
-}
+}*/
 
 int initOpenCL(){
     error = getPlatformID();
@@ -152,26 +163,27 @@ int initOpenCL(){
 
     int length = 320;
     cl_int err;
-    
+    cl_item *item; 
+     
     for(int i = 0; i<POOL_SIZE; i++){
-        free_buffers.push(i);
-        payload_src[i] = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*length,
+	item = cl_buffer_pool.get_item(i);
+        item->payload_src = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*length,
                     NULL, &err);
         checkClError(err, "clCreateBuffer src");
         
-        payload_dst[i] = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*length, 
+        item->payload_dst = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*length, 
                     NULL, &err);
         checkClError(err, "clCreateBuffer dst");
 
-        iv_gpu[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+        item->iv_gpu = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
         checkClError(err, "clCreateBuffer iv");
         
-        rk[i] = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*16*11, NULL, &err);
+        item->rk = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(cl_uchar)*16*11, NULL, &err);
         checkClError(err, "clCreateBuffer rk");
         
-        t1[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+        item->t1 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
         checkClError(err, "clCreateBuffer t1");
-        t2[i] = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
+        item->t2 = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*16, NULL, &err);
         checkClError(err, "clCreateBuffer t2");
     }
     
@@ -207,11 +219,12 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
     BYTE round_key[11][16];
     AES::expand_key(key, round_key);
    
-    int index = GPU::alloc_buffer();
+    int index = cl_buffer_pool.get_buffer_id();
+    cl_item *item = cl_buffer_pool.get_item(index); 
 
     // Copy data from memory to gpu
     err = clEnqueueWriteBuffer(cl_queue,
-            payload_src[index], //memory on gpu
+            item->payload_src, //memory on gpu
             CL_TRUE,   //blocking write
             0,         //offset
             sizeof(cl_uchar)*length, //size in bytes of copied data
@@ -221,7 +234,7 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
             NULL);     //wait list
 
     err = clEnqueueWriteBuffer(cl_queue,
-            iv_gpu[index], //memory on gpu
+            item->iv_gpu, //memory on gpu
             CL_TRUE,   //blocking write
             0,         //offset
             sizeof(cl_uchar)*16, //size in bytes of copied data
@@ -231,7 +244,7 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
             NULL);     //wait list
 
     err = clEnqueueWriteBuffer(cl_queue,
-            rk[index], //memory on gpu
+            item->rk, //memory on gpu
             CL_TRUE,   //blocking write
             0,         //offset
             sizeof(cl_uchar)*16*11,
@@ -241,19 +254,19 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
             NULL);     //wait list
 
 
-    clSetKernelArg(decode_kernel, 0, sizeof(cl_mem), (void *)&(payload_src[index]));
-    clSetKernelArg(decode_kernel, 1, sizeof(cl_mem), (void *)&(payload_dst[index]));
-    clSetKernelArg(decode_kernel, 2, sizeof(cl_mem), (void *)&(iv_gpu[index]));
+    clSetKernelArg(decode_kernel, 0, sizeof(cl_mem), (void *)&(item->payload_src));
+    clSetKernelArg(decode_kernel, 1, sizeof(cl_mem), (void *)&(item->payload_dst));
+    clSetKernelArg(decode_kernel, 2, sizeof(cl_mem), (void *)&(item->iv_gpu));
     clSetKernelArg(decode_kernel, 3, sizeof(int),    (void *)&length);
-    clSetKernelArg(decode_kernel, 4, sizeof(cl_mem), (void *)&(rk[index]));
-    clSetKernelArg(decode_kernel, 5, sizeof(cl_mem), (void *)&(t1[index]));
-    clSetKernelArg(decode_kernel, 6, sizeof(cl_mem), (void *)&(t2[index]));
+    clSetKernelArg(decode_kernel, 4, sizeof(cl_mem), (void *)&(item->rk));
+    clSetKernelArg(decode_kernel, 5, sizeof(cl_mem), (void *)&(item->t1));
+    clSetKernelArg(decode_kernel, 6, sizeof(cl_mem), (void *)&(item->t2));
 
     clEnqueueNDRangeKernel(cl_queue, decode_kernel, 1, NULL, GWS, LWS, 0, NULL, NULL);
     
     // copy result back from gpu to host
     clEnqueueReadBuffer(cl_queue, 
-            payload_dst[index], 
+            item->payload_dst, 
             CL_TRUE, 
             0, 
             sizeof(cl_uchar)*16,            
@@ -264,7 +277,7 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
 
     clFinish(cl_queue);
 
-    GPU::release_buffer(index);
+    cl_buffer_pool.release_buffer(index);
     //err = clReleaseMemObject(payload_src);
     //checkClError(err, "clReleaseMemObject block_src");
 
@@ -400,12 +413,12 @@ const char *CLErrorString(cl_int _err) {
 
 inline void checkClError(cl_int err, char* debug){
     if(err != CL_SUCCESS){
-        cout << "ERROR: " << CLErrorString(err) << " " << debug << endl;
+        LOG_ERROR("ERROR: %s %s", CLErrorString(err), debug);
         exit(EXIT_FAILURE);
     }
 #ifdef DEBUG
     else {
-        cout << "OK - " << debug << endl;
+        LOG_MSG("OK - %s",debug);
     }
 #endif
 }
@@ -416,7 +429,7 @@ void CL_CALLBACK contextCallback(const char *err_info,
                                  const void *private_intfo,
                                  size_t cb,
                                  void *user_data){
-    cout << "ERROR during context use: " << err_info << endl;
+    LOG_ERROR("ERROR during context use: %s", err_info);
     exit(EXIT_FAILURE);
 }
 

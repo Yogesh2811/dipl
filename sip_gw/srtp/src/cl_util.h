@@ -13,7 +13,6 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <queue>
@@ -40,8 +39,8 @@ void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length);
 int cleanup();
 
 namespace GPU {
-    int alloc_buffer();
-    void release_buffer(int id); 
+    //int alloc_buffer();
+    //void release_buffer(int id); 
     void test();
 }
 
