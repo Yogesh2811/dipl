@@ -16,12 +16,10 @@ SRTP_parser::SRTP_parser(RTP_interface *iface, execution_type t){
     if(t == SERIAL_EXECUTION){
         encode = &AES::srtp_encode;
         decode = &AES::srtp_decode;
-        //encode_decode = &srtp_encode_decode;
     }
     else{
         encode = &srtp_encode_gpu;
-        decode = &srtp_decode_gpu;
-        //encode_decode = &srtp_encode_decode_gpu;
+	decode = &srtp_decode_gpu;
     }
 }
 
@@ -41,42 +39,53 @@ void SRTP_parser::set_interface(RTP_interface *iface){
     i = iface;
 }
 
-void SRTP_parser::parse_msg(const BYTE* in, SRTP::header *h, BYTE* out, SRTP_stream* s, 
-                            int id, int len){
+void SRTP_parser::parse_msg(RTP_item* item, SRTP::header* h, SRTP_stream* s, int id, int len){
     LOG_MSG("SRTP_parser::parse_msg()");
-    
+
     //1) find counter and key for encryption
     //2) get counter and expand to be the same length as input aligned to 128bits
     //3) send for processing
     //4) send output
     
-    //int size = (ceil(length/16.0))*16;
+    //int size = (ceil(len/16.0))*16;
     BYTE pi[6];
     BYTE iv[16] = {0};
     SRTP::get_packet_index(s->roc, h->seq, pi);
     SRTP::get_iv(nullptr, h->ssrc, pi, iv);
     
-    CBYTE *key =  s->get_key();
+    BYTE *key =  s->get_key();
 
+    //transcoding temp vars
+    int len_dst;
 
     switch(s->get_type()){
         case SRTP_stream::ENCODE :
-            encode(in, out, key, iv, len);
+            encode(item->src, item->dst, key, iv, len);
             break;
         case SRTP_stream::DECODE :
-            decode(in, out, key, iv, len);
+            decode(item->src, item->dst, key, iv, len);
             break;
-        case SRTP_stream::ENCODE_DECODE : 
-            encode_decode(in, out, key, iv, len);
+        case SRTP_stream::TRANSCODE_ENCODE:
+            Plugins::transcode(item->src, item->temp, len, &len_dst, s->src_pt, s->dst_pt);
+            encode(item->temp, item->dst, key, iv, len_dst);
+            break;
+        case SRTP_stream::DECODE_TRANSCODE:
+            decode(item->src, item->temp, key, iv, len);
+            Plugins::transcode(item->temp, item->dst, len, &len_dst, s->src_pt, s->dst_pt);
+            break;
+        case SRTP_stream::DECODE_TRANSCODE_ENCODE:
+            decode(item->src, item->dst, key, iv, len);
+            Plugins::transcode(item->dst, item->temp, len, &len_dst, s->src_pt, s->dst_pt);
+            encode(item->temp, item->dst, key, iv, len_dst);
             break;
         default: //forward
-            memcpy(out, in, len);
+            memcpy(item->src, item->dst, len);
             break;
     };
     
-    char sseq[10];
+    /*char sseq[10];
     sprintf(sseq, "%d", h->seq);
-    memcpy(out,sseq,10);
+    memcpy(out,sseq,10);*/
     //printf("[%s] %d [%d]\n", out, len, h->seq);
     i->send(id,len);
 }

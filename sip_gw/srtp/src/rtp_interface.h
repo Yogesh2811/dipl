@@ -14,9 +14,24 @@
 
 class SRTP_stream;
 class Parser_interface;
+template<class t> class Buffer_pool;
 
 typedef unsigned char BYTE;
-typedef const BYTE CBYTE;
+
+class RTP_item {
+    public:
+        BYTE src[PACKET_SIZE];
+	BYTE *payload;
+        BYTE dst[PACKET_SIZE];
+        BYTE temp[PACKET_SIZE];
+    
+        struct sockaddr_in6 src_addr;
+        struct iovec iov[1];
+        struct msghdr msg;
+
+	RTP_item();
+	~RTP_item();
+};
 
 
 class RTP_interface {
@@ -31,17 +46,20 @@ class RTP_interface {
         struct sockaddr_in6 rtcp_addr;
         bool exit;
         
-        unsigned char buffer_pool[POOL_SIZE][PACKET_SIZE];
-        unsigned char out_buffer_pool[POOL_SIZE][PACKET_SIZE];
-        struct sockaddr_in6 src_addr_pool[POOL_SIZE];
-        struct iovec iov_pool[POOL_SIZE][1];
-        struct msghdr msg_pool[POOL_SIZE];
-        std::queue<int> free_buffer_index;
+        //unsigned char buffer_pool[POOL_SIZE][PACKET_SIZE];
+        //unsigned char out_buffer_pool[POOL_SIZE][PACKET_SIZE];
+        //struct sockaddr_in6 src_addr_pool[POOL_SIZE];
+        //struct iovec iov_pool[POOL_SIZE][1];
+        //struct msghdr msg_pool[POOL_SIZE];
+        //std::queue<int> free_buffer_index;
         std::map<unsigned int, SRTP_stream*> streams;
 
-        void init_msg_pool(int id);
-        int get_buffer_id();
-        void release_buffer(int id);
+	Buffer_pool<RTP_item> *pool = NULL;
+	//RTP_item *item = NULL;
+	
+        //void init_msg_pool(int id);
+        //int get_buffer_id();
+        //void release_buffer(int id);
         void parse_packet(int id, int length);
 
 

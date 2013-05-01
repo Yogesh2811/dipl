@@ -11,7 +11,9 @@ class SRTP_stream {
             FORWARD,
             ENCODE,
             DECODE,
-            ENCODE_DECODE
+            TRANSCODE_ENCODE,
+            DECODE_TRANSCODE,
+            DECODE_TRANSCODE_ENCODE,
         };
 
         enum Status {
@@ -24,21 +26,18 @@ class SRTP_stream {
             AES128_CTR
         };
 
-        enum Transcoding {
-            NO_TRANSCODE,
-            TRANSCODE_NAIVE,
-            TRANSCODE_FUNCTION
-        };
-
         SRTP_stream(Stream_type type);
         ~SRTP_stream();
         
         Stream_type get_type();
         void set_transcoding();
-        const unsigned char* get_key();
+        unsigned char* get_key();
     
         unsigned int roc;
     
+        //transcoding
+        int src_pt;
+        int dst_pt;
     private:
         Status state;
         Stream_type type;
@@ -51,12 +50,6 @@ class SRTP_stream {
         BYTE replay_list[LIST_SIZE][PACKET_SIZE];
         BYTE master_salt[16];
         unsigned int MKI;
-
-        //transcoding
-        Transcoding tr_state;
-        int src_pt;
-        int dst_pt;
-        void* transcode_function;
 };
 
 

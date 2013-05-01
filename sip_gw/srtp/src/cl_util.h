@@ -13,7 +13,6 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <queue>
@@ -33,15 +32,15 @@ void CL_CALLBACK contextCallback(const char *err_info,
                                  void *user_data);
 
 
-void srtp_decode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
-void srtp_encode_gpu(CBYTE* src, BYTE* dst, CBYTE* key, CBYTE* iv, int length);
+void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length);
+void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length);
 
 
 int cleanup();
 
 namespace GPU {
-    int alloc_buffer();
-    void release_buffer(int id); 
+    //int alloc_buffer();
+    //void release_buffer(int id); 
     void test();
 }
 

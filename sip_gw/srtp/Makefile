@@ -34,7 +34,7 @@ endif
 
 all: $(BIN)$(PROJ)
 
-$(BIN)%.o: $(SRC)%.cpp
+$(BIN)%.o: $(SRC)%.cpp 
 	$(CC) -c $(FLAGS) $(OBJ_CL_FLAGS) $< -o $@ $(OBJ_LIBS)
 
 $(BIN)$(PROJ): $(OBJS)
