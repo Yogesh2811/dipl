@@ -3,14 +3,14 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
-One of the essential metrics for measuring VoIP private branch exchange's 
+One of the essential metrics for measuring VoIP gateway's 
 performance is the number of simultaneous calls. It is affected mostly by the
 computational demands of used communication protocols and number of registered
 users. While the count of registered users provides very limited room for 
 improvement by the nature of the problem itself, there could be wide variety
 of aproaches in implementing the protocol stacks. 
 
-The communication protocols for VoIP PBX can be divided into two groups. 
+The communication protocols for VoIP gateway can be divided into two groups. 
 Signalization, which consists mostly of textually represented protocols, where 
 the messages' occurance is either periodical with quite small frequency, or 
 based on the users initiative which is a stochastical event depending on the 
@@ -29,6 +29,8 @@ processing unit capable of parallel computations. Therefore, target of this
 thesis is implementation and analysis of parallel processing of encrypted
 real-time multimedia data transfere.
 
+
+
 Chapter \ref{chapter:srtp} describes the structures and algorithms used in 
 Secure Real-time Transport Protocol. Increased attention is devoted to 
 explanation of Advanced Encryption Standard, which is default cipher used in 
@@ -37,13 +39,24 @@ Because SRTP doesn't provide key exchange mechanism for symetric AES cipher, the
 chapter also includes description of selected protocol extensions for this task.
 Chapter \ref{chapter:gpgpu} provides basic information about graphic processing 
 unit and the usage of GPU for general purpose computations. Part of the chapter 
-is principal explanation of OpenCL framework and its elementary usage. 
-Chapter \ref{chapter:design} defines the term SIP Gateway for the context of 
+is principal explanation of OpenCL framework and its elementary usage for the 
+developer. As the parallel processing is diverse and wide study, the area of 
+parallel paradigm that could be associated to the further implementation of
+this thesis is mentioned with particular interest and focus. 
+Chapter \ref{chapter:design} defines the term SIP gateway for the context of 
 this thesis, discusses the design of such gateway and includes
 listing of selected further implemented protocol stacks, their mutual 
-interaction and possible improvement of processing the passing data. 
+interaction and possible improvement of processing the passing data. The highest
+amount of attention is devoted to the comparison of different approaches to
+design of SRTP stack and identification of main characteristics of native
+OpenCL programming pattern in contrast to persistent thread model. The advantages
+of both parallel implementations over serial code executed on the same hardware
+is mentioned as well. 
 Finally chapter \ref{chapter:conclusion} sumarizes the potential benefits of 
-usage the GPGPU for the number of maximal simultaneous calls.
+usage the GPGPU for the number of maximal simultaneous calls and shows visualization
+of achieved results in improvement and decrease of latency. Also this chapter
+draws possible contribution to related topics, such as transcoding of media
+compressing codecs which discussion may provide even higher level of improvement.
 
 
 
@@ -193,8 +206,6 @@ belong\cite{perkins:rtp2003}:
 \item Sensitivity to factors that are difficult to objectively measure
 such as jitter.
 \end{itemize}
-
-
 
 It has been proven that increase in size of the packet SRTP is
 insignificant compared to the RTP\cite{srtp:analysis2, srtp:analysis1}.
@@ -503,33 +514,6 @@ inverse. For implementation purposes both S-boxes are precomputed.
 In this transformation $[x_0, .., x_7]$ is the multiplicative inverse as vector,
 and $\oplus$ is XOR operation.
 
-\begin{table}[H]
-\label{sbox}
-\begin{center}
-\begin{tabular}{|c|cccccccccccccccc|}\hline%
-      &  0 &  1 &  2 &  3 &  4 &  5 &  6 &  7 &  8 &  9 &  a &  b &  c &  d &  e &  f \\\hline
-   00 & 63 & 7c & 77 & 7b & f2 & 6b & 6f & c5 & 30 & 01 & 67 & 2b & fe & d7 & ab & 76 \\ 
-   10 & ca & 82 & c9 & 7d & fa & 59 & 47 & f0 & ad & d4 & a2 & af & 9c & a4 & 72 & c0 \\ 
-   20 & b7 & fd & 93 & 26 & 36 & 3f & f7 & cc & 34 & a5 & e5 & f1 & 71 & d8 & 31 & 15 \\ 
-   30 & 04 & c7 & 23 & c3 & 18 & 96 & 05 & 9a & 07 & 12 & 80 & e2 & eb & 27 & b2 & 75 \\ 
-   40 & 09 & 83 & 2c & 1a & 1b & 6e & 5a & a0 & 52 & 3b & d6 & b3 & 29 & e3 & 2f & 84 \\ 
-   50 & 53 & d1 & 00 & ed & 20 & fc & b1 & 5b & 6a & cb & be & 39 & 4a & 4c & 58 & cf \\ 
-   60 & d0 & ef & aa & fb & 43 & 4d & 33 & 85 & 45 & f9 & 02 & 7f & 50 & 3c & 9f & a8 \\ 
-   70 & 51 & a3 & 40 & 8f & 92 & 9d & 38 & f5 & bc & b6 & da & 21 & 10 & ff & f3 & d2 \\ 
-   80 & cd & 0c & 13 & ec & 5f & 97 & 44 & 17 & c4 & a7 & 7e & 3d & 64 & 5d & 19 & 73 \\ 
-   90 & 60 & 81 & 4f & dc & 22 & 2a & 90 & 88 & 46 & ee & b8 & 14 & de & 5e & 0b & db \\ 
-   a0 & e0 & 32 & 3a & 0a & 49 & 06 & 24 & 5c & c2 & d3 & ac & 62 & 91 & 95 & e4 & 79 \\ 
-   b0 & e7 & c8 & 37 & 6d & 8d & d5 & 4e & a9 & 6c & 56 & f4 & ea & 65 & 7a & ae & 08 \\ 
-   c0 & ba & 78 & 25 & 2e & 1c & a6 & b4 & c6 & e8 & dd & 74 & 1f & 4b & bd & 8b & 8a \\ 
-   d0 & 70 & 3e & b5 & 66 & 48 & 03 & f6 & 0e & 61 & 35 & 57 & b9 & 86 & c1 & 1d & 9e \\ 
-   e0 & e1 & f8 & 98 & 11 & 69 & d9 & 8e & 94 & 9b & 1e & 87 & e9 & ce & 55 & 28 & df \\ 
-   f0 & 8c & a1 & 89 & 0d & bf & e6 & 42 & 68 & 41 & 99 & 2d & 0f & b0 & 54 & bb & 16 \\ 
-\hline
-\end{tabular}
-\end{center}
-\caption{S-box for SubBytes transformation in hexadecimal notation.}
-\end{table}
-
 \subsection{Block Cipher Modes}
 During encyption the same key is applied repeatedly on the uniform lenght blocks
 of data to whose the message is separated into. Large amount of ciphered data 
@@ -615,58 +599,6 @@ P_j &=& C_j \oplus O_j
 
 
 
-%\begin{table}[H]
-%\label{invsbox}
-%\begin{center}
-%\begin{tabular}{|c|cccccccccccccccc|}\hline%
-%      &  0 &  1 &  2 &  3 &  4 &  5 &  6 &  7 &  8 &  9 &  a &  b &  c &  d &  e &  f \\\hline
-%   00 & 63 & 7c & 77 & 7b & f2 & 6b & 6f & c5 & 30 & 01 & 67 & 2b & fe & d7 & ab & 76 \\ 
-%   10 & ca & 82 & c9 & 7d & fa & 59 & 47 & f0 & ad & d4 & a2 & af & 9c & a4 & 72 & c0 \\ 
-%   20 & b7 & fd & 93 & 26 & 36 & 3f & f7 & cc & 34 & a5 & e5 & f1 & 71 & d8 & 31 & 15 \\ 
-%   30 & 04 & c7 & 23 & c3 & 18 & 96 & 05 & 9a & 07 & 12 & 80 & e2 & eb & 27 & b2 & 75 \\ 
-%   40 & 09 & 83 & 2c & 1a & 1b & 6e & 5a & a0 & 52 & 3b & d6 & b3 & 29 & e3 & 2f & 84 \\ 
-%   50 & 53 & d1 & 00 & ed & 20 & fc & b1 & 5b & 6a & cb & be & 39 & 4a & 4c & 58 & cf \\ 
-%   60 & d0 & ef & aa & fb & 43 & 4d & 33 & 85 & 45 & f9 & 02 & 7f & 50 & 3c & 9f & a8 \\ 
-%   70 & 51 & a3 & 40 & 8f & 92 & 9d & 38 & f5 & bc & b6 & da & 21 & 10 & ff & f3 & d2 \\ 
-%   80 & cd & 0c & 13 & ec & 5f & 97 & 44 & 17 & c4 & a7 & 7e & 3d & 64 & 5d & 19 & 73 \\ 
-%   90 & 60 & 81 & 4f & dc & 22 & 2a & 90 & 88 & 46 & ee & b8 & 14 & de & 5e & 0b & db \\ 
-%   a0 & e0 & 32 & 3a & 0a & 49 & 06 & 24 & 5c & c2 & d3 & ac & 62 & 91 & 95 & e4 & 79 \\ 
-%   b0 & e7 & c8 & 37 & 6d & 8d & d5 & 4e & a9 & 6c & 56 & f4 & ea & 65 & 7a & ae & 08 \\ 
-%   c0 & ba & 78 & 25 & 2e & 1c & a6 & b4 & c6 & e8 & dd & 74 & 1f & 4b & bd & 8b & 8a \\ 
-%   d0 & 70 & 3e & b5 & 66 & 48 & 03 & f6 & 0e & 61 & 35 & 57 & b9 & 86 & c1 & 1d & 9e \\ 
-%   e0 & e1 & f8 & 98 & 11 & 69 & d9 & 8e & 94 & 9b & 1e & 87 & e9 & ce & 55 & 28 & df \\ 
-%   f0 & 8c & a1 & 89 & 0d & bf & e6 & 42 & 68 & 41 & 99 & 2d & 0f & b0 & 54 & bb & 16 \\ 
-%\hline
-%\end{tabular}
-%\end{center}
-%\caption{Inverse S-box for SubBytes transformation in hexadecimal notation.}
-%\end{table}
-
-
-
-
-
-%\begin{algorithm}
-%\caption{AES decryption}
-%\label{decr}
-%\begin{algorithmic}
-%\State \textbf{Decipher(State, Key)}
-%\State state $\gets AddRoundKey($State, Key[n]$)$
-%\State state $\gets ShiftRows($state$)$
-%\State state $\gets SubBytes($state$)$
-%\vspace{0.5em}
-%\For{$i \gets (n-1..1)$}
-%    \State state $\gets AddRoundKey($state, Key[i]$)$
-%    \State state $\gets MixColumns($state$)$
-%    \State state $\gets ShiftRows($state$)$
-%    \State state $\gets SubBytes($state$)$
-%\EndFor
-%\vspace{0.5em}
-%\State state $\gets AddRoundKey($state, Key[0]$)$
-%\vspace{0.5em}
-%\State $return$ state
-%\end{algorithmic}
-%\end{algorithm}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -863,7 +795,51 @@ stack\footnote{ Light-weight Control Protocol -- communication protocol for
 Siemens prototype VoIP phone.}.
 
 
+\section{Design Patterns}
+More complex the application is the higher level of considerate design it 
+requires. There are plenty of already well tested design patterns from
+which the implemetation could be based on and as the field of VoIP communication
+has been known for decent amount of time, there are currently couple of advised
+design patterns, from which the particular implementation for this thesis
+stands on four -- mediator pattern, singleton pattern, factory method pattern 
+\cite{design-patterns} and protocol stack pattern \cite{protocol-stack}. None of
+these design patterns could be thought as contribution of the thesis as they all
+belong to common public knowledge and their examination was not the main topic 
+of the  research. However, their explanation is provided in order to make the
+rest of the chapter more comprehendable.
 
+\subsection{Mediator Pattern}
+In object oriented design the common problem be the large number of classes and
+their mutual interaction. One of the possible solutions for the latter can be
+behavorial pattern called mediator, which is named after the way it alters the
+running behavior. The pattern consits of following participants:
+
+\begin{itemize}
+\item \textbf{Mediator} -- defines an interface for communicating with colleague 
+objects
+\item \textbf{ConcreteMediator} -- implements cooperative behavior by coordinating
+colleague objects, it knows and maintains its colleagues
+\item \textbf{ConcreteColleague} -- each colleague knows its mediator object and
+it communicates with its mediator whenever it would have otherwise communicated 
+with another colleague
+\end{itemize}
+
+The mediator object communicates with multiple colleague object through shared
+interface.
+\url{http://en.wikipedia.org/wiki/Mediator\_pattern}
+
+\subsection{Singleton Pattern}
+\url{http://en.wikipedia.org/wiki/Singleton\_pattern}
+
+\subsection{Factory Method Pattern}
+\url{http://en.wikipedia.org/wiki/Factory\_method\_pattern}
+
+\subsection{Protocol Stack Pattern}
+\url{http://www.eventhelix.com/realtimemantra/PatternCatalog/protocol\_stack.htm#.UYEfRbXQovo}
+
+
+
+\section{}
 \begin{figure}[H]
 \centering
 \includegraphics[width=10cm]{fig/scenario1.pdf}
@@ -874,11 +850,11 @@ connected and SIP phone through SIP Registrar.}
 
 Multiple SIP or LCP telephones are connected to the SIP Gateway whose appear as
 users to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
-HiPath 8000}. The SIP Gateway in this scenario works as bridging point between 
-the SIP telephones and SIP Registrar, LCP phones and SIP Registrar or LCP phones
+HiPath 8000}. The SIP gateway in this scenario works as bridging point between 
+the SIP telephones and SIP registrar, LCP phones and SIP registrar or LCP phones
 directly.
 
-The modules of SIP Gateway are implemented in different programming languages
+The modules of SIP gateway are implemented in different programming languages
 and each serve specified purpose.
 \begin{itemize}
 \item \textbf{Gateway core} -- implemented in Java, provides communication 
@@ -939,7 +915,38 @@ Each SIP/LCP client is instance of \texttt{Client} class, and universal interfac
 remote communication and administration shall be provided as well.
 
 
-\section{SRTP processing}
+\section{SRTP Stack}
+The essential point of implementation improvement lies in design of SRTP stack as
+it has been mentioned in previous text that it consumes majority of resources of
+the gateway during indirect media sessions. Proper implementation must not lack
+following properties:
+
+\begin{itemize}
+\item \textbf{encryption module} -- implementation of AES-128b cipher as defined
+in RFC-3711 \cite{rfc3711} in at least CRT mode that provides protection of transfered
+data with different keys for each endpoint in all concurrent sessions.
+\item \textbf{input and output buffers} -- in order to avoid exhaustive allocation
+and deallocation of structures for input and output packets, the data storage should
+be implemented as thread safe pool of buffers  with sufficient size and both, 
+synchronization techniques and memory override protection.
+\item \textbf{transcoding module} -- due to vaious reasons, endpoints may not be
+able of negotiate the same media compressing codec. The SRTP stack should allow
+the transcoding and then encapsulate the process without unneccessary additional
+demands for the gateway.
+\item \textbf{integration interface} -- most of the procedures implemented in
+SRTP stack should be encapsulated to minimize overloading data transferes with
+the gateway providing only essential and minimal interface with callback
+features to simplify and unify the integration process.
+\end{itemize}
+
+An advanced techniques like \textbf{jitter buffer} may improve overal quality
+of VoIP communication, however, each end device capable of such communication must
+implement these techniques as well, therefore, it may render itself redundant 
+and generating minimal, but still additional latency.
+
+
+
+\subsection{SRTP Processing}
 Advantage of usage AES in CM is that it allows out-of-order processing. Because
 majority of RTP implementations are build on UDP transport layer, which is 
 simple model with minimal protocol mechanisms, neither order nor delivery of the
@@ -972,13 +979,52 @@ be mapped to the packet using any of the mentioned common codecs. Parallelizatio
 of the encryption process could be performed either on a single state, where
 value during every method of the AES of each cell of the state is computed 
 separately, therefore a work-item can be mapped on computing for each cell. 
-Theoretical speed-up of this method of AES algorithm should be 16x utilizing 16
-work-items.
+Theoretical common hardware should be capable of utilizing 16 work-items in a 
+single work-group which is the maximal number of needed by this design.
 
 Another possible approach for codecs with larger payload size, such as G.711, 
 could be to map multiple states for the parallel execution of entire packet, 
 which for the particular codec would require significantly more computational 
 units. 
+
+\vspace{1em}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=15cm]{fig/paral_scheme.pdf}
+\caption{SRTP Processing Scheme.}
+\label{scheme}
+\end{figure}
+
+The SRTP processing scheme from figure \ref{scheme} visualizes the ideas behind
+the design of SRTP stack and encapsulates implementation details for easier
+explanation from the multi-threaded application design point of view. 
+The entire stack runs in three separate threads which shall minimize the delay 
+caused by waiting on modules with varying time of execution per packet.
+\begin{itemize}
+\item \textbf{Network thread} -- the incomming and outgoing data are captured
+via two sockets, for RTP and RTCP. This thread includes a pool of buffers for
+the storage of packets and another the processed data.
+\item \textbf{Daemon thread} -- the implementation of the entire stack is based 
+on the daemon design pattern.
+\item textbf{Packet Processing Thread} --
+\end{itemize} 
+
+The threads can be used for bijective mappings to the SRTP layers as shown in the scheme.
+
+\begin{itemize}
+\item Network Layer
+\item Packet Processing Layer
+\item Payload Encoding
+\end{itemize}
+
+\subsection{Serial Processing}
+For better understanding of improvement this thesis is provided with reference
+serial implementation which design will be analyzed as well.  
+
+\subsection{Massive Parallel Processing}
+
+\subsection{Persistent Thread Processing}
 
 
  
