@@ -15,13 +15,11 @@ Signalization, which consists mostly of textually represented protocols, where
 the messages' occurance is either periodical with quite small frequency, or 
 based on the users initiative which is a stochastical event depending on the 
 activity of the user. However, generally the recurrance of both is rather 
-similar.
-
-Comparably more resources during indirect simultaneous call sessions consumes 
-processing the second group of protocols, transport of multimedia packets. Since
-security has recently grown to be necessary feature in VoIP communication and 
-the encryption and decryption processes are designed with the idea of 
-optimization, it is primary scope of interest of this thesis.
+similar. Comparably more resources during indirect simultaneous call sessions 
+consumes processing the second group of protocols, transport of multimedia 
+packets. Since security has recently grown to be necessary feature in VoIP 
+communication and the encryption and decryption processes are designed with the 
+idea of optimization, it is primary scope of interest of this thesis.
 
 Development and results in the areas of parallel architectures shows that many
 procedures could be distinctively accelerated by executing the algorithm on the
@@ -37,12 +35,14 @@ explanation of Advanced Encryption Standard, which is default cipher used in
 SRTP, including brief theoretical background and analysis of SRTP and AES. 
 Because SRTP doesn't provide key exchange mechanism for symetric AES cipher, the
 chapter also includes description of selected protocol extensions for this task.
+
 Chapter \ref{chapter:gpgpu} provides basic information about graphic processing 
 unit and the usage of GPU for general purpose computations. Part of the chapter 
 is principal explanation of OpenCL framework and its elementary usage for the 
 developer. As the parallel processing is diverse and wide study, the area of 
 parallel paradigm that could be associated to the further implementation of
 this thesis is mentioned with particular interest and focus. 
+
 Chapter \ref{chapter:design} defines the term SIP gateway for the context of 
 this thesis, discusses the design of such gateway and includes
 listing of selected further implemented protocol stacks, their mutual 
@@ -51,12 +51,23 @@ amount of attention is devoted to the comparison of different approaches to
 design of SRTP stack and identification of main characteristics of native
 OpenCL programming pattern in contrast to persistent thread model. The advantages
 of both parallel implementations over serial code executed on the same hardware
-is mentioned as well. 
-Finally chapter \ref{chapter:conclusion} sumarizes the potential benefits of 
-usage the GPGPU for the number of maximal simultaneous calls and shows visualization
-of achieved results in improvement and decrease of latency. Also this chapter
-draws possible contribution to related topics, such as transcoding of media
-compressing codecs which discussion may provide even higher level of improvement.
+is mentioned as well. Short introduction and description of used design patterns
+is included in order to provide better comprehensibility of the application 
+schemes.
+
+Chapter \ref{chapter:implementation} covers the reference implementation of
+the previous theoretical part of this thesis, used techniques and algorithms and
+reasonig behind their selection. Even though the focus of the thesis is primarily
+research of available contemporary methods there were many restrictions.
+The requirements of this chapter arise from currently used implementation and 
+hardware limitation of the gateway.
+
+Finally chapters \ref{chapter:results} and \ref{chapter:conclusion} sumarize
+the potential benefits of usage the GPGPU for the number of maximal simultaneous 
+calls and shows visualization of achieved results in improvement and decrease of
+latency. Also these chapter discusses possible contribution to related topics, 
+such as transcoding of media compressing codecs which parallel implementation 
+may provide even higher level of improvement.
 
 
 
@@ -1030,7 +1041,7 @@ serial implementation which design will be analyzed as well.
  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\chapter{Implementation}
+\chapter{Implementation}\label{chapter:implementation}
 
 
 
@@ -1038,7 +1049,7 @@ serial implementation which design will be analyzed as well.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\chapter{Testing}
+\chapter{Results}\label{chapter:results}
 
 
 
