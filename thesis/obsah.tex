@@ -835,11 +835,28 @@ it communicates with its mediator whenever it would have otherwise communicated
 with another colleague
 \end{itemize}
 
-The mediator object communicates with multiple colleague object through shared
-interface.
+The mediator object communicates with multiple colleague object through defined
+interface, the interaction between colleague objects is strictly limited.
+One of the issues of such design is that the data flow might be bottlenecked by
+the only option of mutual communication is realised via single object if there
+is a need for critical section and their exclusion.
 \url{http://en.wikipedia.org/wiki/Mediator\_pattern}
 
 \subsection{Singleton Pattern}
+During creation of the application architecture certain class may be required
+to provide global point of access to it while preserving only one instance.
+One approach could be to have global variable but that is not complete fulfilment
+of the requests, because multiple instances could still be created.
+Singleton design pattern offers a solution when the class itself is responsible
+for the number of instances which ensures that nowhere in the code multiple object
+of such class may be created. This doesn't affect the rest of the design, only
+one single class.
+
+\begin{itemize}
+\item \textbf{Singleton} -- there must be exactly one instance of the class and
+class must prevent from instantiation of multiple instances,  it must be globaly 
+available from well known access point
+\end{itemize}
 \url{http://en.wikipedia.org/wiki/Singleton\_pattern}
 
 \subsection{Factory Method Pattern}
@@ -1013,20 +1030,25 @@ explanation from the multi-threaded application design point of view.
 The entire stack runs in three separate threads which shall minimize the delay 
 caused by waiting on modules with varying time of execution per packet.
 \begin{itemize}
-\item \textbf{Network thread} -- the incomming and outgoing data are captured
+\item \textbf{Network Thread} -- the incomming and outgoing data are captured
 via two sockets, for RTP and RTCP. This thread includes a pool of buffers for
 the storage of packets and another the processed data.
-\item \textbf{Daemon thread} -- the implementation of the entire stack is based 
-on the daemon design pattern.
-\item textbf{Packet Processing Thread} --
+\item \textbf{Stack Thread} -- the interaction and selectiong atributes for
+the processing thread is taken care in the stack thread as well as interface
+for higher layers of the aplication using the SRTP stack.
+\item \textbf{Packet Processing Thread} -- extraction of important values from
+the packet header, encoding and decoding provided with transcoding interface of 
+the entire packet payload according to the previously extracted data
 \end{itemize} 
 
-The threads can be used for bijective mappings to the SRTP layers as shown in the scheme.
+The thread design could be mapped to another type of view on the layers of
+the stack design. The SRTP layers as shown in the scheme \ref{scheme} have following
+functions:
 
 \begin{itemize}
-\item Network Layer
-\item Packet Processing Layer
-\item Payload Encoding
+\item \textbf{Network Layer} --
+\item \textbf{Packet Processing Layer} --
+\item \textbf{Payload Encoding} --
 \end{itemize}
 
 \subsection{Serial Processing}
