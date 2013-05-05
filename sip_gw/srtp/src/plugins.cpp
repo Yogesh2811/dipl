@@ -48,16 +48,16 @@ int set_plugin(void* plugin){
     char** encoding_name = (char**)dlsym(plugin, "encoding_name");
     if((error = dlerror()) != NULL) {return 2;}
 
-    int (**transcode)(CBYTE*, BYTE*, int, int*, int);
-    transcode = (int(**)(CBYTE*,BYTE*,int,int*,int))dlsym(plugin, "transcode");
+    int (**transcode)(CBYTE*, BYTE*, int, int*, int, int);
+    transcode = (int(**)(CBYTE*,BYTE*,int,int*,int,int))dlsym(plugin, "transcode");
     if((error = dlerror()) != NULL) {return 3;}
 
-    void (**to_raw)(CBYTE*, BYTE*, int, int*);
-    to_raw = (void(**)(CBYTE*,BYTE*,int,int*))dlsym(plugin, "to_raw");
+    void (**to_raw)(CBYTE*, BYTE*, int, int*, int);
+    to_raw = (void(**)(CBYTE*,BYTE*,int,int*,int))dlsym(plugin, "to_raw");
     if((error = dlerror()) != NULL) {return 4;}
  
-    void (**from_raw)(CBYTE*, BYTE*, int, int*);
-    from_raw = (void(**)(CBYTE*,BYTE*,int,int*))dlsym(plugin, "from_raw");
+    void (**from_raw)(CBYTE*, BYTE*, int, int*, int);
+    from_raw = (void(**)(CBYTE*,BYTE*,int,int*,int))dlsym(plugin, "from_raw");
     if((error = dlerror()) != NULL) {return 5;}
 
     transcode_plugins[pt].PT = pt; 
@@ -99,44 +99,22 @@ void Plugins::init(){
     }
 }
 
-int Plugins::transcode(BYTE* src, BYTE* dst, int l_src, int* l_dst, int pt_src, int pt_dst){
+int Plugins::transcode(BYTE* src, BYTE* dst, int l_src, int* l_dst, 
+                       int pt_src, int pt_dst, int id){
     int result = -1;
     if(transcode_plugins[pt_src].encoding_name != NULL &&
        transcode_plugins[pt_dst].encoding_name != NULL ) {
-        result = (*transcode_plugins[pt_src].transcode)(src, dst, l_src, l_dst, pt_dst);
+        result = (*transcode_plugins[pt_src].transcode)(src, dst, l_src, l_dst, pt_dst, id);
         if(result < 1){ //must convert through PCM
             BYTE pcm_buffer[PACKET_SIZE];
             int l_raw;
-            (*transcode_plugins[pt_src].to_raw)(src, pcm_buffer, l_src, &l_raw);
-            (*transcode_plugins[pt_dst].from_raw)(pcm_buffer, dst, l_raw, l_dst);
+            (*transcode_plugins[pt_src].to_raw)(src, pcm_buffer, l_src, &l_raw, id);
+            (*transcode_plugins[pt_dst].from_raw)(pcm_buffer, dst, l_raw, l_dst, id);
         }
     }
     return result;
 }
 
-/*void* Plugins::get_transcode_function(int pt_src, int pt_dst){
-    LOG_MSG("Plugins::get_transcode_function()");
-    int result = -1;
-    if(transcode_plugins[pt_src].encoding_name != NULL &&
-       transcode_plugins[pt_dst].encoding_name != NULL ) {
-        int tmp;
-        LOG_MSG("Plugins::get_transcode_function() - getting result");
-        result = (*transcode_plugins[pt_src].transcode)(NULL, NULL, 0, &tmp, pt_dst);
-    }
-
-    if(result == 1){
-        LOG_MSG("Plugins::get_transcode_function() - transcode");
-        return (void*)transcode_plugins[pt_src].transcode;
-    }
-    else if(result == 0){
-        LOG_MSG("Plugins::get_transcode_function() - transcode_via_pcm");
-        return (void*)transcode_plugins[pt_src].transcode_via_pcm;
-    }
-    else{ // if(result == -1)
-        LOG_MSG("Plugins::get_transcode_function() - NULL");
-        return NULL;
-    }
-}*/
 
 void Plugins::cleanup(){
     for(int i = 0; i<PAYLOAD_TYPES; i++){

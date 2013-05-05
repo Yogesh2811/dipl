@@ -6,7 +6,8 @@ SRTP_stream::SRTP_stream(Stream_type t){
     state = INIT;
     roc = 0;
     alg = AES128_CTR;
-    
+    id = 0;
+
     memset(session_key, 0, 16);
 }
 

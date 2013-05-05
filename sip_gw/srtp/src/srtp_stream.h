@@ -38,6 +38,7 @@ class SRTP_stream {
         //transcoding
         int src_pt;
         int dst_pt;
+        int id;
     private:
         Status state;
         Stream_type type;

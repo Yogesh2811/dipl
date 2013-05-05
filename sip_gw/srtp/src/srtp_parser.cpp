@@ -56,7 +56,7 @@ void SRTP_parser::parse_msg(RTP_item* item, SRTP::header* h, SRTP_stream* s, int
     BYTE *key =  s->get_key();
 
     //transcoding temp vars
-    int len_dst;
+    int l_dst;
 
     switch(s->get_type()){
         case SRTP_stream::ENCODE :
@@ -66,17 +66,17 @@ void SRTP_parser::parse_msg(RTP_item* item, SRTP::header* h, SRTP_stream* s, int
             decode(item->src, item->dst, key, iv, len);
             break;
         case SRTP_stream::TRANSCODE_ENCODE:
-            Plugins::transcode(item->src, item->temp, len, &len_dst, s->src_pt, s->dst_pt);
-            encode(item->temp, item->dst, key, iv, len_dst);
+            Plugins::transcode(item->src, item->temp, len, &l_dst, s->src_pt, s->dst_pt, s->id);
+            encode(item->temp, item->dst, key, iv, l_dst);
             break;
         case SRTP_stream::DECODE_TRANSCODE:
             decode(item->src, item->temp, key, iv, len);
-            Plugins::transcode(item->temp, item->dst, len, &len_dst, s->src_pt, s->dst_pt);
+            Plugins::transcode(item->temp, item->dst, len, &l_dst, s->src_pt, s->dst_pt, s->id);
             break;
         case SRTP_stream::DECODE_TRANSCODE_ENCODE:
             decode(item->src, item->dst, key, iv, len);
-            Plugins::transcode(item->dst, item->temp, len, &len_dst, s->src_pt, s->dst_pt);
-            encode(item->temp, item->dst, key, iv, len_dst);
+            Plugins::transcode(item->dst, item->temp, len, &l_dst, s->src_pt, s->dst_pt, s->id);
+            encode(item->temp, item->dst, key, iv, l_dst);
             break;
         default: //forward
             memcpy(item->src, item->dst, len);

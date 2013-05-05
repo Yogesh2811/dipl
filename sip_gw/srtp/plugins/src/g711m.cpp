@@ -12,14 +12,14 @@ const char* encoding_name = "PCMU";
 const int PT = 0;
 
 //functions for plugin interface
-int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt);
-void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst);
-void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst);
+int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt, int id);
+void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst, int id);
+void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst, int id);
 
 //public interface of the plugin
-int (*transcode)(CBYTE*, BYTE*, int, int*, int) = &transcode_f;
-void (*to_raw)(CBYTE*, BYTE*, int, int*) = &to_raw_f;
-void (*from_raw)(CBYTE*, BYTE*, int, int*) = &from_raw_f;
+int (*transcode)(CBYTE*, BYTE*, int, int*, int, int) = &transcode_f;
+void (*to_raw)(CBYTE*, BYTE*, int, int*, int) = &to_raw_f;
+void (*from_raw)(CBYTE*, BYTE*, int, int*, int) = &from_raw_f;
 
 
 
@@ -56,7 +56,7 @@ void transcode_g711a(CBYTE* src, BYTE* dst, int length){
     }
 }
 
-int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt){
+int transcode_f(CBYTE* src, BYTE* dst, int l_src, int* l_dst, int pt, int id){
     /*if(pt == 0){
         *l_dst = l_src;
         memcpy(dst, src, sizeof(BYTE)*l_src);
@@ -84,7 +84,7 @@ short ulaw_to_pcm(BYTE number){
     return (sign == 0) ? (decoded) : (-(decoded));
 }
 
-void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst){
+void to_raw_f(CBYTE* src, BYTE* raw, int len_src, int* len_dst, int id){
     (*len_dst) = len_src*2;
     BYTE aval;
     short t, seg, pcm;
@@ -112,7 +112,7 @@ BYTE pcm_to_ulaw(short number){
     return (~(sign | ((position - 5) << 4) | lsb));
 }
 
-void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst){
+void from_raw_f(CBYTE* raw, BYTE* dst, int len_src, int* len_dst, int id){
     (*len_dst) = len_src/2;
     short pcm, seg, mask;
     BYTE aval;
