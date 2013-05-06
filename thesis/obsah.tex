@@ -812,8 +812,8 @@ requires. There are plenty of already well tested design patterns from
 which the implemetation could be based on and as the field of VoIP communication
 has been known for decent amount of time, there are currently couple of advised
 design patterns, from which the particular implementation for this thesis
-stands on four -- mediator pattern, singleton pattern, factory method pattern 
-\cite{design-patterns} and protocol stack pattern \cite{protocol-stack}. None of
+stands on three -- mediator pattern, singleton pattern\cite{design-patterns} 
+and protocol stack pattern \cite{protocol-stack}. None of
 these design patterns could be thought as contribution of the thesis as they all
 belong to common public knowledge and their examination was not the main topic 
 of the  research. However, their explanation is provided in order to make the
@@ -840,7 +840,6 @@ interface, the interaction between colleague objects is strictly limited.
 One of the issues of such design is that the data flow might be bottlenecked by
 the only option of mutual communication is realised via single object if there
 is a need for critical section and their exclusion.
-\url{http://en.wikipedia.org/wiki/Mediator\_pattern}
 
 \subsection{Singleton Pattern}
 During creation of the application architecture certain class may be required
@@ -850,28 +849,58 @@ of the requests, because multiple instances could still be created.
 Singleton design pattern offers a solution when the class itself is responsible
 for the number of instances which ensures that nowhere in the code multiple object
 of such class may be created. This doesn't affect the rest of the design, only
-one single class.
+one single class, therefore, it has only one participant:
 
 \begin{itemize}
 \item \textbf{Singleton} -- there must be exactly one instance of the class and
 class must prevent from instantiation of multiple instances,  it must be globaly 
 available from well known access point
 \end{itemize}
-\url{http://en.wikipedia.org/wiki/Singleton\_pattern}
 
-\subsection{Factory Method Pattern}
-\url{http://en.wikipedia.org/wiki/Factory\_method\_pattern}
+%\subsection{Factory Method Pattern}
+%\url{http://en.wikipedia.org/wiki/Factory\_method\_pattern}
 
 \subsection{Protocol Stack Pattern}
-\url{http://www.eventhelix.com/realtimemantra/PatternCatalog/protocol\_stack.htm#.UYEfRbXQovo}
+There are two design patterns closely related to the protocol stack design pattern
+which it uses as higher level of abstraction in explaining the correspondign
+relations in design.
+\begin{itemize}
+\item \textbf{Protocol Layer} -- provide a common interface for implementing
+different layers of communication protocol stack.
+\item \textbf{Protocol Packet} -- unification and simplification of internal
+packet buffers and their access.
+\end{itemize} 
+
+This pattern's usage is concentrated but not limited to dynamic exchange of protocol
+layers from the stack, their insertion and removal, thanks to separate view
+and decoupling of each implemented protocol and its layers.
+
+The participants of protocol stack pattern are:
+\begin{itemize}
+\item \textbf{Protocol Stack} -- contains and maintains list of used protocols.
+\item \textbf{Protocol Layer} -- provides interface and communication point for 
+each individual layer. The certain layers are abstracted from the actual type of
+the upper layer and lower layer classes.
+\end{itemize}
+
+
+%\url{http://www.eventhelix.com/realtimemantra/PatternCatalog/protocol\_stack.htm#.UYEfRbXQovo}
 
 
 
-\section{}
+\section{SIP Gateway}
+In order to create a session for VoIP communication between two endpoints, 
+there must be device that will be able to create such connection and negotiate
+protocols for their interaction and data exchange. In telecommunications such
+device is called \textit{gateway}. The essential function of gateway is 
+protocol translation to interconnect networks and devices using different
+protocol technologies. The SIP gateway used in this thesis provides protocol
+conversion between subset of SIP protocol and full implementation of LCP protocol.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=10cm]{fig/scenario1.pdf}
-\caption{SIP Gateway with two VoIP telephones accessible, LCP phone directly 
+\caption{SIP gateway with two VoIP telephones accessible, LCP phone directly 
 connected and SIP phone through SIP Registrar.}
 \label{oclpm}
 \end{figure}
@@ -896,7 +925,6 @@ C/C++ and OpenCL provides neccessary briging point.
 \end{itemize}
 
 
-\section{SIP Gateway}
 Mesurement of utilization of computational resources during execution of 
 ciphering algorithm does provide correct and exact results, however in real 
 deployment the efectivity could be negatively affected by the other processes 
@@ -1031,24 +1059,30 @@ The entire stack runs in three separate threads which shall minimize the delay
 caused by waiting on modules with varying time of execution per packet.
 \begin{itemize}
 \item \textbf{Network Thread} -- the incomming and outgoing data are captured
-via two sockets, for RTP and RTCP. This thread includes a pool of buffers for
-the storage of packets and another the processed data.
+via two sockets, for RTP and RTCP. This thread includes storage of the packets 
+and another processed data.
 \item \textbf{Stack Thread} -- the interaction and selectiong atributes for
 the processing thread is taken care in the stack thread as well as interface
 for higher layers of the aplication using the SRTP stack.
 \item \textbf{Packet Processing Thread} -- extraction of important values from
 the packet header, encoding and decoding provided with transcoding interface of 
-the entire packet payload according to the previously extracted data
+the entire packet payload according to the previously extracted data.
 \end{itemize} 
 
 The thread design could be mapped to another type of view on the layers of
-the stack design. The SRTP layers as shown in the scheme \ref{scheme} have following
-functions:
+the stack design. The SRTP layers as shown in the scheme \ref{scheme} are subset
+of the entire SRTP stack functionality and the classes from the scheme have 
+following purposes:
 
 \begin{itemize}
-\item \textbf{Network Layer} --
-\item \textbf{Packet Processing Layer} --
-\item \textbf{Payload Encoding} --
+\item \textbf{Network Layer} -- enables the communication with external devices
+through SRTP protocol, transfere of the multimedia data packets between endpoints
+and implements buffer pool for packet data.  
+\item \textbf{Packet Processing Layer} -- without unneccessary data reallocation
+the proper structures are casted for easier readability and extraction of important
+data from the incomming packets. 
+\item \textbf{Payload Encoding} -- complete implementations of encryption and 
+decryption of the packet payload.
 \end{itemize}
 
 \subsection{Serial Processing}
@@ -1056,14 +1090,44 @@ For better understanding of improvement this thesis is provided with reference
 serial implementation which design will be analyzed as well.  
 
 \subsection{Massive Parallel Processing}
+Traditional parallel programming style relies heavily on SIMT\footnote{ SIMT -- 
+Single Instruction Multiple Thread} and SPMD\footnote{ SPMD -- Single Program
+Multiple Data} programming paradigms \cite{Flynn:1972}. The 
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=13cm]{fig/packet_wi.pdf}
+\caption{Work item mapping on packet payload with native OpenCL approach.}
+\label{mp_payload}
+\end{figure}
+
+
 
 \subsection{Persistent Thread Processing}
+Persistent thread\cite{pt}.
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=13cm]{fig/packet_wi.pdf}
+\caption{Work item mapping on packet payload using persistent thread paradigm.}
+\label{pt_payload}
+\end{figure}
 
  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Implementation}\label{chapter:implementation}
+
+\section{SIP Gateway}
+\subsection{SIP Layer}
+\subsection{LCP Layer}
+
+
+\section{SRTP Stack}
+\subsection{Encryption}
+\subsection{Transcoding}
+
+\section{Visualization Tool}
 
 
 
@@ -1072,6 +1136,7 @@ serial implementation which design will be analyzed as well.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Results}\label{chapter:results}
+Number of concurrent calls \cite{hp4k}.
 
 
 
