@@ -2,30 +2,32 @@
 % (c) Michal Bidlo, Bohuslav K�ena, 2008
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Introduction}
-One of the essential metrics for measuring VoIP gateway's 
-performance is the number of simultaneous calls. It is affected mostly by the
+\chapter{Introduction} 
+One of the essential metrics for measuring VoIP gateway's performance is the
+number and quality of simultaneous calls. It is affected mostly by the
 computational demands of used communication protocols and number of registered
 users. While the count of registered users provides very limited room for 
 improvement by the nature of the problem itself, there could be wide variety
-of aproaches in implementing the protocol stacks. 
+of approaches in implementing the protocol stacks. 
 
 The communication protocols for VoIP gateway can be divided into two groups. 
 Signalization, which consists mostly of textually represented protocols, where 
-the messages' occurance is either periodical with quite small frequency, or 
+the messages' occurrence is either periodical with quite small frequency, or 
 based on the users initiative which is a stochastical event depending on the 
-activity of the user. However, generally the recurrance of both is rather 
+activity of the user. However, generally the recurrence of both is rather 
 similar. Comparably more resources during indirect simultaneous call sessions 
 consumes processing the second group of protocols, transport of multimedia 
 packets. Since security has recently grown to be necessary feature in VoIP 
 communication and the encryption and decryption processes are designed with the 
 idea of optimization, it is primary scope of interest of this thesis.
 
+
+
 Development and results in the areas of parallel architectures shows that many
 procedures could be distinctively accelerated by executing the algorithm on the
 processing unit capable of parallel computations. Therefore, target of this 
 thesis is implementation and analysis of parallel processing of encrypted
-real-time multimedia data transfere.
+real-time multimedia data transfer.
 
 
 
@@ -33,8 +35,9 @@ Chapter \ref{chapter:srtp} describes the structures and algorithms used in
 Secure Real-time Transport Protocol. Increased attention is devoted to 
 explanation of Advanced Encryption Standard, which is default cipher used in 
 SRTP, including brief theoretical background and analysis of SRTP and AES. 
-Because SRTP doesn't provide key exchange mechanism for symetric AES cipher, the
-chapter also includes description of selected protocol extensions for this task.
+Because SRTP doesn't provide key exchange mechanism for symmetric AES cipher, 
+the chapter also includes description of selected protocol extensions for this
+ task.
 
 Chapter \ref{chapter:gpgpu} provides basic information about graphic processing 
 unit and the usage of GPU for general purpose computations. Part of the chapter 
@@ -57,12 +60,12 @@ schemes.
 
 Chapter \ref{chapter:implementation} covers the reference implementation of
 the previous theoretical part of this thesis, used techniques and algorithms and
-reasonig behind their selection. Even though the focus of the thesis is primarily
-research of available contemporary methods there were many restrictions.
-The requirements of this chapter arise from currently used implementation and 
-hardware limitation of the gateway.
+reasoning behind their selection. Even though the focus of the thesis is
+primarily research of available contemporary methods there were many
+restrictions. The requirements of this chapter arise from currently used
+implementation and hardware limitation of the gateway.
 
-Finally chapters \ref{chapter:results} and \ref{chapter:conclusion} sumarize
+Finally chapters \ref{chapter:results} and \ref{chapter:conclusion} summarize
 the potential benefits of usage the GPGPU for the number of maximal simultaneous 
 calls and shows visualization of achieved results in improvement and decrease of
 latency. Also these chapter discusses possible contribution to related topics, 
@@ -79,7 +82,7 @@ may provide even higher level of improvement.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Secure Real-time Transport Protocol}\label{chapter:srtp}
-To achieve confidentiality and neccessary security for real-time multimedia
+To achieve confidentiality and necessary security for real-time multimedia
 transmission over TCP/IP connection there has been invented SRTP\cite{
 rfc3711}. Except previously mentioned, it provides message
 authentication and replay protection for both RTP and RTCP traffic, 
@@ -98,7 +101,7 @@ exactly one extension header.
 header.
 \item Marker (M) -- interpretation defined by a profile.
 \item Payload Type (PT) -- identifies the type of payload
-\item Sequence Number (SEQ) -- incremets by one for each RTP packet.
+\item Sequence Number (SEQ) -- increments by one for each RTP packet.
 \item Timestamp (TS) -- reflecting the exact moment the payload was sampled.
 \item Synchronization Source Identifier (SSRC) -- identifier of RTP 
 synchronization source within the single RTP session.
@@ -196,12 +199,12 @@ key as secured secret, which is possible via TLS connection for instance.
 \textbf{MIKEY} defines the key exchange as part of SDP payload in SIP message.
 The algorithm is basic Diffie-Hellman which requires either prior shared secret
 or PKI\footnote{ Public Key Infrastructure for digital certificates}. The SIP 
-stack doesn't have to protect the transfered information any further.
+stack doesn't have to protect the transferred information any further.
 
 
 
 \section{Protocol Summary}
-Main concers about the use of SRTP are whether the increase of computational
+Main concerns about the use of SRTP are whether the increase of computational
 complexity and packet size don't make RTP hardly usable and what degree of
 security does it provide.
 
@@ -209,7 +212,7 @@ security does it provide.
 In VoIP communication the time has essential impact on the quality of
 transmitted information, therefore it is important that ensuring the 
 security of RTP wouldn't increase the latency over the acceptable level.
-Among commont limitations of real-time communications 
+Among common limitations of real-time communications 
 belong\cite{perkins:rtp2003}:
 \begin{itemize}
 \item Maximal tolerable latency round-trip time 300ms.
@@ -226,7 +229,7 @@ unsecured VoIP.
 
 
 \subsubsection*{Security}
-VoIP suffers from many simillar security threats as other standard internet
+VoIP suffers from many similar security threats as other standard internet
 services. 
 
 \textit{Man in the middle}\label{mitm} in computer security is form of active 
@@ -245,11 +248,11 @@ attack\cite{rfc3711, cisco:srtp}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{AES}
-This section treats neccessary theoretical background of Advanced Encryption 
+This section treats necessary theoretical background of Advanced Encryption 
 Standard, which is the default cipher, and as the text has been written the only
 cipher, of Secure Real-time Transport Protocol used in VoIP communication.
 
-\textit{Advanced Encryption Standard} is symetric block cipher which means 
+\textit{Advanced Encryption Standard} is symmetric block cipher which means 
 it uses the same key for both encryption and decryption and encodes the
 input in uniform sized blocks. The algorithm was developed to supersede
 \textit{Data Encryption Standard} due to various security reasons\footnote
@@ -260,14 +263,14 @@ electronic data transmission.
 For this purpose National Institute of Standards and Technology (NIST)
 announced public competition for new encryption standard in 1997 and 
 considering multiple requirements the \textit{Rijndael}\footnote{ Rijndael
-was original name of the AES as abreviation of authors' names -- Joan 
+was original name of the AES as abbreviation of authors' names -- Joan 
 Daemen and Vincent Rijmen.} was selected as the most suitable algorithm
 for the task\cite{AES-FIPS}. 
 
 \subsection{Mathematical Preliminaries}
 All the bytes in AES are interpreted as 8-bit values in finite field $2^8$.
 For better readability the values are printed using hexadecimal notation.
-Following mathematical therms and operations are used in AES aglorithm:
+Following mathematical therms and operations are used in AES algorithm:
 
 \subsubsection*{Galois field}
 In algebra Galois field is finite field with finite number of elements.
@@ -276,7 +279,7 @@ natural number. Therefore it is possible to classify the Galois fields
 by their size, because only single $GF(p^k)$ exists for each $p$ and $k$.
 Characteristics of the field is equal to the $p$.
 
-Each byte is in fact a polynomial with degree equal to 7 with coeficients
+Each byte is in fact a polynomial with degree equal to 7 with coefficients
 $b_i$ 0 or 1 and this notation $b_7x^7 + b_6x^6 + b_5x^5 + b_4x^4 + b_3x^3
 + b_2x^2 + b_1x^1 + b_0$. The decimal number 95 could be represented as:
 \begin{itemize}
@@ -286,14 +289,14 @@ $b_i$ 0 or 1 and this notation $b_7x^7 + b_6x^6 + b_5x^5 + b_4x^4 + b_3x^3
 \end{itemize}
 
 \subsubsection*{Addition}
-Addition is defined as addition of coeficinets of both polynomials modulo
+Addition is defined as addition of coefficinets of both polynomials modulo
 2. This operation has the same result as bitwise XOR and because 
 each value is its own inversion, addition and substraction are equal
 operations.
 
 \subsubsection*{Multiplication}
 Multiplication is defined as multiplication of both polynomials modulo
-irreducible polynomial of degree eight. For AES the irreducible polynom
+irreducible polynomial of degree eight. For AES the irreducible polynomial
 is defined as
 \begin{equation}
 m(x) = x^8 + x^4 + x^3 + x + 1
@@ -318,7 +321,7 @@ state has fixed block size 128-bit, supported key sizes are 128-bit, 196-bit
 and 256-bit. 
 
 Encryption process as described in pseudocode \ref{encr} has 4 operations 
-perfomed on each state of the data in specific number of cycles which 
+performed on each state of the data in specific number of cycles which 
 varies from key length.
 \begin{itemize}
 \item 10 cycles for 128-bit key
@@ -526,11 +529,11 @@ In this transformation $[x_0, .., x_7]$ is the multiplicative inverse as vector,
 and $\oplus$ is XOR operation.
 
 \subsection{Block Cipher Modes}
-During encyption the same key is applied repeatedly on the uniform lenght blocks
-of data to whose the message is separated into. Large amount of ciphered data 
-with the same encryption key might present security threat unless the ciphering
-algorithm provides form of randomization the output value. Such procedure might
-be achieved by additional input value.
+During encryption the same key is applied repeatedly on the uniform length 
+blocks of data to whose the message is separated into. Large amount of ciphered 
+data with the same encryption key might present security threat unless the 
+ciphering algorithm provides form of randomization the output value. Such 
+procedure might be achieved by additional input value.
 
 There are many variations on block cipher to provide this confidentiality\cite{
 blockciphers}, for AES algorithm the most often used are \textit{counter 
@@ -572,7 +575,7 @@ P_i &=& C_i \oplus H_i
 \end{eqnarray} 
 
 The last block of the plaintext doesn't have to be padded\footnote{ Padding 
-can be used for the plaintext that is not alligned to the multiplies of the 
+can be used for the plaintext that is not aligned to the multiplies of the 
 block.}, it is common to use only the most significant bits of ciphered counter
 to be XORed with plaintext in cipher algorithm (and in similar way for
 deciphering). 
@@ -617,7 +620,7 @@ P_j &=& C_j \oplus O_j
 \chapter{General Purpose GPU}\label{chapter:gpgpu}
 This chapter describes the basic ideas and techniques behind GPU parallel 
 programming model and architecture. Following text will focus on possibilities
-of efective implementation for GPGPU and integrated GPU in modern CPU using 
+of effective implementation for GPGPU and integrated GPU in modern CPU using 
 OpenCL framework, brief description of selected principles and development of
 parallel applications. 
 
@@ -628,14 +631,14 @@ and resource sharing. Mapping parallel program to multiprocessor machine is
 complex problem that needs to decide about task allocation, scheduling of
 processes, communication patterns and much more.
 
-While current CPUs are powerfull and sofisticated chips, their design must be
+While current CPUs are powerful and sophisticated chips, their design must be
 focused on wide variety of tasks, therefore vast majority of resources might
 not be as fully utilized as could have been. The GPU chips provide much better
-theoretical performance for certain tasks for smaller price\cite{Owens:2007:ASO}.
-Interest among developers has grown in using the power GPUs provide for other
-tasks than graphics pipeline. 
+theoretical performance for certain tasks for smaller 
+price\cite{Owens:2007:ASO}. Interest among developers has grown in using the 
+power GPUs provide for other tasks than graphics pipeline. 
 
-In order to achieve improvement in certain algorithm it is neccessary to analyze
+In order to achieve improvement in certain algorithm it is necessary to analyze
 the procedures and find possibilities for parallelization and take under 
 consideration that usage of additional processing unit brings computational 
 overhead. The characteristics of such application are\cite{Owens:2008:GC}:
@@ -644,7 +647,7 @@ overhead. The characteristics of such application are\cite{Owens:2008:GC}:
 \item Utilization of data-parallelism -- many non-graphical problems might be
 separated into fractional procedures and computed separately, such as matrix 
 calculations individially for each cell.
-\item Large portion of computation -- GPU porcessors are optimized for 
+\item Large portion of computation -- GPU processors are optimized for 
 computations over handling conditional evaluations.
 \item Throughput over Latency -- computations on GPU are designed for large
 overall throughput of entire data rather than short response time of each 
@@ -699,7 +702,7 @@ keywords as memory region qualifiers: \texttt{\_\_global},
 \texttt{\_\_local}, \texttt{\_\_constant} and \texttt{\_\_private}.
 
 For further reading of the text and better comprehensibility, there are
-listed neccessary words from OpenCL terminology\cite{opencl}.
+listed necessary words from OpenCL terminology\cite{opencl}.
 \begin{itemize}
 \item Context -- contains one or more devices used for kernel execution
 and are used for managing command queues, memory and program.
@@ -712,14 +715,14 @@ device through commands posted by the host and provides synchronization
 methods for the execution of the commands.
 \end{itemize}
 
-OpenCL platform includes single \textit{host} that comunicates with the user
+OpenCL platform includes single \textit{host} that communicates with the user
 and the OpenCL program. The host is connected to one or more
 OpenCL \textit{devices} where the \textit{kernels} are executed. 
 \textit{Kernel} could be considered as the entry point between host and
 GPU. In order to achieve parallelism, the device consists of many 
 \textit{work-items} whose execute multiple instances of kernel at the same 
 time. The work-items are organized in integer indexed orthogonal grid where 
-the unique index of a work-item is called gloabl ID. The identification
+the unique index of a work-item is called global ID. The identification
 of work-item is possible through combination of its local ID inside a specific
 \textit{work-group} and the work-group global ID.
 
@@ -764,7 +767,7 @@ available in C or OpenCL language. The \textit{image object} is restricted
 to containing pictures only and is optimized for the specific needs of 
 image processing.
 
-OpenCL uses a hierarchicaly structured memory. The types differ in access time,
+OpenCL uses a hierarchically structured memory. The types differ in access time,
 availability and types of usage\cite{opencl}:
 \begin{itemize}
 \item \textbf{Private Memory} -- each work-item has it's own private memory 
@@ -809,21 +812,21 @@ Siemens prototype VoIP phone.}.
 \section{Design Patterns}
 More complex the application is the higher level of considerate design it 
 requires. There are plenty of already well tested design patterns from
-which the implemetation could be based on and as the field of VoIP communication
-has been known for decent amount of time, there are currently couple of advised
-design patterns, from which the particular implementation for this thesis
-stands on four -- mediator pattern, singleton pattern, factory method pattern 
-\cite{design-patterns} and protocol stack pattern \cite{protocol-stack}. None of
-these design patterns could be thought as contribution of the thesis as they all
-belong to common public knowledge and their examination was not the main topic 
-of the  research. However, their explanation is provided in order to make the
-rest of the chapter more comprehendable.
+which the implementation could be based on and as the field of VoIP
+communication has been known for decent amount of time, there are currently
+couple of advised design patterns, from which the particular implementation for 
+this thesis stands on four -- mediator pattern, singleton pattern, factory 
+method pattern \cite{design-patterns} and protocol stack pattern \cite{protocol-
+stack}. None of these design patterns could be thought as contribution of the 
+thesis as they all belong to common public knowledge and their examination was 
+not the main topic of the  research. However, their explanation is provided in 
+order to make the rest of the chapter more comprehensible.
 
 \subsection{Mediator Pattern}
 In object oriented design the common problem be the large number of classes and
 their mutual interaction. One of the possible solutions for the latter can be
-behavorial pattern called mediator, which is named after the way it alters the
-running behavior. The pattern consits of following participants:
+behavioral pattern called mediator, which is named after the way it alters the
+running behavior. The pattern consists of following participants:
 
 \begin{itemize}
 \item \textbf{Mediator} -- defines an interface for communicating with colleague 
@@ -854,8 +857,8 @@ one single class.
 
 \begin{itemize}
 \item \textbf{Singleton} -- there must be exactly one instance of the class and
-class must prevent from instantiation of multiple instances,  it must be globaly 
-available from well known access point
+class must prevent from instantiation of multiple instances,  it must be 
+globally available from well known access point
 \end{itemize}
 \url{http://en.wikipedia.org/wiki/Singleton\_pattern}
 
@@ -878,7 +881,7 @@ connected and SIP phone through SIP Registrar.}
 
 Multiple SIP or LCP telephones are connected to the SIP Gateway whose appear as
 users to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
-HiPath 8000}. The SIP gateway in this scenario works as bridging point between 
+HiPath 4000}. The SIP gateway in this scenario works as bridging point between 
 the SIP telephones and SIP registrar, LCP phones and SIP registrar or LCP phones
 directly.
 
@@ -891,17 +894,17 @@ between each module and encapsulates basic functionality of a Gateway.
 implemented basic SIP features.
 \item \textbf{LCP Stack} -- implemented in Java fully covering LCP protocol v1.0.
 \item \textbf{RTP Stack} -- for non-direct connections where the telephones 
-couldn't agree on communication chanel for the session, RTP stack implemented in 
-C/C++ and OpenCL provides neccessary briging point.
+couldn't agree on communication channel for the session, RTP stack implemented in 
+C/C++ and OpenCL provides necessary bridging point.
 \end{itemize}
 
 
 \section{SIP Gateway}
-Mesurement of utilization of computational resources during execution of 
+Measurement of utilization of computational resources during execution of 
 ciphering algorithm does provide correct and exact results, however in real 
-deployment the efectivity could be negatively affected by the other processes 
-running on the softgate. SIP Gateway is a collection of programs and utilites
-whose together implement a server for lighweight LCP phones and suplement a
+deployment the effectivity could be negatively affected by the other processes 
+running on the softgate. SIP Gateway is a collection of programs and utilities
+whose together implement a server for lightweight LCP phones and supplement a
 SIP functionality for each phone to be able to connect to an actual SIP 
 registrar. 
 
@@ -932,7 +935,7 @@ the application and provides interfaces to communicate with external
 applications.
 \texttt{SIP Stack} provides the interface to communicate with SIP Registrar. 
 The single SIP Stack is shared for all users, implicitly runs on well known port
-for SIP communication 5060, which could be explicitly changed if neccessary.
+for SIP communication 5060, which could be explicitly changed if necessary.
 \texttt{LCP stack} visualized on the figure \ref{lcpstack} was designed to reflect
 the elaborate design used in JAIN SIP\cite{jainsip}. While SIP is much richer 
 protocol than LCP, the design of the stack was extremely shortened but the basic
@@ -951,23 +954,23 @@ following properties:
 
 \begin{itemize}
 \item \textbf{encryption module} -- implementation of AES-128b cipher as defined
-in RFC-3711 \cite{rfc3711} in at least CRT mode that provides protection of transfered
+in RFC-3711 \cite{rfc3711} in at least CRT mode that provides protection of transferred
 data with different keys for each endpoint in all concurrent sessions.
 \item \textbf{input and output buffers} -- in order to avoid exhaustive allocation
 and deallocation of structures for input and output packets, the data storage should
 be implemented as thread safe pool of buffers  with sufficient size and both, 
 synchronization techniques and memory override protection.
-\item \textbf{transcoding module} -- due to vaious reasons, endpoints may not be
+\item \textbf{transcoding module} -- due to various reasons, endpoints may not be
 able of negotiate the same media compressing codec. The SRTP stack should allow
 the transcoding and then encapsulate the process without unneccessary additional
 demands for the gateway.
 \item \textbf{integration interface} -- most of the procedures implemented in
-SRTP stack should be encapsulated to minimize overloading data transferes with
+SRTP stack should be encapsulated to minimize overloading data transferres with
 the gateway providing only essential and minimal interface with callback
 features to simplify and unify the integration process.
 \end{itemize}
 
-An advanced techniques like \textbf{jitter buffer} may improve overal quality
+An advanced techniques like \textbf{jitter buffer} may improve overall quality
 of VoIP communication, however, each end device capable of such communication must
 implement these techniques as well, therefore, it may render itself redundant 
 and generating minimal, but still additional latency.
@@ -1030,12 +1033,12 @@ explanation from the multi-threaded application design point of view.
 The entire stack runs in three separate threads which shall minimize the delay 
 caused by waiting on modules with varying time of execution per packet.
 \begin{itemize}
-\item \textbf{Network Thread} -- the incomming and outgoing data are captured
+\item \textbf{Network Thread} -- the incoming and outgoing data are captured
 via two sockets, for RTP and RTCP. This thread includes a pool of buffers for
 the storage of packets and another the processed data.
-\item \textbf{Stack Thread} -- the interaction and selectiong atributes for
+\item \textbf{Stack Thread} -- the interaction and selection attributes for
 the processing thread is taken care in the stack thread as well as interface
-for higher layers of the aplication using the SRTP stack.
+for higher layers of the application using the SRTP stack.
 \item \textbf{Packet Processing Thread} -- extraction of important values from
 the packet header, encoding and decoding provided with transcoding interface of 
 the entire packet payload according to the previously extracted data
@@ -1072,8 +1075,88 @@ serial implementation which design will be analyzed as well.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Results}\label{chapter:results}
+One of the major delays caused on gateway during indirect calls is due to
+encryption and transcoding. Since the core of this thesis was parallelization
+of SRTP encryption, the tests and measurements focus on gathering relevant
+information regarding especially the correct usage of SRTP on the gateway. Even
+though AES was designed to be fast algorithm, while executed on large amount of
+flowing data it can cause measurable overhead.
 
+For the purposes of this chapter there was designed loadtest with following
+attributes:
+\begin{itemize}
+\item each test fulfilled these properties:
+\vspace{-0.5em}
+\begin{itemize}
+\item 300 subscribers executing the calls
+\item 50 to 150 concurrent calls in the same time
+\item BHCA 2000\footnote{ BHCA -- busy hour call attempts}
+\end{itemize}
+\item each call from the tests mentioned above:
+\vspace{-0.5em}
+\begin{itemize}
+\item lasted 20 seconds
+\item used G.711-a or G.711-$\mu$ codec
+\item needed encryption of SRTP
+\end{itemize}
+\end{itemize}
 
+The tests were executed on the machine running 32-bit OpenSUSE 12.2 with similar
+hardware as HiPath4000 softgate is equiped. The following list summarizes the
+softgate properties and used software products for compilation of SRTP stack.
+\begin{itemize}
+\item processor intel i5 2500k with HD3000 graphics chip
+\item 8gb RAM
+\item OpenCL 1.2
+\item gcc 4.7
+\end{itemize}
+ 
+
+\section{Packet Encryption}
+
+\subsection*{AES}
+For the comparison of effectivity of the AES implementation, in figure 
+\ref{aes-comparison} are given time requirements for execution of multiple
+blocks encrypted by 128-bit AES.
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|l|ccccc|}\hline%
+  Implementation   & 1 block & 5 block & 10 block & 15 block & 20 block\\\hline
+  Serial                 & 5       & 5       & 5        & 5        & 5 \\
+  Persistent thread      & 5       & 5       & 5        & 5        & 5 \\
+  Massive Parallel       & 5       & 5       & 5        & 5        & 5 \\
+  m5t\cite{m5t}          & 5       & 5       & 5        & 5        & 5 \\      
+  comparison01\cite{aes-cmp1}& 5   & 5       & 5        & 5        & 5 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{Selected comparison of AES implementation.} %\cite{rtpbandwidth}
+\label{bandwidth}
+\end{table}
+
+ 
+
+\section{Round-trip Time Delay}
+The total delay is combination of many factors and even though information
+about measured time of packet encryption on the gateway is exact, it doesn't
+provide the most important information about how affected the session is overall
+and what is the delay on endpoints. The same test was executed once more but
+measurements were collected on modified virtual clients.
+\begin{figure}[h!]
+\centering
+\includegraphics[width=15cm]{fig/serial-res.pdf}
+\caption{Comparison of distribution of delays during SRTP sessions with serial 
+encryption implementation.}
+\label{scheme}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=15cm]{fig/persistent-thread-res.pdf}
+\caption{Comparison of distribution of delays during SRTP sessions with parallel 
+encryption implementation.}
+\label{scheme}
+\end{figure}
 
 
 
@@ -1102,7 +1185,7 @@ actual results on deployed machine experiencing real traffic.
 For the further development number of issues must be taken for notice. For 
 instance the delay generated by the processing of separate SRTP packets should 
 be reliably masked and interpolated across the SRTP stream to reduce possible 
-jitter. On the other hand stands the actual delay of incomming packet, since
+jitter. On the other hand stands the actual delay of incoming packet, since
 after certain absolute value the conversation quality becomes unbearable.
 
 Nevertheless, partial value of this thesis lies in the understanding of current
