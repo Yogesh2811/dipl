@@ -927,8 +927,6 @@ couldn't agree on communication channel for the session, RTP stack implemented i
 C/C++ and OpenCL provides necessary bridging point.
 \end{itemize}
 
-
-\section{SIP Gateway}
 Measurement of utilization of computational resources during execution of 
 ciphering algorithm does provide correct and exact results, however in real 
 deployment the effectivity could be negatively affected by the other processes 
@@ -1003,8 +1001,6 @@ An advanced techniques like \textbf{jitter buffer} may improve overall quality
 of VoIP communication, however, each end device capable of such communication must
 implement these techniques as well, therefore, it may render itself redundant 
 and generating minimal, but still additional latency.
-
-
 
 \subsection{SRTP Processing}
 Advantage of usage AES in CM is that it allows out-of-order processing. Because
@@ -1089,16 +1085,28 @@ data from the incomming packets.
 decryption of the packet payload.
 \end{itemize}
 
-\subsection{Serial Processing}
+\subsubsection*{Serial Processing}
 For better understanding of improvement this thesis is provided with reference
-serial implementation which design will be analyzed as well.  
+serial implementation which design will be analyzed as well. The payload 
+encryption design as visualized in figure \ref{scheme} shows, that the execution
+is separated into multiple consecutive callings of AES algorithm with updating
+of counter in between for CTR mode. Thanks to the decomposition of the code,
+the design of parallel encryption is done in similar fashion.
 
-\subsection{Massive Parallel Processing}
+The design prevents the executing implementations from creating any additional
+temporary buffers to decrease unnecessary allocations. These can be predicted in
+the startup of SRTP stack and already preallocated with maximal size a packet
+can have. This approach consumes more memory, but improves memory management and
+saves execution time during critical sections. Also it is assumed that softgate
+gateway code runs on machine with enough memory and these buffers most certainly
+shouldn't mean any excessive memory consumption.     
+
+\subsubsection*{Massive Parallel Processing}
 Traditional parallel programming style relies heavily on SIMT\footnote{ SIMT -- 
 Single Instruction Multiple Thread} and SPMD\footnote{ SPMD -- Single Program
 Multiple Data} programming paradigms \cite{Flynn:1972}. The native OpenCL 
-aproach is based on abstracting the units of work from the programmers code into
-virtual threads -- work-items. The convinience it offers in allocation
+approach is based on abstracting the units of work from the programmers code 
+into virtual threads -- work-items. The convenience it offers in allocation
 of resources brings couple of limitations as well. 
 
 The figure \ref{mp_payload} demonstrates the processing of packet payload of 
@@ -1108,7 +1116,7 @@ processing of the particular AES block, therefore, this code will need 160
 invocations of work-items during the kernel execution. That would bring
 unnecessary computational overhead.    
 
-\begin{figure}[h!]
+\begin{figure}[H]
 \centering
 \includegraphics[width=13cm]{fig/packet_mp.pdf}
 \caption{Work-item mapping on packet payload with native OpenCL approach.}
@@ -1117,16 +1125,48 @@ unnecessary computational overhead.
 
 
 
-\subsection{Persistent Thread Processing}
-Persistent thread\cite{pt}.
+\subsubsection*{Persistent Thread Processing}
+The requirements and attributes imposed by massive parallel processing
+style divide the workload into multiple blocks, more than can be simultaneously
+executed during kernel launch time, and the synchronization is ensured by the
+OpenCL. For massive parallel applications the obvious approach would be to 
+utilize as much of machine's power as possible to gain the largest speed-up in 
+every single execution. However, the aim of this thesis is to minimize large 
+delays for multiple sessions which requires rather careful allocation of
+resources. Persistent threads is special type of programing paradigm combining 
+both, the possible gain of mapping the program for parallel computation and
+considerate usage of resources \cite{pt}.
 
-\begin{figure}[h!]
+Since the initialization of computational kernel can consume significant amount 
+of time compared to the actual execution, larger kernel reusing its resources 
+for multiple similar computations could render the initialization negligible 
+trading off portion of parallelization. This approach has been chosen for
+packet parsing, while instead of mapping 160 OpenCL work-items on the G.711 
+packet's payload it uses one work-item for each AES block cell in a loop that 
+goes through the data.
+
+Maximal simultaneous work-items launched during the kernel execution is equal
+to the number of blocks in AES algorithm and it must not be larger than the
+amount of work-items in work-group. The persistent thread style provides 
+couple of relevant improvements that are not resolved in common parallel 
+implementation to the satisfactory degree.
+
+\begin{itemize}
+\item \textbf{Global synchronization} -- 
+\item
+\item
+\item
+\end{itemize}
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=13cm]{fig/packet_wi.pdf}
 \caption{Work-item mapping on packet payload using persistent thread paradigm.}
 \label{pt_payload}
 \end{figure}
 
+
+\section{Transcoding}
  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1187,11 +1227,18 @@ softgate properties and used software products for compilation of SRTP stack.
 \item gcc 4.7
 \end{itemize}
  
+The commercial gateway with optimized hardware and software can hold around 120 
+concurrent calls \cite{hp4k}, therefore, the tests did not aim for much higher
+numbers and the analysis of the results focus around the known maximal number. 
 
 \section{Packet Encryption}
+The most accurate results can be reached by measuring directly in the code for
+packet encryption on the gateway. Also this aproach offers the easiest way
+for comparison with well-known implementations to increase creadibility of 
+the improvement of the reference implementations distributed with this thesis. 
 
 \subsection*{AES}
-For the comparison of effectivity of the AES implementation, in figure 
+For the comparison of effectivity of the AES implementation, in table 
 \ref{aes-comparison} are given time requirements for execution of multiple
 blocks encrypted by 128-bit AES with the implementation proposed in this thesis
 and reference implementations M5t\footnote{ M5t framework includes AES 
@@ -1202,16 +1249,25 @@ library\cite{aes-lib}.}.
 \begin{center}
 \begin{tabular}{|l|ccccc|}\hline%
 Implementation &  1 block & 5 blocks & 10 blocks & 15 blocks & 20 blocks\\\hline
+M5t                & 5       & 5       & 5        & 5        & 5 \\ 
 Serial             & 5       & 5       & 5        & 5        & 5 \\
 Persistent thread  & 5       & 5       & 5        & 5        & 5 \\
 Massive Parallel   & 5       & 5       & 5        & 5        & 5 \\
-M5t                & 5       & 5       & 5        & 5        & 5 \\      
 EfAesLib           & 5       & 5       & 5        & 5        & 5 \\\hline
 \end{tabular}
 \end{center}
-\caption{Selected comparison of AES implementation.}
+\caption{Comparison of selected AES implementations.}
 \label{aes-comparison}
 \end{table}
+
+The serial implementation of 128-bit AES is presumptively similar in execution 
+speed as the M5t AES implementation, which is the reference value for measuring
+the degree of improvement. Therefore, later provided results of round-trip time
+delay can be assumed as relevant for the evaluation the total contribution. 
+Higher execution time for the M5t implementation could be partially due to
+negative influence of not using the M5t framework in the SRTP stack 
+implementation, therefore, conversion between structures and data types used
+might hindered the performance. 
  
 
 \section{Round-trip Time Delay}
@@ -1220,21 +1276,50 @@ about measured time of packet encryption on the gateway is exact, it doesn't
 provide the most important information about how affected the session is overall
 and what is the delay on endpoints. The same test was executed once more but
 measurements were collected on modified virtual clients.
-\begin{figure}[h!]
+
+Graphs \ref{serial-res} and \ref{pt-res} include packet delay
+during concurrent calls. Every captured SRTP packet has been entered into
+results. Single column shows the distribution of delays during the particular
+number of concurrent calls where the thicker area of the column visualizes
+90\% of the packets. The remainding 10\% were considered as abnormal and thanks
+to satisfying the common limitations of real-time communications 
+\cite{perkins:rtp2003}, the exceeding 5\% can be neglected.
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/serial-res.pdf}
 \caption{Comparison of distribution of delays during SRTP sessions with serial 
 encryption implementation.}
-\label{scheme}
+\label{serial-res}
 \end{figure}
 
-\begin{figure}[h!]
+Predictably the average delay of the packet increases with the amount of 
+concurrent calls in figure \ref{serial-res} for serial implementation. The time
+for 150 concurrent calls was not included due its excessive values which would
+make readability of the graph more difficult. 
+
+Even though the increase of delay seems to be linear, higher number of 
+concurrent calls shows that the increase is exponential, which can be visible
+on the figure \ref{pt-res} for persistent thread implementation.
+
+\begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/persistent-thread-res.pdf}
 \caption{Comparison of distribution of delays during SRTP sessions with parallel 
 encryption implementation.}
-\label{scheme}
+\label{pt-res}
 \end{figure}
+
+Less predictable increase is visible in persistent thread implementation.
+Inconsistent extreme values of delays may be produced by host and device
+synchronization. Also memory management for packet buffer pool and OpenCL
+buffer pool are two separate implementations, slowdown in one pool may have
+negative effect on the other, therefore, both may combine in a negative way.
+
+Comparing persistent thread implementation and serial implementation, the 
+average delay was dropped to one half for smaller amount of concurrent calls
+(50-90) and the best results of speed-up was achieved in 140 concurrent calls
+where the average delay was dropped to one third.      
 
 
 
