@@ -1249,11 +1249,11 @@ library\cite{aes-lib}.}.
 \begin{center}
 \begin{tabular}{|l|ccccc|}\hline%
 Implementation &  1 block & 5 blocks & 10 blocks & 15 blocks & 20 blocks\\\hline
-M5t                & 5       & 5       & 5        & 5        & 5 \\ 
-Serial             & 5       & 5       & 5        & 5        & 5 \\
-Persistent thread  & 5       & 5       & 5        & 5        & 5 \\
-Massive Parallel   & 5       & 5       & 5        & 5        & 5 \\
-EfAesLib           & 5       & 5       & 5        & 5        & 5 \\\hline
+M5t  &26 $\micro$s&32 $\micro$s&46 $\micro$s&69 $\micro$s&82 $\micro$s\\ 
+Serial  &16 $\micro$s&28 $\micro$s&48 $\micro$s&66 $\micro$s&86 $\micro$s\\
+Persistent thread&44 $\micro$s&45 $\micro$s&44 $\micro$s&44 $\micro$s&45 $\micro$s\\
+Massive Parallel&55 $\micro$s&55 $\micro$s&54 $\micro$s&55 $\micro$s&62 $\micro$s\\
+EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
 \end{tabular}
 \end{center}
 \caption{Comparison of selected AES implementations.}
