@@ -816,11 +816,12 @@ which the implementation could be based on and as the field of VoIP
 communication has been known for decent amount of time, there are currently
 couple of advised design patterns, from which the particular implementation for 
 this thesis stands on four -- mediator pattern, singleton pattern, factory 
-method pattern \cite{design-patterns} and protocol stack pattern \cite{protocol-
-stack}. None of these design patterns could be thought as contribution of the 
-thesis as they all belong to common public knowledge and their examination was 
-not the main topic of the  research. However, their explanation is provided in 
-order to make the rest of the chapter more comprehensible.
+method pattern \cite{design-patterns} and protocol stack pattern 
+\cite{protocol-stack}. None of these design patterns could be thought as 
+contribution of the thesis as they all belong to common public knowledge and 
+their examination was not the main topic of the  research. However, their 
+explanation is provided in order to make the rest of the chapter more 
+comprehensible.
 
 \subsection{Mediator Pattern}
 In object oriented design the common problem be the large number of classes and
@@ -1249,11 +1250,11 @@ library\cite{aes-lib}.}.
 \begin{center}
 \begin{tabular}{|l|ccccc|}\hline%
 Implementation &  1 block & 5 blocks & 10 blocks & 15 blocks & 20 blocks\\\hline
-M5t  &26 $\micro$s&32 $\micro$s&46 $\micro$s&69 $\micro$s&82 $\micro$s\\ 
-Serial  &16 $\micro$s&28 $\micro$s&48 $\micro$s&66 $\micro$s&86 $\micro$s\\
-Persistent thread&44 $\micro$s&45 $\micro$s&44 $\micro$s&44 $\micro$s&45 $\micro$s\\
-Massive Parallel&55 $\micro$s&55 $\micro$s&54 $\micro$s&55 $\micro$s&62 $\micro$s\\
-EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
+M5t  &26 $\mu$s&32 $\mu$s&46 $\mu$s&69 $\mu$s&82 $\mu$s\\ 
+Serial  &16 $\mu$s&28 $\mu$s&48 $\mu$s&66 $\mu$s&86 $\mu$s\\
+Persistent thread&44 $\mu$s&45 $\mu$s&44 $\mu$s&44 $\mu$s&45 $\mu$s\\
+Massive Parallel&55 $\mu$s&55 $\mu$s&54 $\mu$s&55 $\mu$s&62 $\mu$s\\
+EfAesLib &XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s\\\hline
 \end{tabular}
 \end{center}
 \caption{Comparison of selected AES implementations.}
