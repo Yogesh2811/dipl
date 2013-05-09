@@ -1289,8 +1289,8 @@ to satisfying the common limitations of real-time communications
 \begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/serial-res.pdf}
-\caption{Comparison of distribution of delays during SRTP sessions with serial 
-encryption implementation.}
+\caption{Visualization of distribution of delays during SRTP sessions with
+serial encryption implementation.}
 \label{serial-res}
 \end{figure}
 
@@ -1306,8 +1306,8 @@ on the figure \ref{pt-res} for persistent thread implementation.
 \begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/persistent-thread-res.pdf}
-\caption{Comparison of distribution of delays during SRTP sessions with parallel 
-encryption implementation.}
+\caption{Visualization of distribution of delays during SRTP sessions with 
+parallel encryption implementation.}
 \label{pt-res}
 \end{figure}
 
@@ -1320,7 +1320,22 @@ negative effect on the other, therefore, both may combine in a negative way.
 Comparing persistent thread implementation and serial implementation, the 
 average delay was dropped to one half for smaller amount of concurrent calls
 (50-90) and the best results of speed-up was achieved in 140 concurrent calls
-where the average delay was dropped to one third.      
+where the average delay was dropped to one third.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=15cm]{fig/delay_comparison.pdf}
+\caption{Comparison of distribution of delays during SRTP sessions serial with 
+parallel encryption implementation.}
+\label{dist-comp}
+\end{figure}  
+
+The figure \ref{dist-comp} centralizes on the most interesting results from
+previous tests which is the delay for 120 concurrent calls. The detailed 
+distribution of packet delays shows, that parallel implementation, visualized
+in blue color, has the peak situated around 12~ms when the serial 
+implementation, visualized in purple color, has the most packet delays situated
+around 27~ms.     
 
 
 
