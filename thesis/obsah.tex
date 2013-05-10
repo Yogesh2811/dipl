@@ -832,8 +832,8 @@ running behavior. The pattern consists of following participants:
 \begin{itemize}
 \item \textbf{Mediator} -- defines an interface for communicating with colleague 
 objects
-\item \textbf{ConcreteMediator} -- implements cooperative behavior by coordinating
-colleague objects, it knows and maintains its colleagues
+\item \textbf{ConcreteMediator} -- implements cooperative behavior by 
+coordinating colleague objects, it knows and maintains its colleagues
 \item \textbf{ConcreteColleague} -- each colleague knows its mediator object and
 it communicates with its mediator whenever it would have otherwise communicated 
 with another colleague
@@ -848,12 +848,12 @@ is a need for critical section and their exclusion.
 \subsection{Singleton Pattern}
 During creation of the application architecture certain class may be required
 to provide global point of access to it while preserving only one instance.
-One approach could be to have global variable but that is not complete fulfilment
-of the requests, because multiple instances could still be created.
-Singleton design pattern offers a solution when the class itself is responsible
-for the number of instances which ensures that nowhere in the code multiple object
-of such class may be created. This doesn't affect the rest of the design, only
-one single class, therefore, it has only one participant:
+One approach could be to have global variable but that is not complete 
+fulfilment of the requests, because multiple instances could still be created. 
+Singleton design pattern offers a solution when the class itself is responsible 
+for the number of instances which ensures that nowhere in the code multiple 
+object of such class may be created. This doesn't affect the rest of the design, 
+only one single class, therefore, it has only one participant:
 
 \begin{itemize}
 \item \textbf{Singleton} -- there must be exactly one instance of the class and
@@ -865,9 +865,9 @@ globally available from well known access point
 %\url{http://en.wikipedia.org/wiki/Factory\_method\_pattern}
 
 \subsection{Protocol Stack Pattern}
-There are two design patterns closely related to the protocol stack design pattern
-which it uses as higher level of abstraction in explaining the correspondign
-relations in design.
+There are two design patterns closely related to the protocol stack design 
+pattern which it uses as higher level of abstraction in explaining the 
+correspondign relations in design.
 \begin{itemize}
 \item \textbf{Protocol Layer} -- provide a common interface for implementing
 different layers of communication protocol stack.
@@ -875,9 +875,9 @@ different layers of communication protocol stack.
 packet buffers and their access.
 \end{itemize} 
 
-This pattern's usage is concentrated but not limited to dynamic exchange of protocol
-layers from the stack, their insertion and removal, thanks to separate view
-and decoupling of each implemented protocol and its layers.
+This pattern's usage is concentrated but not limited to dynamic exchange of 
+protocol layers from the stack, their insertion and removal, thanks to separate 
+view and decoupling of each implemented protocol and its layers.
 
 The participants of protocol stack pattern are:
 \begin{itemize}
@@ -899,11 +899,12 @@ protocols for their interaction and data exchange. In telecommunications such
 device is called \textit{gateway}. The essential function of gateway is 
 protocol translation to interconnect networks and devices using different
 protocol technologies. The SIP gateway used in this thesis provides protocol
-conversion between subset of SIP protocol and full implementation of LCP protocol.
+conversion between subset of SIP protocol and full implementation of LCP 
+protocol.
 
-\begin{figure}[H]
+\begin{figure}[h!]
 \centering
-\includegraphics[width=10cm]{fig/scenario1.pdf}
+\includegraphics[width=13cm]{fig/scenario1.pdf}
 \caption{SIP gateway with two VoIP telephones accessible, LCP phone directly 
 connected and SIP phone through SIP Registrar.}
 \label{oclpm}
@@ -920,12 +921,13 @@ and each serve specified purpose.
 \begin{itemize}
 \item \textbf{Gateway core} -- implemented in Java, provides communication 
 between each module and encapsulates basic functionality of a Gateway.
-\item \textbf{SIP Stack} -- Java API for SIP stack called JAIN SIP\cite{jainsip}, 
-implemented basic SIP features.
-\item \textbf{LCP Stack} -- implemented in Java fully covering LCP protocol v1.0.
+\item \textbf{SIP Stack} -- Java API for SIP stack called 
+JAIN SIP\cite{jainsip}, implemented basic SIP features.
+\item \textbf{LCP Stack} -- implemented in Java fully covering LCP protocol 
+v1.0.
 \item \textbf{RTP Stack} -- for non-direct connections where the telephones 
-couldn't agree on communication channel for the session, RTP stack implemented in 
-C/C++ and OpenCL provides necessary bridging point.
+couldn't agree on communication channel for the session, RTP stack implemented
+in C/C++ and OpenCL provides necessary bridging point.
 \end{itemize}
 
 Measurement of utilization of computational resources during execution of 
@@ -936,17 +938,17 @@ whose together implement a server for lightweight LCP phones and supplement a
 SIP functionality for each phone to be able to connect to an actual SIP 
 registrar. 
 
-\begin{figure}[H]
+\begin{figure}[h!]
 \centering
-\includegraphics[width=14cm]{fig/lcpstack.pdf}
+\includegraphics[width=15cm]{fig/lcpstack.pdf}
 \caption{Architecture of LCP stack, design was inspired by the JAIN-SIP 
 api\cite{jainsip}.}
 \label{lcpstack}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[h!]
 \centering
-\includegraphics[width=14cm]{fig/sipgw.pdf}
+\includegraphics[width=15cm]{fig/sipgw.pdf}
 \caption{Architecture of SIP Gateway with singleton design pattern. Consists
 of \textit{Daemon} class, multiple LCP phones connected via LCP stack and 
 represented as instances of \textit{Client} class and multiple user interfaces
@@ -955,30 +957,38 @@ for control over the gateway.}
 \end{figure}
 
 The core application should offer simple management via command line for 
-both development and tracing of the flowing communication and basic functionality
-for communication and session management. 
+both development and tracing of the flowing communication and basic 
+functionality for communication and session management. 
 
-The core class of the gateway is \texttt{Daemon}, which controls the flow of data inside 
-the application and provides interfaces to communicate with external 
-applications.
+The core class of the gateway is \texttt{Daemon}, which controls the flow of 
+data inside the application and provides interfaces to communicate with external 
+applications. During the composition of gateway the mediator design pattern
+was used where the daemon is mediator and all directly communicating classes are
+colleagues.
+ 
 \texttt{SIP Stack} provides the interface to communicate with SIP Registrar. 
 The single SIP Stack is shared for all users, implicitly runs on well known port
 for SIP communication 5060, which could be explicitly changed if necessary.
-\texttt{LCP stack} visualized on the figure \ref{lcpstack} was designed to reflect
-the elaborate design used in JAIN SIP\cite{jainsip}. While SIP is much richer 
-protocol than LCP, the design of the stack was extremely shortened but the basic
-structure of elementary components and their interaction remained the same. LCP 
-stack runs implicitly on the recommended port 4066, but as well as SIP stack 
-port, the port could be variable if needed.
-Each SIP/LCP client is instance of \texttt{Client} class, and universal interface for 
-remote communication and administration shall be provided as well.
+
+\texttt{LCP Stack} visualized on the figure \ref{lcpstack} was designed to 
+reflect the elaborate design used in JAIN SIP\cite{jainsip}. While SIP is much 
+richer protocol than LCP, the design of the stack was extremely shortened but 
+the basic structure of elementary components and their interaction remained the 
+same. LCP stack runs implicitly on the recommended port 4066, but as well as SIP 
+stack port, the port could be variable if needed. Each SIP/LCP client is 
+instance of \texttt{Client} class, and universal interface for remote 
+communication and administration shall be provided as well.
+
+\texttt{RTP Stack} is devoted increased amount of attention in design because it 
+covers the focus of this thesis. All of the stacks are interchangable and during 
+their design were used recommendations from protocol stack design pattern and 
+its related patterns.
 
 
 \section{SRTP Stack}
-The essential point of implementation improvement lies in design of SRTP stack as
-it has been mentioned in previous text that it consumes majority of resources of
-the gateway during indirect media sessions. Proper implementation must not lack
-following properties:
+The essential point of implementation improvement lies in design of SRTP stack 
+as it has been mentioned in previous text that it consumes majority of resources 
+of the gateway during indirect media sessions. Proper implementation must not lack following properties:
 
 \begin{itemize}
 \item \textbf{encryption module} -- implementation of AES-128b cipher as defined
@@ -1087,6 +1097,15 @@ decryption of the packet payload.
 \end{itemize}
 
 \subsubsection*{Serial Processing}
+The designed application captures data from network in the network layer which
+ensures communication with both endpoints of multimedia session and is running 
+in its own thread. It contains buffer pools for incoming and outgoing data to 
+ensure maximal level of parallelization in each layer of application. Pointers 
+for input and output buffers are passed for further packet processing where are 
+extracted information such as header and payload from the packet, copied data 
+from the memory to OpenCL data structures and serial implementation of AES key 
+schedule. 
+
 For better understanding of improvement this thesis is provided with reference
 serial implementation which design will be analyzed as well. The payload 
 encryption design as visualized in figure \ref{scheme} shows, that the execution
@@ -1100,7 +1119,15 @@ the startup of SRTP stack and already preallocated with maximal size a packet
 can have. This approach consumes more memory, but improves memory management and
 saves execution time during critical sections. Also it is assumed that softgate
 gateway code runs on machine with enough memory and these buffers most certainly
-shouldn't mean any excessive memory consumption.     
+shouldn't mean any excessive memory consumption. 
+
+The buffer pools provided are used in both serial and parallel encryption,
+and to increase the level of algorithm categorization, their implementation is
+based on template classes. The pool guarantees to protect buffer from overwrite
+and data persistency.
+
+
+\newpage
 
 \subsubsection*{Massive Parallel Processing}
 Traditional parallel programming style relies heavily on SIMT\footnote{ SIMT -- 
@@ -1119,7 +1146,7 @@ unnecessary computational overhead.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=13cm]{fig/packet_mp.pdf}
+\includegraphics[width=12cm]{fig/packet_mp.pdf}
 \caption{Work-item mapping on packet payload with native OpenCL approach.}
 \label{mp_payload}
 \end{figure}
@@ -1153,22 +1180,70 @@ couple of relevant improvements that are not resolved in common parallel
 implementation to the satisfactory degree.
 
 \begin{itemize}
-\item \textbf{Global synchronization} -- 
-\item
-\item
-\item
+\item \textbf{Global synchronization} -- as the kernel uses only as many 
+work-items as can be simultaneously scheduled, the tools OpenCL offers
+for synchronization within work-group can be used to synchronize calculations
+through the entire execution at any given point which is used in 
+synchronization across AES blocks for update of \textit{round key}.
+\item \textbf{Computational overhead} -- the amount of computations in a 
+work-item for 128-bit AES is larger than initialization, startup and cleanup
+of the kernel, but those factors are not completely insignificant. Limiting
+the number of consecutive executions decreases the ratio of OpenCL overhead and
+the algorithm performance in positive way.
+\item \textbf{Resource requirement consistency} -- memory requirements are
+similar for both persistent thread and massive parallel style, but size of the 
+payload for single packet may consume up to 160 work-items on the GPU if kernel
+is programmed in non persistent thread style. As it doesn't seem to be much for
+one packet, if the stack should take care of multiple SRTP streams, the 
+resources may promptly become insufficient which will increase the weight of 
+OpenCL overhead. Persistent thread kernel will not use more than 16 work-items
+per packet.
 \end{itemize}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=13cm]{fig/packet_wi.pdf}
+\includegraphics[width=12cm]{fig/packet_wi.pdf}
 \caption{Work-item mapping on packet payload using persistent thread paradigm.}
 \label{pt_payload}
 \end{figure}
 
 
 \section{Transcoding}
- 
+Essential part of the media server is ability to negotiate the best codec for
+both endpoints in real-time media session. When all participating devices can
+not communicate using the same compressing media codec, the gateway must be able
+of transcoding to provide the channel for communication. RTP protocol defines
+127 different codecs for audio and video profile. Therefore, the designed 
+SRTP stack uses plugin system for multimedia codec transcoding.
+
+The design of plugin system takes into consideration the lifetime of packet data buffers and  for optimization purposes may defer the release of buffers on the side of codec plugin. The core desing is simple and consists of two parts.
+
+\begin{itemize}
+\item \textbf{Plugin System Module} -- part of the gateway, on the startup 
+browses defined directory for any plugins and dynamically links them into the 
+application. The plugin system may offer the management of packet memory buffers
+on the side of codec plugin, but the system doesn't guarantee the consistency 
+through the entire lifetime and if necessary, the buffer may be rewritten, in 
+which case the flag for data correctness is set off. 
+\item \textbf{Codec Plugin} -- compiled files implementing the plugin interface
+capable at least of both transcoding the codec from and into PCM \footnote{ PCM 
+-- Pulse-code modulation.} and preferably also optimized transcoding into
+another codec, if such algorithm is presented. The codec plugin is responsible
+for implementing or control of any buffers if necessary, concurrently transcode 
+multiple different streams, and must separate the buffers and another saved 
+information from given stream ID. The plugin may not use the optimization 
+option, duplicate the data into its own buffers and keep the memory management
+on the part of SRTP stack itself.  
+\end{itemize}  
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=9cm]{fig/plugins.pdf}
+\caption{Interaction between plugin system on the gateway and separate codec 
+plugins.}
+\label{pt_payload}
+\end{figure} 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Implementation}\label{chapter:implementation}
@@ -1289,8 +1364,8 @@ to satisfying the common limitations of real-time communications
 \begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/serial-res.pdf}
-\caption{Comparison of distribution of delays during SRTP sessions with serial 
-encryption implementation.}
+\caption{Visualization of distribution of delays during SRTP sessions with
+serial encryption implementation.}
 \label{serial-res}
 \end{figure}
 
@@ -1306,8 +1381,8 @@ on the figure \ref{pt-res} for persistent thread implementation.
 \begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/persistent-thread-res.pdf}
-\caption{Comparison of distribution of delays during SRTP sessions with parallel 
-encryption implementation.}
+\caption{Visualization of distribution of delays during SRTP sessions with 
+parallel encryption implementation.}
 \label{pt-res}
 \end{figure}
 
@@ -1320,7 +1395,22 @@ negative effect on the other, therefore, both may combine in a negative way.
 Comparing persistent thread implementation and serial implementation, the 
 average delay was dropped to one half for smaller amount of concurrent calls
 (50-90) and the best results of speed-up was achieved in 140 concurrent calls
-where the average delay was dropped to one third.      
+where the average delay was dropped to one third.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=15cm]{fig/delay_comparison.pdf}
+\caption{Comparison of distribution of delays during SRTP sessions serial with 
+parallel encryption implementation.}
+\label{dist-comp}
+\end{figure}  
+
+The figure \ref{dist-comp} centralizes on the most interesting results from
+previous tests which is the delay for 120 concurrent calls. The detailed 
+distribution of packet delays shows, that parallel implementation, visualized
+in blue color, has the peak situated around 12~ms when the serial 
+implementation, visualized in purple color, has the most packet delays situated
+around 27~ms.     
 
 
 
