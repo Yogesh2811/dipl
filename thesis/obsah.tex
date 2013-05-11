@@ -1247,6 +1247,55 @@ plugins.}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Implementation}\label{chapter:implementation}
+The application's specifications were variable through the life-cycle of the 
+entire development. SIP gateway's implementation started as a prototype for 
+translating LCP protocol and subset of SIP protocol enabling basic functionality 
+for  new lighweight prototype telephones. As the statement of requirements 
+included reference Java application that combined LCP server and multiple SIP 
+clients,  the implementation languages differ from the SRTP stack which is the 
+core of this thesis.
+
+As mentioned before, the reference application implements only a subset of 
+the full communication protocols and instead of understanding all of the complex
+scenarios the protocols offer, it brings research value examining 
+the  possibilities of improvement implementing computationally demanding 
+algorithms using parallel programming paradigm. Another benefit this work 
+brings, is experimental study and comparison of established implementations used
+either commercially or free.
+
+\lstset{ %
+language=C++,                        % choose the language of the code
+basicstyle=\footnotesize\tt,   % the size of the fonts that are used for the code
+numbers=left,                   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,                   % the step between two line-numbers. If it is 1 each line will be numbered
+numbersep=10pt,                  % how far the line-numbers are from the code
+backgroundcolor=\color{light-gray},  % choose the background color. You must add \usepackage{color}
+showspaces=false,               % show spaces adding particular underscores
+showstringspaces=false,         % underline spaces within strings
+showtabs=false,                 % show tabs within strings adding particular underscores
+%frame=single,           % adds a frame around the code
+tabsize=2,          % sets default tabsize to 2 spaces
+captionpos=b,           % sets the caption-position to bottom
+breaklines=true,        % sets automatic line breaking
+breakatwhitespace=false,    % sets if automatic breaks should only happen at whitespace
+escapeinside={\%*}{*)},          % if you want to add a comment within your code
+keywordstyle=\bf\color{blue},
+commentstyle=\color{gray},
+stringstyle=\color{red},
+escapechar=@,
+morekeywords={BYTE, CBYTE, nullptr, __local},
+}
+
+%\begin{figure}[H]
+%\begin{lstlisting}
+%@\color{brown}{\#define CONST 16}@                         //komentar
+%void funkce(int param, int param2){   //komentar2
+%  int a = @\color{red}{0x05}@;
+%  int b = @\color{brown}{CONST};
+%}
+%\end{lstlisting}
+%\end{figure}
 
 \section{SIP Gateway}
 \subsection{SIP Layer}
@@ -1254,8 +1303,502 @@ plugins.}
 
 
 \section{SRTP Stack}
-\subsection{Encryption}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+
+
+\subsection{Buffer Pool}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+
+\begin{figure}[H]
+\begin{lstlisting}
+template <class buffer_item> class Buffer_pool {
+    private: //implementation
+        buffer_item **pool = nullptr;
+        std::queue<int> free_buffer_index;
+        int pool_size;
+
+    public: //interface
+        // initialize pool and free_buffer_index
+        Buffer_pool(int pool_size) { .. };
+        // cleanup of resources
+        ~Buffer_pool() { .. };
+        // returns available buffer ID
+        int get_buffer_id() { .. };
+        // returns size of pool
+        int get_pool_size(){ .. };
+        // returns available buffer with ID
+        buffer_item* get_item(int id) { .. };
+        // makes buffer with ID available
+        void release_buffer(int id) { .. };
+};
+\end{lstlisting}
+\end{figure}
+
+To achieve higher degree of code reusability and categorization, buffer pool
+is implemented as template class offering both the OpenCL implementation
+use its own pool for memory objects on the host side and network interface
+use its own pool for incomming and outgoing packets and their structures.
+
+\begin{figure}[H]
+\begin{lstlisting}
+class RTP_item {
+    public:
+        RTP_item();
+        ~RTP_item();
+        // packet data buffers
+        BYTE src[@\color{brown}{PACKET\_SIZE@];
+        BYTE *payload_src;
+        BYTE dst[@\color{brown}{PACKET\_SIZE}@];
+        BYTE *payload_dst;
+        BYTE temp[@\color{brown}{PACKET\_SIZE}@];
+        // IPv6 BSD socket structures
+        struct sockaddr_in6 src_addr;
+        struct iovec iov[@\color{red}{1}@];
+        struct msghdr msg;
+};
+\end{lstlisting}
+\end{figure}
+
+The buffer pool item for network packets includes the buffers for incomming and 
+outgoing packets and the pointers to payload to avoid perpetual header removal.
+Network interface uses GNU C standard implementation of BSD sockets, therefore,
+this item includes structures for the sockets as well to keep the information
+persistent through packet processing.
+
+\begin{figure}[H]
+\begin{lstlisting}
+class cl_item{
+    public:
+        cl_mem payload_src; //buffer for payload
+        cl_mem payload_dst;
+        cl_mem iv_gpu;      //buffer for initial vector
+        cl_mem rk;          //round key
+        cl_mem t1;          //auxiliary buffers
+        cl_mem t2;
+};
+\end{lstlisting}
+\end{figure}
+
+OpenCL requires specific memory objects that can be loaded to the device memory.
+Buffer pool item for parallel implementation requires only those memory objects.
+
+
+\subsection{AES}
+For the SRTP stack the crucial is implementation of Advanced Encryption Standard.
+Described are two most relevant implementations, serial for comparison with
+the current solutions and persistent thread as the representative of the the
+best examined parallel implementation.
+
+The header file \texttt{aes.h} offers the functions for encryption and 
+decryption of packet payload in CTR mode encapsulated in \texttt{AES} namespace.
+
+\subsubsection*{Key Schedule}
+The master key defined for every SRTP session must be expanded into round key,
+which is used in every round for encryption. The algorithm for round key schedule
+is provided only in serial implementation, because its execution is prompt and
+doesn't provide enough calculations for the kernel device that would justify
+parallel implementation and diminish OpenCL computational overhead.
+
+\begin{figure}[H]
+\begin{lstlisting}
+void AES::expand_key(BYTE *mk, BYTE rk[@\color{brown}{ROUND\_KEY\_SIZE}@][@\color{brown}{BLOCK\_SIZE}@]){
+    get_first_rk(mk, rk[@\color{red}{0}@]);
+    for(int i = @\color{red}{1}@; i<@\color{brown}{ROUND\_KEY\_SIZE}@; i++){
+        get_next_rk(mk[i-@\color{red}{1}@], rk[i], rcon[i]);
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Key expansion algorithm is different for the first round key and the rest of
+round keys. Both methods are described in this chapter.
+ 
+\begin{figure}[H]
+\begin{lstlisting}
+void get_first_rk(BYTE *key, BYTE *rk){
+    memcpy(rk, key, @\color{red}{16}@*sizeof(BYTE));
+}
+\end{lstlisting}
+\end{figure}
+
+The first round key is copy of first 128 bits from the master key. 
+
+\begin{figure}[H]
+\begin{lstlisting}
+void get_next_rk(BYTE *previous_key, BYTE *rk, BYTE rcon){
+    rotate_column(previous_key, rk, @\color{red}{0}@, @\color{red}{3}@, @\color{red}{1}@);
+    for(int r = 0; r<@\color{brown}{ROWS}@; r++){
+       rk[r*@\color{brown}{COLUMNS}@] = sbox[rk[r*@\color{brown}{COLUMNS}@]] ^ previous_key[r*@\color{brown}{COLUMNS}@]; 
+    }
+    rk[@\color{red}{0}@] = rk[@\color{red}{0}@] ^ rcon;
+    for(int c = @\color{red}{1}@; c<@\color{brown}{COLUMNS}@; c++){
+        for(int r = @\color{red}{0}@; r<@\color{brown}{ROWS}@; r++){
+            rk[r*@\color{brown}{COLUMNS}@+c] = previous_key[r*@\color{brown}{COLUMNS}@+c] ^ rk[r*@\color{brown}{COLUMNS}@+c-@\color{red}{1}@];
+        }
+    }
+}
+\end{lstlisting}
+\end{figure}
+Other round keys are derived from the previous round key. The algorithm is 
+devided into two steps, first calculates the first column of the key state
+and then are calculated columns two, three and four always derived from
+the previous column. Because every array in the SRTP stack is considered
+one dimensional exactly as the incomming packet, the index to the state matrix
+memory must be computed exclusively.
+
+\subsubsection*{Serial Encryption}
+The AES encryption is divided into 4 steps exactly as described in previous
+chapters. Five constants necessary for AES will be mentioned through this 
+chapter in many code snippets and are listed in the following algorithm for 
+encryption. Their definitions are later skipped to avoid information redundancy.
+
+\begin{figure}[H]
+\begin{lstlisting}
+//AES constants
+@\color{brown}{\#define ROUND\_KEY\_SIZE 11}@ 
+@\color{brown}{\#define ROUNDS \hspace{30pt} 10}@ 
+@\color{brown}{\#define BLOCK\_SIZE \hspace{13pt} 16}@ 
+@\color{brown}{\#define ROWS \hspace{44pt} 4}@ 
+@\color{brown}{\#define COLUMNS \hspace{30pt} 4}@ 
+//CTR encryption algorithm
+void AES::srtp_encode(BYTE *src, BYTE *dst, BYTE *key, BYTE *iv, int len){
+    xor_key(key,iv,key);
+    expand_key(key,round_key);
+    int i = @\color{red}{0}@, j = @\color{red}{0}@;
+    int last_offset = len/@\color{brown}{BLOCK\_SIZE}@*@\color{brown}{BLOCK\_SIZE}@;
+    //encryption of counter and XORing with blocks
+    for( ; i < length; i+=@\color{brown}{BLOCK\_SIZE}@){
+        encode_block(counter, dst+i, round_key);
+        xor_key(dst+i,dst+i,src+i);
+        update_counter(counter);
+    }
+    //encryption of counter is full but XORing only up to packet size
+    BYTE *last_block = dst+last_offset;
+    encode_block(counter, last_block, round_key);
+    for(i=i-@\color{brown}{BLOCK\_SIZE}@; i < length; i++, j++){
+        dst[i] = last_block[j] ^ src[i];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada.
+
+\begin{figure}[H]
+\begin{lstlisting}
+//precomputed AES tables
+static const BYTE rcon[]     = {@\color{red}{0x8d}@, ... };
+static const BYTE sbox[]     = {@\color{red}{0x63}@, ... };
+static const BYTE sbox_inv[] = {@\color{red}{0x52}@, ... };
+static const BYTE g2[]       = {@\color{red}{0x00}@, ... };
+static const BYTE g3[]       = {@\color{red}{0x00}@, ... };
+static const BYTE g9[]       = {@\color{red}{0x00}@, ... };
+static const BYTE g11[]      = {@\color{red}{0x00}@, ... };
+//AES block encryption
+void encode_block(BYTE *counter, BYTE *dst, BYTE **round_key){
+    BYTE temp[@\color{brown}{BLOCK\_SIZE}@];
+    xor_key(counter, temp, round_key[@\color{red}{0}@]);
+    for(int i = @\color{red}{1}@; i < @\color{brown}{ROUNDS}@; i++){
+        sub_bytes(temp, dst);
+        shift_rows(dst, temp);
+        mix_columns(temp, dst);
+        xor_key(dst, temp, round_key[i]);
+    }
+    sub_bytes(temp,dst);
+    shift_rows(dst,temp);
+    xor_key(temp,dst,round_key[@\color{brown}{ROUNDS}@]);
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada.
+
+\begin{figure}[H]
+\begin{lstlisting}
+void mix_columns(BYTE *src, BYTE *dst){
+    BYTE a0, a1, a2, a3;
+    for(int col = @\color{red}{0}@; col < @\color{brown}{COLUMNS}@; col++){ 
+        //for better readability
+        a0 = src[col]; 
+        a1 = src[col+@\color{red}{4}@];
+        a2 = src[col+@\color{red}{8}@];
+        a3 = src[col+@\color{red}{12}@];
+        //using precomputed tables
+        dst[col]    = g2[a0] ^ g3[a1] ^ a2     ^ a3;
+        dst[col+@\color{red}{4}@] @\hspace{0.9pt}@ = a0     ^ g2[a1] ^ g3[a2] ^ a3;
+        dst[col+@\color{red}{8}@] @\hspace{0.9pt}@ = a0     ^ a1     ^ g2[a2] ^ g3[a3];
+        dst[col+@\color{red}{12}@]@\hspace{1.9pt}@ = g3[a0] ^ a1     ^ a2     ^ g2[a3];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. 
+
+\begin{figure}[H]
+\begin{lstlisting}
+void xor_key(BYTE *src, BYTE *dst, BYTE *key){
+    for(int i = @\color{red}{0}@; i < @\color{brown}{BLOCK\_SIZE}@; i++){
+        dst[i] = src[i] ^ key[i];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+
+\begin{figure}[H]
+\begin{lstlisting}
+void shift_rows(BYTE *src, BYTE *dst){   
+    for(int row = @\color{red}{0}@; row < @\color{brown}{ROWS}@; row++){
+        rotate_row(src+(row*@\color{brown}{COLUMNS}@), dst+(row*@\color{brown}{COLUMNS}@), row);
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+
+\begin{figure}[H]
+\begin{lstlisting}
+void sub_bytes(BYTE *src, BYTE *dst){
+    for(int i = @\color{red}{0}@; i < @\color{brown}{BLOCK\_SIZE}@; i++){
+        dst[i] = sbox[src[i]];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+
+helper functions
+\begin{figure}[H]
+\begin{lstlisting}
+void rotate_row(BYTE *src, BYTE *dst, int n){
+    int max = @\color{brown}{COLUMNS}@-n;
+    for(int i = @\color{red}{0}@; i < max; i++){
+        dst[i] = src[i+n];    
+    }
+    for(int i = max; i < @\color{brown}{COLUMNS}@; i++){
+        dst[i] = src[i-max];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. 
+
+\begin{figure}[H]
+\begin{lstlisting}
+void rotate_column(BYTE *src, BYTE *dst, int col1, int col2, int n){
+    int max = @\color{brown}{ROWS}@-n;
+    for(int i = @\color{red}{0}@; i < max; i++){
+        dst_state[i*@\color{brown}{COLUMNS}@ + col1] = src_state[(i+n)*@\color{brown}{COLUMNS}@ + col2];
+    }
+    for(int i = max; i < @\color{brown}{ROWS}@; i++){
+        dst_state[i*@\color{brown}{COLUMNS}@ + col1] = src_state[(i-max)*@\color{brown}{COLUMNS}@ + col2];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. 
+\subsubsection*{Parallel Encryption}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada.
+
+precomputed tables in constant memory -- fastest.
+
+
+\begin{figure}[H]
+\begin{lstlisting}
+//AES block encryption
+void encode_block(BYTE *counter, BYTE *dst, BYTE **round_key){
+    BYTE temp[@\color{brown}{BLOCK\_SIZE}@];
+    xor_key(counter, temp, round_key[@\color{red}{0}@]);
+    for(int i = @\color{red}{1}@; i < @\color{brown}{ROUNDS}@; i++){
+        sub_bytes(temp, dst);
+        shift_rows(dst, temp);
+        mix_columns(temp, dst);
+        xor_key(dst, temp, round_key[i]);
+    }
+    sub_bytes(temp,dst);
+    shift_rows(dst,temp);
+    xor_key(temp,dst,round_key[@\color{brown}{ROUNDS}@]);
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada
+
+\begin{figure}[H]
+\begin{lstlisting}
+void encode_block(__local BYTE *counter, __local BYTE *dst, 
+                  __local BYTE *temp, __local BYTE *round_key){
+    xor_key(counter, temp, round_key);
+    barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@); 
+    for(int i = @\color{red}{1}@; i < @\color{brown}{ROUNDS}@; i++){
+        sub_bytes(temp, dst);
+        barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@);
+        shift_rows(dst, temp);
+        barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@);
+        mix_columns(temp, dst);
+        barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@);
+        xor_key(dst, temp, round_key+(i*@\color{brown}{BLOCK\_SIZE}@));
+        barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@);
+    }
+    sub_bytes(temp,dst);
+    barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@);
+    shift_rows(dst,temp);
+    barrier(@\color{brown}{CLK\_LOCAL\_MEM\_FENCE}@);
+    xor_key(temp,dst,round_key+(@\color{brown}{ROUNDS}@*@\color{brown}{BLOCK\_SIZE}@));
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada
+
+\begin{figure}[H]
+\begin{lstlisting}
+void xor_key(__local BYTE *src, __local BYTE *dst, __local BYTE *key){
+    int i = get_global_id(@\color{red}{0}@);
+    dst[i] = src[i] ^ key[i];
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada
+
+\begin{figure}[H]
+\begin{lstlisting}
+void mix_columns(__local BYTE *src, __local BYTE *dst){
+    int i = get_global_id(@\color{red}{0}@);
+    int row = i/@\color{red}{4}@;
+    int col = i%@\color{red}{4}@;
+    // for better readability
+    BYTE a0 = src[col]; 
+    BYTE a1 = src[col+@\color{red}{4}@];
+    BYTE a2 = src[col+@\color{red}{8}@];
+    BYTE a3 = src[col+@\color{red}{12}@];
+    // mix only the byte this work-item belongs to
+    if(row == @\color{red}{0}@){
+        dst[i] = g2[a0] ^ g3[a1] ^ a2     ^ a3;
+    } else if(row == @\color{red}{1}@) {
+        dst[i] = a0     ^ g2[a1] ^ g3[a2] ^ a3;
+    } else if(row == @\color{red}{2}@) {
+        dst[i] = a0     ^ a1     ^ g2[a2] ^ g3[a3];
+    } else if(row == @\color{red}{3}@) {
+        dst[i] = g3[a0] ^ a1     ^ a2     ^ g2[a3];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada
+
+\begin{figure}[H]
+\begin{lstlisting}
+void sub_bytes(__local BYTE *src, __local BYTE *dst){
+    int i = get_global_id(@\color{red}{0}@);
+    dst[i] = sbox[src[i]];
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada
+
+\begin{figure}[H]
+\begin{lstlisting}
+void shift_rows(__local BYTE *src, __local BYTE *dst){   
+    int i = get_global_id(@\color{red}{0}@);
+    int row = i/@\color{red}{4}@;
+    int col = i%@\color{red}{4}@;
+    // shift only the byte this work-item belongs to
+    if(row == @\color{red}{0}@){
+        dst[i] = src[i];
+    } else if(row == @\color{red}{1}@) {
+        if(col == @\color{red}{3}@)
+            dst[i] = src[i-@\color{red}{3}@];
+        else
+            dst[i] = src[i+@\color{red}{1}@];
+    } else if(row == @\color{red}{2}@) {
+        if(col <= @\color{red}{1}@)
+            dst[i] = src[i+@\color{red}{2}@];
+        else
+            dst[i] = src[i-@\color{red}{2}@];
+    } else if(row == @\color{red}{3}@) {
+        dst[i] = src[i-@\color{red}{1}@];
+    }
+}
+\end{lstlisting}
+\end{figure}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada
+
 \subsection{Transcoding}
+The plugin system was implemented with usage of the GNU C Library. All of the 
+important functions for run-time dynamic loading are included from header
+\texttt{dlfcn.h}.
+
+\begin{itemize}
+\item \texttt{dlopen()} -- loads dynamic library file with \texttt{RTLD\_GLOBAL}
+and \texttt{RTLD\_NOW} flags set to make the symbols available for subsequently 
+loaded libraries and perform eager symbol resolution. 
+\item \texttt{dlsym()} -- returns address where the particular symbol is loaded
+into memory.
+\item \texttt{dlclose()} -- unloads the dynamic library.
+\end{itemize}
+
+The plugin module searches folder \texttt{plugins} for any file ending with 
+extension \texttt{.so} and performs plugin test whether the file contains
+necessary properties.
+
+\begin{figure}[H]
+\begin{lstlisting}
+@\color{brown}{PAYLOAD\_TYPES 127}@ //[RFC3551]
+// structure for codec plugin
+struct Codec {
+    int PT = @\color{red}{-1}@;
+    char* encoding_name = nullptr;
+    int (*transcode)(BYTE *src, BYTE *dst, int l1, int *l2, int pt, int id);
+    void (*to_raw)(BYTE *src, BYTE *raw, int l1, int *l2, int id);
+    void (*from_raw)(BYTE *raw, BYTE *dst, int l1, int *l2, int id);
+};
+// list of plugins
+static Codec transcode_plugins[PAYLOAD_TYPES];
+// transcode module interface
+int transcode(BYTE *src, BYTE *dst, //packet buffers 
+              int l1, int *l2,      //data lengths
+              int pt1, int pt2,     //codec types
+              int id);              //stream ID
+\end{lstlisting}
+\end{figure}
+
+The code sniplet above defines the structure for loaded codec plugins on the 
+host application side and interface for plugin module and rest of the SRTP 
+stack. Transcoding is always executed through \texttt{transcode()} function and
+never directly, because the function handles the possibilities of plugins
+and selects the option with best effort ratio and in the worst case transcodes
+through PCM.
+
+\begin{figure}[H]
+\begin{lstlisting}
+// codec identification [RFC3551]
+extern const char* encoding_name;
+extern const int PT;
+// transcodes multimedia data from one codec to another codec
+int transcode(BYTE *src, BYTE *dst, int l_src, int *l_dst, int pt, int id);
+// transcodes codec to raw PCM
+void to_raw(BYTE *src, BYTE *raw, int len_src, int *len_dst, int id);
+// transcodes raw PCM to codec
+void from_raw(BYTE *raw, BYTE *dst, int len_src, int *len_dst, int id);
+\end{lstlisting}
+\end{figure}
+
+The plugin must define all of the mentioned interface values and functions.
+To ensure proper implementation, each codec plugin includes header file 
+\texttt{transcode\_plugin.h}.
+
 
 \section{Visualization Tool}
 
@@ -1329,7 +1872,8 @@ M5t  &26 $\micro$s&32 $\micro$s&46 $\micro$s&69 $\micro$s&82 $\micro$s\\
 Serial  &16 $\micro$s&28 $\micro$s&48 $\micro$s&66 $\micro$s&86 $\micro$s\\
 Persistent thread&44 $\micro$s&45 $\micro$s&44 $\micro$s&44 $\micro$s&45 $\micro$s\\
 Massive Parallel&55 $\micro$s&55 $\micro$s&54 $\micro$s&55 $\micro$s&62 $\micro$s\\
-EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
+EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\
+OpenSSL &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
 \end{tabular}
 \end{center}
 \caption{Comparison of selected AES implementations.}
