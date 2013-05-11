@@ -1874,7 +1874,7 @@ hardware as HiPath4000 softgate is equiped. The following list summarizes the
 softgate properties and used software products for compilation of SRTP stack.
 \begin{itemize}
 \item processor intel i5 2500k with HD3000 graphics chip
-\item 8gb RAM
+\item 8~GB RAM
 \item OpenCL 1.2
 \item gcc 4.7
 \end{itemize}
@@ -1894,9 +1894,11 @@ For the comparison of effectivity of the AES implementation, in table
 \ref{aes-comparison} are given time requirements for execution of multiple
 blocks encrypted by 128-bit AES with the implementation proposed in this thesis
 and reference implementations M5t\footnote{ M5t framework includes AES 
-implementation currently used in many Siemens devices\cite{m5t}.} and EfAesLib 
-\footnote{ EfAesLib is a highly optimized Advanced Encryption Standard 
-library\cite{aes-lib}.}.
+implementation currently used in many Siemens devices\cite{m5t}.}, 
+EfAesLib\footnote{ EfAesLib is a highly optimized Advanced Encryption Standard 
+library\cite{aes-lib}.} and OpenSSL\footnote{ OpenSSL is open-source 
+implementation of SSL and TLS protocols including cryptographic 
+functions\cite{openssl}.}.
 \begin{table}[H]
 \begin{center}
 \begin{tabular}{|l|ccccc|}\hline%
