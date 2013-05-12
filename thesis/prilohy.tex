@@ -4,7 +4,29 @@
 %\chapter{RelaxNG Schéma konfiguraèního soboru}
 %\chapter{Plakat}
 \chapter{AES Properties}
-\begin{table}[H]
+\begin{algorithm}
+\caption{AES decryption}
+\label{decr}
+\begin{algorithmic}
+\State \textbf{Decipher(State, Key)}
+\State state $\gets AddRoundKey($State, Key[n]$)$
+\State state $\gets ShiftRows($state$)$
+\State state $\gets SubBytes($state$)$
+\vspace{0.5em}
+\For{$i \gets (n-1..1)$}
+    \State state $\gets AddRoundKey($state, Key[i]$)$
+    \State state $\gets MixColumns($state$)$
+    \State state $\gets ShiftRows($state$)$
+    \State state $\gets SubBytes($state$)$
+\EndFor
+\vspace{0.5em}
+\State state $\gets AddRoundKey($state, Key[0]$)$
+\vspace{0.5em}
+\State $return$ state
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table}
 \label{sbox}
 \begin{center}
 \begin{tabular}{|c|cccccccccccccccc|}\hline%
@@ -31,7 +53,7 @@
 \caption{S-box for SubBytes transformation in hexadecimal notation.}
 \end{table}
 
-\begin{table}[H]
+\begin{table}
 \label{invsbox}
 \begin{center}
 \begin{tabular}{|c|cccccccccccccccc|}\hline%
@@ -58,24 +80,4 @@
 \caption{Inverse S-box for SubBytes transformation in hexadecimal notation.}
 \end{table}
 
-\begin{algorithm}
-\caption{AES decryption}
-\label{decr}
-\begin{algorithmic}
-\State \textbf{Decipher(State, Key)}
-\State state $\gets AddRoundKey($State, Key[n]$)$
-\State state $\gets ShiftRows($state$)$
-\State state $\gets SubBytes($state$)$
-\vspace{0.5em}
-\For{$i \gets (n-1..1)$}
-    \State state $\gets AddRoundKey($state, Key[i]$)$
-    \State state $\gets MixColumns($state$)$
-    \State state $\gets ShiftRows($state$)$
-    \State state $\gets SubBytes($state$)$
-\EndFor
-\vspace{0.5em}
-\State state $\gets AddRoundKey($state, Key[0]$)$
-\vspace{0.5em}
-\State $return$ state
-\end{algorithmic}
-\end{algorithm}
+

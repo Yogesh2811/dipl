@@ -737,7 +737,7 @@ of compute units which are further divided into processing elements.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=10cm]{fig/opencl_platform_model.jpg}
+\includegraphics[width=10cm]{fig/platform_model.pdf}
 \caption[OpenCL platform model]{OpenCL platform model with one host and multiple
 devices\cite{opencl}.}
 \label{oclpm}
@@ -1244,7 +1244,7 @@ on the part of SRTP stack itself.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=9cm]{fig/plugins.pdf}
+\includegraphics[width=15cm]{fig/plugins.pdf}
 \caption[Plugin system design]{Interaction between plugin system on the gateway 
 and separate codec plugins.}
 \label{pt_payload}
@@ -1304,13 +1304,18 @@ morekeywords={BYTE, CBYTE, nullptr, __local},
 %\end{figure}
 
 \section{SIP Gateway}
-\subsection{SIP Layer}
-\subsection{LCP Layer}
+implemented in Java
 
 
 \section{SRTP Stack}
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+The implementation of SRTP stack is written in C/C++ 
 
+\begin{itemize}
+\item boost -- threads
+\item stl -- containers
+\item sockets
+\item dynamic library loading
+\end{itemize}
 
 \subsection{Buffer Pool}
 Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
