@@ -891,7 +891,22 @@ the upper layer and lower layer classes.
 
 %\url{http://www.eventhelix.com/realtimemantra/PatternCatalog/protocol\_stack.htm#.UYEfRbXQovo}
 
+\section{Model-view-controller}
+The MVC belongs to the group of software architecture patterns which shall not
+be confused with OOP design patterns. It has more strict rules for design
+and implementation than pure design patterns and influences development to the
+higher degree. Also it is not limited to the object oriented programming 
+paradigm even though in this particular case MVC is used with OOP.
 
+The MVC pattern defines both the participants and their mutual interaction.
+\begin{itemize}
+\item \textbf{Model} -- contains the information and inner implementation of
+the system, understands and responds to requests from it's associated view and controller and it may also inform them about changes of inner state and data.
+\item \textbf{View} -- creates visual representation for the user of the
+information and data the model stores.                 
+\item \textbf{Controller} -- represents user actions associated with view and
+responds through interface commands to the model.
+\end{itemize} 
 
 \section{SIP Gateway}
 In order to create a session for VoIP communication between two endpoints, 
@@ -1060,7 +1075,7 @@ units.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=15cm]{fig/paral_scheme.pdf}
+\includegraphics[width=14cm]{fig/paral_scheme.pdf}
 \caption[SRTP processing scheme]{SRTP processing scheme.}
 \label{scheme}
 \end{figure}
@@ -1128,9 +1143,6 @@ and to increase the level of algorithm categorization, their implementation is
 based on template classes. The pool guarantees to protect buffer from overwrite
 and data persistency.
 
-
-\newpage
-
 \subsubsection*{Massive Parallel Processing}
 Traditional parallel programming style relies heavily on SIMT\footnote{ SIMT -- 
 Single Instruction Multiple Thread} and SPMD\footnote{ SPMD -- Single Program
@@ -1148,7 +1160,7 @@ unnecessary computational overhead.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=12cm]{fig/packet_mp.pdf}
+\includegraphics[width=11cm]{fig/packet_mp.pdf}
 \caption[OpenCL work-item mapping]{Work-item mapping on packet payload with 
 native OpenCL approach.}
 \label{mp_payload}
@@ -1205,7 +1217,7 @@ per packet.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=12cm]{fig/packet_wi.pdf}
+\includegraphics[width=11cm]{fig/packet_wi.pdf}
 \caption[Persistent thread work-item mapping]{Work-item mapping on packet 
 payload using persistent thread paradigm.}
 \label{pt_payload}
@@ -1304,21 +1316,43 @@ morekeywords={BYTE, CBYTE, nullptr, __local},
 %\end{figure}
 
 \section{SIP Gateway}
+%TODO
 implemented in Java
 
 
 \section{SRTP Stack}
-The implementation of SRTP stack is written in C/C++ 
+The implementation of SRTP stack is written in C++ following the recommendation
+of standard C++11. Even though the standard defines multi-threading model with
+synchronization, at the time of development SRTP stack, there were no compilers
+sufficiently implementing the language property, therefore, the boost library
+threads and semaphores were used. 
 
+%TODO
 \begin{itemize}
-\item boost -- threads
+\item boost -- threads, semaphores
 \item stl -- containers
 \item sockets
 \item dynamic library loading
 \end{itemize}
 
 \subsection{Buffer Pool}
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Pellentesque pretium lectus id turpis. Fusce wisi. Nunc tincidunt ante vitae massa. Nulla non lectus sed nisl molestie malesuada. Nulla quis diam. Cras pede libero, dapibus nec, pretium sit amet, tempor quis. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Quisque tincidunt scelerisque libero.
+Since the application is multithreaded passing the data from one thread to 
+another, there is a necessity for critical section handling. For the allocation
+of buffer first must be called method \texttt{get\_buffer\_id()} which returns
+\texttt{integer} value representing the free buffer ID. In this method it is 
+crucial to avoid releasing the same ID for different buffers, therefore, must
+be executed atomically. The application may access the memory of the buffer
+by method \texttt{get\_item(id)} taking as argument the previously received 
+buffer ID. Even though this method accesses possibly the critical section of
+the memory, it doesn't need any synchronization, because it is all handled in 
+previous code and at this moment it is guaranteed that the allocated buffers
+are exclusively used only by a single thread and branch of code. The releasing
+of the buffer is enabled by \texttt{release\_buffer(id)} method again taking as
+argument the allocated buffer ID. The buffer pool ensures that releasing of
+the buffer is atomic. The allocation and release of buffer is achieved by
+only adding and removal of \texttt{integer} value in \texttt{queue}, which
+makes the critical section code very fast and not vulnerable to basic 
+multi-threading problems such as deadlock and starvation.
 
 \begin{figure}[H]
 \begin{lstlisting}
@@ -1425,18 +1459,7 @@ void AES::expand_key(BYTE *mk, BYTE rk[@\color{brown}{ROUND\_KEY\_SIZE}@][@\colo
 \end{figure}
 
 Key expansion algorithm is different for the first round key and the rest of
-round keys. Both methods are described in this chapter.
- 
-\begin{figure}[H]
-\begin{lstlisting}
-void get_first_rk(BYTE *key, BYTE *rk){
-    memcpy(rk, key, @\color{red}{16}@*sizeof(BYTE));
-}
-\end{lstlisting}
-\end{figure}
-
-The first round key is copy of first 128 bits from the master key. 
-
+round keys. Both methods are described in this chapter. 
 \begin{figure}[H]
 \begin{lstlisting}
 void get_next_rk(BYTE *previous_key, BYTE *rk, BYTE rcon){
@@ -1453,6 +1476,7 @@ void get_next_rk(BYTE *previous_key, BYTE *rk, BYTE rcon){
 }
 \end{lstlisting}
 \end{figure}
+The first round key is copy of first 128 bits from the master key. 
 Other round keys are derived from the previous round key. The algorithm is 
 devided into two steps, first calculates the first column of the key state
 and then are calculated columns two, three and four always derived from
@@ -1553,18 +1577,6 @@ consits of precomputed values stored in arrays and then the mixture of columns.
 
 \begin{figure}[H]
 \begin{lstlisting}
-void xor_key(BYTE *src, BYTE *dst, BYTE *key){
-    for(int i = @\color{red}{0}@; i < @\color{brown}{BLOCK\_SIZE}@; i++){
-        dst[i] = src[i] ^ key[i];
-    }
-}
-\end{lstlisting}
-\end{figure}
-
-
-
-\begin{figure}[H]
-\begin{lstlisting}
 void shift_rows(BYTE *src, BYTE *dst){   
     for(int row = @\color{red}{0}@; row < @\color{brown}{ROWS}@; row++){
         rotate_row(src+(row*@\color{brown}{COLUMNS}@), dst+(row*@\color{brown}{COLUMNS}@), row);
@@ -1575,6 +1587,9 @@ void shift_rows(BYTE *src, BYTE *dst){
 
 Both \texttt{xor\_key()} and \texttt{shift\_rows()} are simple and selfexplanatory
 functions. The \texttt{shift\_rows} uses helper function \texttt{rotate\_row()}.
+The \texttt{xor\_key()} takes three arguments, iterates over AES state in the
+first argument \texttt{src} and applies XOR function on corresponding byte from 
+given key in argument \texttt{key}. Result is written to the \texttt{dst} array. 
 
 \begin{figure}[H]
 \begin{lstlisting}
@@ -1585,8 +1600,7 @@ void sub_bytes(BYTE *src, BYTE *dst){
     }
 }
 \end{lstlisting}
-\end{figure}
-
+\end{figure}                                                                    
 
 Following are two helper functions for AES algorithm that are neither described 
 in the theoretical part of the thesis nor the AES definition document. Their
@@ -1694,15 +1708,6 @@ Encoding the block requires local synchronization which is achieved by
 \texttt{barrier()} function. Each step of the algorithm may start computations
 after the previous step has been finished for all work-items.
 
-\begin{figure}[H]
-\begin{lstlisting}
-void xor_key(__local BYTE *src, __local BYTE *dst, __local BYTE *key){
-    int i = get_global_id(@\color{red}{0}@);
-    dst[i] = src[i] ^ key[i];
-}
-\end{lstlisting}
-\end{figure}
-
 Because both global and local ID of the work-item is cached, calling function 
 \texttt{get\_global\_id()} doesn't bring any slack-off, therefore, it is not 
 necessary to pass the work-item ID to the functions of AES implementation.
@@ -1710,14 +1715,7 @@ necessary to pass the work-item ID to the functions of AES implementation.
 \begin{figure}[H]
 \begin{lstlisting}
 void mix_columns(__local BYTE *src, __local BYTE *dst){
-    int i = get_global_id(@\color{red}{0}@);
-    int row = i/@\color{red}{4}@;
-    int col = i%@\color{red}{4}@;
-    BYTE a0 = src[col]; 
-    BYTE a1 = src[col+@\color{red}{4}@];
-    BYTE a2 = src[col+@\color{red}{8}@];
-    BYTE a3 = src[col+@\color{red}{12}@];
-    // mix only the byte this work-item belongs to
+    @\color{gray}{...}@
     if(row == @\color{red}{0}@){
         dst[i] = g2[a0] ^ g3[a1] ^ a2     ^ a3;
     } else if(row == @\color{red}{1}@) {
@@ -1736,20 +1734,8 @@ which branch of code it belongs.
 
 \begin{figure}[H]
 \begin{lstlisting}
-void sub_bytes(__local BYTE *src, __local BYTE *dst){
-    int i = get_global_id(@\color{red}{0}@);
-    dst[i] = sbox[src[i]];
-}
-\end{lstlisting}
-\end{figure}
-
-\begin{figure}[H]
-\begin{lstlisting}
 void shift_rows(__local BYTE *src, __local BYTE *dst){   
-    int i = get_global_id(@\color{red}{0}@);
-    int row = i/@\color{red}{4}@;
-    int col = i%@\color{red}{4}@;
-    // shift only the byte this work-item belongs to
+    @\color{gray}{...}@
     if(row == @\color{red}{0}@){
         dst[i] = src[i];
     } else if(row == @\color{red}{1}@) {
@@ -1771,7 +1757,8 @@ void shift_rows(__local BYTE *src, __local BYTE *dst){
 
 The kernel code requires work-item categorization again as the rows shifting 
 doesn't provide any means for generalization. This branching in mentioned device
-code doesn't bring any additional computations nor increase overhead.
+code doesn't bring any considerable additional computations nor increase the
+overhead.
 
 \subsection{Transcoding}
 The plugin system was implemented with usage of the GNU C Library. All of the 
@@ -1838,9 +1825,87 @@ To ensure proper implementation, each codec plugin includes header file
 \texttt{transcode\_plugin.h}.
 
 
-\section{Visualization Tool}
+\section{Management Tool}
+As it is quite difficult to monitor processing and reliability of VoIP sessions
+the part of implementation includes management tool for basic management of 
+telephone devices in the network and visualization of ongoing sessions and 
+their states. For the development of such tool was decided Ruby on Rails 
+framework as it offers many of the requested qualities, such as Fast and agile 
+development, simple deployment, ability of integration into any current 
+solution. 
 
+Model-view-controller design also allows to interchange any of the application
+modules without necessity of modifying the remaining modules. For the
+communication between SIP gateway was designed simple protocol transfered
+through WebSocket containing only two parts -- header and body.
 
+\begin{itemize}
+\item header -- required for every message, contains classification of one of 
+the 6 types of messages.
+\item body -- omitted for group of system messages and optional for group of 
+device messages, contains information about changed data in CSV format.
+\end{itemize}   
+
+The communication between all participants is asynchronous and strictly 
+stateless. Message types are grouped into two categories.
+
+\begin{itemize}
+\item \textbf{Device Messages}
+\begin{itemize}
+\item \texttt{update} -- information for the main view about update of client, 
+sent only from gateway to the tool.
+\item \texttt{edit} -- information about the device information change, can be 
+sent both ways.
+\item \texttt{create} -- create of the new device.
+\item \texttt{remove} -- deletion of the particular device.
+\end{itemize}
+
+\item \textbf{System Messages}
+\begin{itemize}
+\item \texttt{inform} -- exchange of the connection information between gateway and management tool.
+\item \texttt{error} -- the error handling of gateway and management tool.
+\end{itemize}
+\end{itemize}
+
+As WebSocket communication is strictly slower than TCP and UDP socket
+communication, it is required to filter the information update only to essential
+level. Both SIP and LCP protocol may generate large amount of messages 
+considering the number of users registered which will result in blocking the
+management tool. This message filter is implemented on both the SIP gateway 
+side, where it sends only the information updating client or server relevant 
+states, and management tool side, where it filters out the information 
+irrelevant to the current view.
+
+\vspace{1em}
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+ManagementProtocol DEFINITIONS ::= BEGIN
+    Message ::= SEQUENCE {
+        header        ENUMERATED{inform, error, update, edit, create, remove},
+        body          BodyType OPTIONAL
+    }
+    BodyType ::= SEQUENCE{
+         [[attr]]     SeparatedAttribute OPTIONAL,
+         lastAttr     Attribute           
+    }
+    SeparatedAttribute ::= SEQUENCE {
+         attr         Attribute,
+         separator    (,)
+    }
+    Attribute ::= SEQUENCE {
+         definition   IA5String
+         separator    (:)
+         value        IA5String
+    }
+END
+\end{verbatim}
+\vspace{-1em}
+\caption[Management tool message definition]{Definition of the message 
+management tool and SIP gateway exchanges for communication in ASN1 notation.}
+\label{tool-msg}
+\end{figure}
 
 
 
@@ -1908,12 +1973,18 @@ functions\cite{openssl}.}.
 \begin{center}
 \begin{tabular}{|l|ccccc|}\hline%
 Implementation &  1 block & 5 blocks & 10 blocks & 15 blocks & 20 blocks\\\hline
-M5t  &26 $\micro$s&32 $\micro$s&46 $\micro$s&69 $\micro$s&82 $\micro$s\\ 
-Serial  &16 $\micro$s&28 $\micro$s&48 $\micro$s&66 $\micro$s&86 $\micro$s\\
-Persistent thread&44 $\micro$s&45 $\micro$s&44 $\micro$s&44 $\micro$s&45 $\micro$s\\
-Massive Parallel&55 $\micro$s&55 $\micro$s&54 $\micro$s&55 $\micro$s&62 $\micro$s\\
-EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\
-OpenSSL &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
+%M5t  &26 $\micro$s&32 $\micro$s&46 $\micro$s&69 $\micro$s&82 $\micro$s\\ 
+%Serial  &16 $\micro$s&28 $\micro$s&48 $\micro$s&66 $\micro$s&86 $\micro$s\\
+%Persistent thread&44 $\micro$s&45 $\micro$s&44 $\micro$s&44 $\micro$s&45 $\micro$s\\
+%Massive Parallel&55 $\micro$s&55 $\micro$s&54 $\micro$s&55 $\micro$s&62 $\micro$s\\
+%EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\
+%OpenSSL &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
+M5t  &26 $\mu$s&32 $\mu$s&46 $\mu$s&69 $\mu$s&82 $\mu$s\\ 
+Serial  &16 $\mu$s&28 $\mu$s&48 $\mu$s&66 $\mu$s&86 $\mu$s\\
+Persistent thread&44 $\mu$s&45 $\mu$s&44 $\mu$s&44 $\mu$s&45 $\mu$s\\
+Massive Parallel&55 $\mu$s&55 $\mu$s&54 $\mu$s&55 $\mu$s&62 $\mu$s\\
+EfAesLib &XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s\\
+OpenSSL &XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s\\\hline
 \end{tabular}
 \end{center}
 \caption{Comparison of selected AES implementations.}
