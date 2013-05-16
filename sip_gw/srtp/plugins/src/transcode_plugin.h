@@ -45,7 +45,7 @@ extern void (*to_raw)(CBYTE* src, BYTE* raw, int len_src, int* len_dst, int id);
  * Transcodes raw PCM to codec
  *
  * @param src - source data
- * @param dst - expects NULL, if fails or unable to convert, sets to NULL
+ * @param dst - expects allocated buffer with big enough size
  * @param len_src - length of src data
  * @param len_dst - sets length of dst data
  * @param id - stream identifier for buffers

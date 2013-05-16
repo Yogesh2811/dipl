@@ -1,3 +1,4 @@
+/** @file */
 #ifndef SRTP_STREAM_H
 #define SRTP_STREAM_H
 
@@ -5,8 +6,10 @@
 
 #include "rtp_interface.h"
 
+/** \brief SRTP stream class for interface with upper layer*/
 class SRTP_stream {
     public:
+        /** \brief processing of the stream definition*/
         enum Stream_type {
             FORWARD,
             ENCODE,
@@ -15,30 +18,37 @@ class SRTP_stream {
             DECODE_TRANSCODE,
             DECODE_TRANSCODE_ENCODE,
         };
-
+        /** \brief status of the stream */
         enum Status {
             INIT,
             SESSION,
             END
         };
-
+        /** \brief encryption type*/
         enum Encryption {
             AES128_CTR
         };
-
+        /** 
+         * \brief constructor 
+         * 
+         * @param type processing of the stream definition
+         */
         SRTP_stream(Stream_type type);
+        /** \brief destructor*/
         ~SRTP_stream();
-        
+        /** \brief returns type of the stream*/
         Stream_type get_type();
+        /** \brief set transcoding type*/
         void set_transcoding();
+        /** \brief returns master key*/
         unsigned char* get_key();
-    
-        unsigned int roc;
+
+        unsigned int roc; ///< rollover counter
     
         //transcoding
-        int src_pt;
-        int dst_pt;
-        int id;
+        int src_pt;       ///< payload type of incomming packets
+        int dst_pt;       ///< payload type of outgoing packets
+        int id;           ///< stream id
     private:
         Status state;
         Stream_type type;
@@ -53,5 +63,5 @@ class SRTP_stream {
         unsigned int MKI;
 };
 
-
 #endif
+/** @} */
