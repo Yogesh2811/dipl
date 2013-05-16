@@ -116,20 +116,7 @@ void set_max_device_worksize(){
     checkClError(error, "clGetDeviceInfo");
 }
 
-
-/*int GPU::alloc_buffer(){
-    while(free_buffers.empty());
-
-    int id = free_buffers.front(); 
-    free_buffers.pop();
-    return id; 
-}
-
-void GPU::release_buffer(int id){
-    free_buffers.push(id);
-}*/
-
-int initOpenCL(){
+int GPU::initOpenCL(){
     error = getPlatformID();
     checkClError(error, "getPlatformID");
 
@@ -210,7 +197,7 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 }
 
 
-void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){ 
+void GPU::srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){ 
     // Alloc buffers with specified size & copy data
     cl_int err;
 
@@ -278,30 +265,77 @@ void srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
     clFinish(cl_queue);
 
     cl_buffer_pool.release_buffer(index);
-    //err = clReleaseMemObject(payload_src);
-    //checkClError(err, "clReleaseMemObject block_src");
-
-    //err = clReleaseMemObject(payload_dst);
-    //checkClError(err, "clReleaseMemObject block_dst");
-
-    //err = clReleaseMemObject(key_gpu);
-    //checkClError(err, "clReleaseMemObject key");
-
-    //err = clReleaseMemObject(iv_gpu);
-    //checkClError(err, "clReleaseMemObject iv");
-    
-    //err = clReleaseMemObject(rk);
-    //checkClError(err, "clReleaseMemObject rk");
-
-    //err = clReleaseMemObject(t1);
-    //checkClError(err, "clReleaseMemObject t1");
-    
-    //err = clReleaseMemObject(t2);
-    //checkClError(err, "clReleaseMemObject t2");
 }
 
 
-void srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
+void GPU::srtp_encode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){
+    // Alloc buffers with specified size & copy data
+    cl_int err;
+
+    size_t packet_size = sizeof(cl_uchar)*length;
+  
+    BYTE round_key[11][16];
+    AES::expand_key(key, round_key);
+   
+    int index = cl_buffer_pool.get_buffer_id();
+    cl_item *item = cl_buffer_pool.get_item(index); 
+
+    // Copy data from memory to gpu
+    err = clEnqueueWriteBuffer(cl_queue,
+            item->payload_src, //memory on gpu
+            CL_TRUE,   //blocking write
+            0,         //offset
+            sizeof(cl_uchar)*length, //size in bytes of copied data
+            src,       //memory data
+            0,         //wait list
+            NULL,      //wait list
+            NULL);     //wait list
+
+    err = clEnqueueWriteBuffer(cl_queue,
+            item->iv_gpu, //memory on gpu
+            CL_TRUE,   //blocking write
+            0,         //offset
+            sizeof(cl_uchar)*16, //size in bytes of copied data
+            iv,       //memory data
+            0,         //wait list
+            NULL,      //wait list
+            NULL);     //wait list
+
+    err = clEnqueueWriteBuffer(cl_queue,
+            item->rk, //memory on gpu
+            CL_TRUE,   //blocking write
+            0,         //offset
+            sizeof(cl_uchar)*16*11,
+            round_key, //memory data
+            0,         //wait list
+            NULL,      //wait list
+            NULL);     //wait list
+
+
+    clSetKernelArg(decode_kernel, 0, sizeof(cl_mem), (void *)&(item->payload_src));
+    clSetKernelArg(decode_kernel, 1, sizeof(cl_mem), (void *)&(item->payload_dst));
+    clSetKernelArg(decode_kernel, 2, sizeof(cl_mem), (void *)&(item->iv_gpu));
+    clSetKernelArg(decode_kernel, 3, sizeof(int),    (void *)&length);
+    clSetKernelArg(decode_kernel, 4, sizeof(cl_mem), (void *)&(item->rk));
+    clSetKernelArg(decode_kernel, 5, sizeof(cl_mem), (void *)&(item->t1));
+    clSetKernelArg(decode_kernel, 6, sizeof(cl_mem), (void *)&(item->t2));
+
+    clEnqueueNDRangeKernel(cl_queue, encode_kernel, 1, NULL, GWS, LWS, 0, NULL, NULL);
+    
+    // copy result back from gpu to host
+    clEnqueueReadBuffer(cl_queue, 
+            item->payload_dst, 
+            CL_TRUE, 
+            0, 
+            sizeof(cl_uchar)*16,            
+            dst, 
+            0, 
+            NULL, 
+            NULL);
+
+    clFinish(cl_queue);
+
+    cl_buffer_pool.release_buffer(index);
 }
 
 /**
@@ -439,7 +473,7 @@ void CL_CALLBACK contextCallback(const char *err_info,
 /* 
  * Releases OpenCL resources (Context, Memory etc.) 
  */
-int cleanup()
+int GPU::cleanup()
 {
 
     //status = clReleaseKernel(dct_kernel);

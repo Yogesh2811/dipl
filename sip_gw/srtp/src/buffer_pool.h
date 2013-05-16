@@ -15,7 +15,7 @@ private:
     unsigned long count_;
 
 public:
-    semaphore()
+    Semaphore()
         : count_()
     {}
     /** \brief notification of waiters*/

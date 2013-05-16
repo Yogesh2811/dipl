@@ -18,8 +18,8 @@ SRTP_parser::SRTP_parser(RTP_interface *iface, execution_type t){
         decode = &AES::srtp_decode;
     }
     else{
-        encode = &srtp_encode_gpu;
-	decode = &srtp_decode_gpu;
+        encode = &GPU::srtp_encode_gpu;
+	decode = &GPU::srtp_decode_gpu;
     }
 }
 
