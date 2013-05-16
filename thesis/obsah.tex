@@ -737,7 +737,7 @@ of compute units which are further divided into processing elements.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=10cm]{fig/platform_model.pdf}
+\includegraphics[width=14cm]{fig/platform_model.pdf}
 \caption[OpenCL platform model]{OpenCL platform model with one host and multiple
 devices\cite{opencl}.}
 \label{oclpm}
@@ -901,7 +901,8 @@ paradigm even though in this particular case MVC is used with OOP.
 The MVC pattern defines both the participants and their mutual interaction.
 \begin{itemize}
 \item \textbf{Model} -- contains the information and inner implementation of
-the system, understands and responds to requests from it's associated view and controller and it may also inform them about changes of inner state and data.
+the system, understands and responds to requests from it's associated view and 
+controller and it may also inform them about changes of inner state and data.
 \item \textbf{View} -- creates visual representation for the user of the
 information and data the model stores.                 
 \item \textbf{Controller} -- represents user actions associated with view and
@@ -926,24 +927,32 @@ phone directly connected and SIP phone through SIP Registrar.}
 \label{oclpm}
 \end{figure}
 
-Multiple SIP or LCP telephones are connected to the SIP Gateway whose appear as
+Multiple SIP or LCP telephones are connected to the SIP gateway whose appear as
 users to the SIP registrar\footnote{ Used registrars were Asterisk and Siemens 
 HiPath 4000}. The SIP gateway in this scenario works as bridging point between 
 the SIP telephones and SIP registrar, LCP phones and SIP registrar or LCP phones
 directly.
 
-The modules of SIP gateway are implemented in different programming languages
-and each serve specified purpose.
+The modules of SIP gateway are implemented using two different programming 
+languages which made the interaction little more complicated. Each of the modules
+serve specified purpose and interacts with remaining modules eihter directly
+or through the gateway core.
 \begin{itemize}
-\item \textbf{Gateway core} -- implemented in Java, provides communication 
-between each module and encapsulates basic functionality of a Gateway.
-\item \textbf{SIP Stack} -- Java API for SIP stack called 
-JAIN SIP\cite{jainsip}, implemented basic SIP features.
-\item \textbf{LCP Stack} -- implemented in Java fully covering LCP protocol 
-v1.0.
+\item \textbf{Gateway core} -- provides communication between each module and 
+encapsulates basic functionality of a gateway, mutual translation of both 
+protocols SIP to LCP and vice versa, the management of RTP stack and 
+devices representation.
+\item \textbf{SIP Stack} -- includes network interface for communication
+over SIP protocol with registrar, representing LCP telephones as SIP clients.
+Encapsulates part of the SIP protocol with automated answeres without putting
+unnecessary load on the gateway core. Remaining communication is provided through 
+interface functions to either gateway core or directly to LCP stack.
+\item \textbf{LCP Stack} -- separate network interface for devices communicating
+via LCP protocol. Includes complete LCP stack and interface for management of
+the connected devices.
 \item \textbf{RTP Stack} -- for non-direct connections where the telephones 
-couldn't agree on communication channel for the session, RTP stack implemented
-in C/C++ and OpenCL provides necessary bridging point.
+couldn't agree on communication channel for the session, RTP stack provides
+necessary bridging point.
 \end{itemize}
 
 Measurement of utilization of computational resources during execution of 
@@ -1160,7 +1169,7 @@ unnecessary computational overhead.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=11cm]{fig/packet_mp.pdf}
+\includegraphics[width=13cm]{fig/packet_mp.pdf}
 \caption[OpenCL work-item mapping]{Work-item mapping on packet payload with 
 native OpenCL approach.}
 \label{mp_payload}
@@ -1217,7 +1226,7 @@ per packet.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=11cm]{fig/packet_wi.pdf}
+\includegraphics[width=13cm]{fig/packet_wi.pdf}
 \caption[Persistent thread work-item mapping]{Work-item mapping on packet 
 payload using persistent thread paradigm.}
 \label{pt_payload}
@@ -1316,8 +1325,26 @@ morekeywords={BYTE, CBYTE, nullptr, __local},
 %\end{figure}
 
 \section{SIP Gateway}
-%TODO
-implemented in Java
+It is only possible to translate limited subset of complete SIP protocol to
+LCP protocol. The the solution is capable of registration, call, hold
+and transfers. Implementation language for SIP gateway was chosen Java as it was
+one of the requirements. The application runs in three threads
+
+\begin{itemize}
+\item \textbf{SIP Network Layer} -- receiving and processing of SIP messages,
+as implementation of SIP stack was used jain SIP API's reference implementation
+by NIST as it is one of the most reliable and fastest implementation available
+for Java\cite{jainsip}. 
+\item \textbf{LCP Network Layer} -- receiving and processing of LCP messages,
+timers for LCP timed responses and interface for rest of the application.
+\item \textbf{Application Logic} -- translation between both networks and 
+communication protocols, data and devices representation.
+\end{itemize}
+
+For management connected devices the SIP gateway offers command line interface
+and remote interface protocol, which is described in \ref{management-tool}. Both
+have same set of commands to change device's and registrar's properties.
+
 
 
 \section{SRTP Stack}
@@ -1847,7 +1874,7 @@ To ensure proper implementation, each codec plugin includes header file
 \texttt{transcode\_plugin.h}.
 
 
-\section{Management Tool}
+\section{Management Tool}\ref{management-tool}
 As it is quite difficult to monitor processing and reliability of VoIP sessions
 the part of implementation includes management tool for basic management of 
 telephone devices in the network and visualization of ongoing sessions and 
