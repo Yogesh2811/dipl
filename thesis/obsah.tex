@@ -1973,9 +1973,25 @@ softgate properties and used software products for compilation of SRTP stack.
  
 The commercial gateway with optimized hardware and software can hold around 120 
 concurrent calls \cite{hp4k}, therefore, the tests did not aim for much higher
-numbers and the analysis of the results focus around the known maximal number. 
+numbers and the analysis of the results focus around the known maximal number.
 
-\section{Packet Encryption}
+The testing environment differed from the type of executed test. For the
+encryption comparison in \ref{enc_comp} was used only standard softgate hadware 
+and implementation of simple benchmark calling the packet encryption, the 
+results were averaged and are presented in table \ref{aes-comparison}.
+
+For the measurement of round-trip time delay in \ref{rtt_test}, the emulation of
+actual LCP phones was modified and used to measure the delay of each particular
+packet. The emulations ran on different machine.
+
+And finally the real life test was executed in Siemens laboratories in Brno.
+The testing scheme consisted of one real SIP telephone, one prototype of LCP 
+phone, SIP gateway and HighPath4000 SIP registrar. Effort of this test wasn't
+any time or quality measurements, but determination of intergation capabilities.
+The last test was successfull.
+   
+
+\section{Packet Encryption}\label{enc_comp}
 The most accurate results can be reached by measuring directly in the code for
 packet encryption on the gateway. Also this aproach offers the easiest way
 for comparison with well-known implementations to increase creadibility of 
@@ -2023,7 +2039,7 @@ implementation, therefore, conversion between structures and data types used
 might hindered the performance. 
  
 
-\section{Round-trip Time Delay}
+\section{Round-trip Time Delay}\label{rtt_test}
 The total delay is combination of many factors and even though information
 about measured time of packet encryption on the gateway is exact, it doesn't
 provide the most important information about how affected the session is overall
