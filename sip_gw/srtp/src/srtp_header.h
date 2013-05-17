@@ -1,4 +1,7 @@
 /** @file */
+/**
+ * \brief Defines structure for SRTP packet header 
+ */ 
 #ifndef SRTP_HEADER_H
 #define SRTP_HEADER_H
 
@@ -7,11 +10,9 @@
 typedef unsigned char BYTE;
 typedef const BYTE CBYTE;
 
-/**
- * /brief Header for SRTP packet 
- */ 
+/** \brief Header and helper functions for SRTP packet */ 
 namespace SRTP{
-    //little endian
+    /** \brief SRTP packet header */
     struct header {
         BYTE cc : 4;    ///< number of contributors
         BYTE x  : 1;    ///< extension

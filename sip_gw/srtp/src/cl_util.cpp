@@ -5,12 +5,11 @@
 
 #include <math.h>
 
-#define POOL_SIZE 30
+#define POOL_SIZE 200
 //#define DEBUG
 
 
 using namespace std;
-
 
 // variables, settings & other stuff
 static cl_platform_id platform;
@@ -24,30 +23,21 @@ static cl_program program;
 static cl_kernel inv_dct_kernel;
 static cl_int error;
  
-// buffers for srtp
+/** \brief Buffers for SRTP packet in OpenCL device memory*/
 class cl_item{
     public:
-	cl_mem payload_src;
-	cl_mem payload_dst;
-	cl_mem iv_gpu;
-	cl_mem rk;
-	cl_mem t1;
-	cl_mem t2;
+        cl_mem payload_src; ///< Payload of incomming packet
+        cl_mem payload_dst; ///< Payload of outgoing packet
+        cl_mem iv_gpu;      ///< initial vector for AES
+        cl_mem rk;          ///< memory for round key
+        cl_mem t1;          ///< temporary memory
+        cl_mem t2;          ///< temporary memory
 };
 static Buffer_pool<cl_item> cl_buffer_pool(POOL_SIZE);
-/*static cl_mem payload_src[POOL_SIZE];
-static cl_mem payload_dst[POOL_SIZE];
-static cl_mem iv_gpu[POOL_SIZE];
-static cl_mem rk[POOL_SIZE];
-static cl_mem t1[POOL_SIZE];
-static cl_mem t2[POOL_SIZE];*/
  
 // kernels
 static cl_kernel encode_kernel;
 static cl_kernel decode_kernel;
-
-
-//std::queue<int> free_buffers;
 
 //max number of local work items
 size_t GWS[3] = {16};
@@ -144,7 +134,7 @@ int GPU::initOpenCL(){
     error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "srtp_decode");
     //error = loadKernelFromFile("../src/srtp.cl", &decode_kernel, "test");
     checkClError(error, "loadKernelFromFile srtp_decode");
-    /*error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
+    error = loadKernelFromFile("../src/srtp.cl", &encode_kernel, "srtp_encode");
     checkClError(error, "loadKernelFromFile srtp_encode");*/
   
 
@@ -198,7 +188,7 @@ cl_int loadKernelFromFile(const char* fileName, cl_kernel* kernel, char* kernel_
 
 
 void GPU::srtp_decode_gpu(BYTE* src, BYTE* dst, BYTE* key, BYTE* iv, int length){ 
-    // Alloc buffers with specified size & copy data
+    // copy data
     cl_int err;
 
     size_t packet_size = sizeof(cl_uchar)*length;
@@ -475,7 +465,6 @@ void CL_CALLBACK contextCallback(const char *err_info,
  */
 int GPU::cleanup()
 {
-
     //status = clReleaseKernel(dct_kernel);
     //checkClError(status, "clReleaseKernel dct_kernel.");
 
