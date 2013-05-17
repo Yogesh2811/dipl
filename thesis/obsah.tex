@@ -1,6 +1,8 @@
 %=========================================================================
 % (c) Michal Bidlo, Bohuslav K�ena, 2008
 
+%TODO idea -- memory bandwidth = bottleneck in performance
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction} 
 One of the essential metrics for measuring VoIP gateway's performance is the
@@ -798,12 +800,12 @@ and GPU, part of host memory. It is slower than global memory.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Design}\label{chapter:design}%\cite{apu:crypto}
 The aim of the implementation is to determine whether the parallel processing
-of SRTP could increase the limitations on modern VoIP softgates. The development
+of SRTP could improve the limitations on modern VoIP softgates. The development
 of sophisticated softgate requires elaborate engineering and implementation
 of various communication protocols that would overshadow the effort in parallel
-processing. Therefore only narrow selection of well know communication protocols
-has been implemented. For VoIP telephony, registration and maintenance of users
-serves \textit{SIP} protocol, for the media transmission description
+processing. Therefore, only narrow selection of well know communication 
+protocols has been implemented. For VoIP telephony, registration and maintenance 
+of users serves \textit{SIP} protocol, for the media transmission description
 and session description \textit{SDP} protocol, and for secure media transport 
 \textit{SRTP} with \textit{ZRTP}. There is also implementation of \textit{LCP} 
 stack\footnote{ Light-weight Control Protocol -- communication protocol for
@@ -816,8 +818,8 @@ requires. There are plenty of already well tested design patterns from
 which the implementation could be based on and as the field of VoIP
 communication has been known for decent amount of time, there are currently
 couple of advised design patterns, from which the particular implementation for 
-this thesis stands on four -- mediator pattern, singleton pattern, factory 
-method pattern \cite{design-patterns} and protocol stack pattern 
+this thesis stands on three -- mediator pattern, singleton 
+pattern\cite{design-patterns} and protocol stack pattern 
 \cite{protocol-stack}. None of these design patterns could be thought as 
 contribution of the thesis as they all belong to common public knowledge and 
 their examination was not the main topic of the  research. However, their 
@@ -825,10 +827,10 @@ explanation is provided in order to make the rest of the chapter more
 comprehensible.
 
 \subsection{Mediator Pattern}
-In object oriented design the common problem be the large number of classes and
-their mutual interaction. One of the possible solutions for the latter can be
-behavioral pattern called mediator, which is named after the way it alters the
-running behavior. The pattern consists of following participants:
+In object oriented design the common problem may be the large number of classes 
+and their mutual interaction. One of the possible solutions for the latter can 
+be behavioral pattern called mediator, which is named after the way it alters
+the running behavior. The pattern consists of following participants:
 
 \begin{itemize}
 \item \textbf{Mediator} -- defines an interface for communicating with colleague 
@@ -843,8 +845,10 @@ with another colleague
 The mediator object communicates with multiple colleague object through defined
 interface, the interaction between colleague objects is strictly limited.
 One of the issues of such design is that the data flow might be bottlenecked by
-the only option of mutual communication is realised via single object if there
-is a need for critical section and their exclusion.
+the only option of mutual communication is realised via single object. If there
+is a need for critical section and their exclusion some of the colleagues may
+not get the chance as often as they would need slowing down the total 
+responsiveness.
 
 \subsection{Singleton Pattern}
 During creation of the application architecture certain class may be required
@@ -1055,9 +1059,9 @@ codecs, their sampling periods and payload size are mentioned in table
 \begin{tabular}{|l|ccc|}\hline%
   Codec and Bit Rate & Payload Size & Sampling Period & Packets Per Second\\\hline
   G.711 -- 64 Kbps   & 160 bytes    & 20 ms           & 50 \\
+  G.722 -- 64 Kbps   & 160 bytes    & 20 ms           & 50 \\
   G.729 -- 8 Kbps    & 20 bytes     & 20 ms           & 50 \\
   G.726 -- 32 Kbps   & 80 bytes     & 20 ms           & 50 \\
-  G.726 -- 24 Kbps   & 60 bytes     & 20 ms           & 50 \\
   G.728 -- 16 Kbps   & 60 bytes     & 30 ms           & 33 \\
  \hline
 \end{tabular}
@@ -1989,7 +1993,9 @@ attributes:
 
 
 The tests were executed on the machine running 32-bit OpenSUSE 12.2 with similar
-hardware as HiPath4000 softgate is equiped. The following list summarizes the
+hardware as HiPath4000 softgate is equiped. During the tests, only SIP gateway
+with SRTP stack were running on the separate machine from the virtualized
+telephone clients. The following list summarizes the
 softgate properties and used software products for compilation of SRTP stack.
 \begin{itemize}
 \item processor intel i5 2500k with HD3000 graphics chip
@@ -2009,7 +2015,9 @@ results were averaged and are presented in table \ref{aes-comparison}.
 
 For the measurement of round-trip time delay in \ref{rtt_test}, the emulation of
 actual LCP phones was modified and used to measure the delay of each particular
-packet. The emulations ran on different machine.
+packet. As previously mentioned, due to computational demands of virtualized 
+clients, the softgate was devoted to the SIP gateway and SRTP stack only and 
+clients were emulated on different computer. 
 
 And finally the real life test was executed in Siemens laboratories in Brno.
 The testing scheme consisted of one real SIP telephone, one prototype of LCP 
@@ -2033,7 +2041,11 @@ implementation currently used in many Siemens devices\cite{m5t}.},
 EfAesLib\footnote{ EfAesLib is a highly optimized Advanced Encryption Standard 
 library\cite{aes-lib}.} and OpenSSL\footnote{ OpenSSL is open-source 
 implementation of SSL and TLS protocols including cryptographic 
-functions\cite{openssl}.}.
+functions\cite{openssl}.}. The values in table \ref{aes-comparison} were 
+obtained through simple benchmark passing the array of bytes representing
+network packet payload for encryption/decryption and averaged through multiple
+measurements.
+
 \begin{table}[H]
 \begin{center}
 \begin{tabular}{|l|ccccc|}\hline%
@@ -2093,10 +2105,9 @@ Predictably the average delay of the packet increases with the amount of
 concurrent calls in figure \ref{serial-res} for serial implementation. The time
 for 150 concurrent calls was not included due its excessive values which would
 make readability of the graph more difficult. 
-
 Even though the increase of delay seems to be linear, higher number of 
 concurrent calls shows that the increase is exponential, which can be visible
-on the figure \ref{pt-res} for persistent thread implementation.
+on the figure \ref{pt-res} for persistent thread implementation. 
 
 \begin{figure}[H]
 \centering
@@ -2138,27 +2149,55 @@ around 27~ms.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Conclusion}\label{chapter:conclusion}
+%TODO split to two - 1. contribution and 2. further suggestions
 There are lot of possibilities for optimization of SRTP processing. Selected
 approach focuses on methods of parallelization of encryption and decryption
-processes of default AES cipher, which offers large potential thanks to recent
-development in the field of parallel computational units.
+processes of default 128-bit AES cipher in counter mode, which offers large 
+potential thanks to recent development in the field of parallel computational 
+units.
+
+Since the current development of processing units begins to be limited by
+physical atributes of used materials, the focus drifts more on the design
+of such units. Instruction and thread level parallelism brings new possibilities 
+of improvement showing that software design should take parallel paradigm under 
+consideration.  
 
 Proposed architectures and designs are currently far from being complete. The 
-most effort was invested in correct analysis and understanding of basic 
-principles of further implemented algorithms and elementary knowledge of 
+most effort was invested in correct analysis and understanding of  
+principles of further implemented algorithms and knowledge of 
 parallel programming paradigm focused on usage of OpenCL framework for
 general-purpose computations on graphical processing unit. Modern GPU 
 concentrate large amount of computational power, which could be to a certain
 extent utilized, if the algorithm is correctly mapped for parallel execution.
 That brings unusual complications in design whose must be carefully considered.
 
-Another important milestone is definition of integration of RTP stack with SRTP 
-processing into implemented SIP Gateway and their mutual interaction. The SRTP 
-processing is only a fraction of overall load on the gateway and if measured 
-separately while producing exact experimental results may not be equal to the 
-actual results on deployed machine experiencing real traffic. 
+\subsubsection*{Contribution}
+After understanding the limitations in common kernel design and kernel 
+execution for many separate packets, such as lack of resources, there was effort
+for examination of alternative kernel design named persisten thread. Trading off
+portion of parallelization for higher level of control over kernel execution
+and limiting OpenCL computational overhead ratio proven itself as valid aproach
+especially for SRTP packets with larger payload. Processing time for single
+G.711 packet can be reduced to half compared with serial implementation. 
+Measuring round-trip time during multiple sessions the improvement was
+successfull to the greater degree lowering the delay to one third for maximal
+number of concurrent channels which is set to the gateway as 120.
 
-For the further development number of issues must be taken for notice. For 
+At first, comparison of implementated algorithms efectivity was measured on
+a simple designed benchmark, where experimentally gained results endorsed the
+theoretical ideas supporting the development. Even though these results produced
+exact comparison, it was necessary to produce measurements on deployed machine 
+experiencing real traffic to confirm the design thoughts.
+  
+As the processing and routing of multimedia sessions represent only fraction of 
+overall workload, for gateways that are required to encode a high number of 
+channels, the OpenCL implementation of media server can be used as 
+self-contained units and still save processor load for another tasks.
+
+\subsubsection*{Next Steps}
+Another important milestone is definition of integration of RTP stack with SRTP 
+processing into implemented SIP gateway and their mutual interaction. For the further 
+development number of issues must be taken into notice. For 
 instance the delay generated by the processing of separate SRTP packets should 
 be reliably masked and interpolated across the SRTP stream to reduce possible 
 jitter. On the other hand stands the actual delay of incoming packet, since
@@ -2166,8 +2205,11 @@ after certain absolute value the conversation quality becomes unbearable.
 
 Nevertheless, partial value of this thesis lies in the understanding of current
 technologies for future potential direction of development and exploration of
-new options in the field communication infrastructure.
-
-
+new options in the field communication infrastructure. In particular, closely
+related topic to real-time multimedia sessions is transcoding. Unification 
+of both problems and finding solution in utilizing alternative compute units
+to CPU may improve overall responsiveness of the gateway and ensure smaller
+variability in service quality without depending on the current load the gateway
+is experiencing.
 
 %=========================================================================
