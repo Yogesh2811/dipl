@@ -807,7 +807,7 @@ processing. Therefore, only narrow selection of well know communication
 protocols has been implemented. For VoIP telephony, registration and maintenance 
 of users serves \textit{SIP} protocol, for the media transmission description
 and session description \textit{SDP} protocol, and for secure media transport 
-\textit{SRTP} with \textit{ZRTP}. There is also implementation of \textit{LCP} 
+\textit{SRTP}. There is also implementation of \textit{LCP} 
 stack\footnote{ Light-weight Control Protocol -- communication protocol for
 Siemens prototype VoIP phone.}.
 
@@ -1037,13 +1037,13 @@ the gateway providing only essential and minimal interface with callback
 features to simplify and unify the integration process.
 \end{itemize}
 
-An advanced techniques like \textbf{jitter buffer} may improve overall quality
+An advanced techniques like jitter buffer may improve overall quality
 of VoIP communication, however, each end device capable of such communication must
 implement these techniques as well, therefore, it may render itself redundant 
 and generating minimal, but still additional latency.
 
 \subsection{SRTP Processing}
-Advantage of usage AES in CM is that it allows out-of-order processing. Because
+Advantage of usage AES in CTR mode is that it allows out-of-order processing. Because
 majority of RTP implementations are build on UDP transport layer, which is 
 simple model with minimal protocol mechanisms, neither order nor delivery of the
 packets are guaranteed in exchange for smaller average delay and smaller 
@@ -1084,8 +1084,6 @@ could be to map multiple states for the parallel execution of entire packet,
 which for the particular codec would require significantly more computational 
 units. 
 
-\vspace{1em}
-
 \begin{figure}[h!]
 \centering
 \includegraphics[width=14cm]{fig/paral_scheme.pdf}
@@ -1117,7 +1115,7 @@ following purposes:
 
 \begin{itemize}
 \item \textbf{Network Layer} -- enables the communication with external devices
-through SRTP protocol, transfere of the multimedia data packets between endpoints
+through SRTP protocol, transfer of the multimedia data packets between endpoints
 and implements buffer pool for packet data.  
 \item \textbf{Packet Processing Layer} -- without unneccessary data reallocation
 the proper structures are casted for easier readability and extraction of important
@@ -1431,55 +1429,52 @@ is implemented as template class offering both the OpenCL implementation
 use its own pool for memory objects on the host side and network interface
 use its own pool for incomming and outgoing packets and their structures.
 
-\begin{figure}[H]
-\begin{lstlisting}
-class RTP_item {
-    public:
-        RTP_item();
-        ~RTP_item();
-        // packet data buffers
-        BYTE src[@\color{brown}{PACKET\_SIZE@];
-        BYTE *payload_src;
-        BYTE dst[@\color{brown}{PACKET\_SIZE}@];
-        BYTE *payload_dst;
-        BYTE temp[@\color{brown}{PACKET\_SIZE}@];
-        // IPv6 BSD socket structures
-        struct sockaddr_in6 src_addr;
-        struct iovec iov[@\color{red}{1}@];
-        struct msghdr msg;
-};
-\end{lstlisting}
-\end{figure}
-
-The buffer pool item for network packets includes the buffers for incomming and 
+Class \texttt{RTP\_item} implements items for buffer pool storing data captured
+from network and their processed variant.It includes the buffers for incomming and 
 outgoing packets and the pointers to payload to avoid perpetual header removal.
 Network interface uses GNU C standard implementation of BSD sockets, therefore,
 this item includes structures for the sockets as well to keep the information
-persistent through packet processing.
+persistent through packet processing. The item consists of following
+arrays and structures:
+\begin {itemize}
+\item \textbf{Source data buffer} -- array of bytes allocated to maximal allowed
+SRTP packet length, later mentioned only as \texttt{src}.
+\item \textbf{Destination data buffer} -- array of bytes allocated to same
+length as \texttt{src}, later only \texttt{dst}.
+\item \textbf{Payload data} -- pointers to \texttt{src} data buffer after
+processing SRTP header in incomming packet and another pointer to \texttt{dst}
+as well right after SRTP header.
+\item \textbf{Temporary buffer} -- during encryption implementation and
+codec translation, some payloads might use temporary buffers. To prevent 
+costly allocations during sessions, auxilliary buffers are statically allocated
+at the compilation time.
+\item \textbf{Structures for sockets} -- function \texttt{recvmsg()} expects
+specific structures present for capturing packets, \texttt{sockaddr\_in6} for
+representation of IPv6 address, \texttt{iovec} as header to gather I/O and 
+\texttt{msghdr} as structure encapsulating inner logic and minimizing the number
+of directly supplied parameters to \texttt{recvmst()}.
+\end{itemize}
 
-\begin{figure}[H]
-\begin{lstlisting}
-class cl_item{
-    public:
-        cl_mem payload_src; //buffer for payload
-        cl_mem payload_dst;
-        cl_mem iv_gpu;      //buffer for initial vector
-        cl_mem rk;          //round key
-        cl_mem t1;          //auxiliary buffers
-        cl_mem t2;
-};
-\end{lstlisting}
-\end{figure}
-
-OpenCL requires specific memory objects that can be loaded to the device memory.
-Buffer pool item for parallel implementation requires only those memory objects.
-Because single network packet needs multiple callings of 
-\texttt{clEnqueueWriteBuffer()}during the data transfers to the OpenCL device 
+OpenCL requires specific memory objects that can be loaded to the device memory
+called \texttt{cl\_mem}. Buffer pool item for parallel implementation represented
+in class \texttt{cl\_item} requires only those memory objects.Because single 
+network packet needs multiple callings of 
+\texttt{clEnqueueWriteBuffer()} during the data transfers to the OpenCL device 
 memory, we can select the option of nonblocking write, which is faster than 
 blocking write. The calling of the kernel can be immediate, but events returned 
 by \texttt{clEnqueueWriteBuffer} must be queried in order to release the 
-\texttt{cl\_item} in the buffer pool. 
-
+\texttt{cl\_item} in the buffer pool.
+Partially both buffer items share the data structures but they serve different
+function and their redundancy is necessary. Common memory objects are packet
+payloads, because SRTP headers are not passed to parallel processing, and 
+temporary buffers.Extra structures, that are precomputed before parallel 
+execution are:
+\begin{itemize}
+\item \textbf{Initial vector} -- buffer for CTR mode AES value of IV, which is
+calculated from SRTP header for each packet.
+\item \textbf{Round key} -- parallelization of round key calculation doesn't 
+propose any actual execution gain and therefore is precomputed.
+\end{itemize} 
 
 \subsection{AES}
 For the SRTP stack the crucial is implementation of Advanced Encryption Standard.
@@ -1512,28 +1507,19 @@ void AES::expand_key(BYTE *mk, BYTE rk[@\color{brown}{ROUND\_KEY\_SIZE}@][@\colo
 \end{figure}
 
 Key expansion algorithm is different for the first round key and the rest of
-round keys. Both methods are described in this chapter. 
-\begin{figure}[H]
-\begin{lstlisting}
-void get_next_rk(BYTE *previous_key, BYTE *rk, BYTE rcon){
-    rotate_column(previous_key, rk, @\color{red}{0}@, @\color{red}{3}@, @\color{red}{1}@);
-    for(int r = 0; r<@\color{brown}{ROWS}@; r++){
-       rk[r*@\color{brown}{COLUMNS}@] = sbox[rk[r*@\color{brown}{COLUMNS}@]] ^ previous_key[r*@\color{brown}{COLUMNS}@]; 
-    }
-    rk[@\color{red}{0}@] = rk[@\color{red}{0}@] ^ rcon;
-    for(int c = @\color{red}{1}@; c<@\color{brown}{COLUMNS}@; c++){
-        for(int r = @\color{red}{0}@; r<@\color{brown}{ROWS}@; r++){
-            rk[r*@\color{brown}{COLUMNS}@+c] = previous_key[r*@\color{brown}{COLUMNS}@+c] ^ rk[r*@\color{brown}{COLUMNS}@+c-@\color{red}{1}@];
-        }
-    }
-}
-\end{lstlisting}
-\end{figure}
+round keys.
 The first round key is copy of first 128 bits from the master key. 
 Other round keys are derived from the previous round key. The algorithm is 
-devided into two steps, first calculates the first column of the key state
-and then are calculated columns two, three and four always derived from
-the previous column. Because every array in the SRTP stack is considered
+devided into two steps.
+
+\begin{enumerate}
+\item calculates the first column of the key state XORing values from last 
+column of previous round key applicated on substitution box
+\item and then are calculated columns two, three and four always derived from
+the previous column of previous round key.
+\end{enumerate} 
+
+Because every array in the SRTP stack is considered
 one dimensional exactly as the incomming packet, the index to the state matrix
 memory must be computed exclusively.
 
@@ -1580,63 +1566,14 @@ pointer to the buffer with outgoing packet payload after encryption, arguments
 \texttt{key} and \texttt{iv} represent encryption properties and finally the
 last argument \texttt{len} has length of the packet payload.
 
-\begin{figure}[H]
-\begin{lstlisting}
-void encode_block(BYTE *counter, BYTE *dst, BYTE **round_key){
-    BYTE temp[@\color{brown}{BLOCK\_SIZE}@];
-    xor_key(counter, temp, round_key[@\color{red}{0}@]);
-    for(int i = @\color{red}{1}@; i < @\color{brown}{ROUNDS}@; i++){
-        sub_bytes(temp, dst);
-        shift_rows(dst, temp);
-        mix_columns(temp, dst);
-        xor_key(dst, temp, round_key[i]);
-    }
-    sub_bytes(temp,dst);
-    shift_rows(dst,temp);
-    xor_key(temp,dst,round_key[@\color{brown}{ROUNDS}@]);
-}
-\end{lstlisting}
-\end{figure}
+Implementation of the block encode \texttt{encode\_block()} follows the algorithm 
+described in chapter \ref{chapter:srtp} in algorithm \ref{encr}. Since the CTR 
+mode encrypts the counter, packet payload doesn't have to be presented to the
+encryption function.  
 
-Implementation of the block encode follows the algorithm described in chapter
-\ref{chapter:srtp} in algorithm \ref{encr}. Since the CTR mode encrypts the
-counter, packet payload doesn't have to be present. 
-
-\begin{figure}[H]
-\begin{lstlisting}
-//precomputed AES tables
-static const BYTE g2[] = {@\color{red}{0x00}@, ... };
-static const BYTE g3[] = {@\color{red}{0x00}@, ... };
-//optimized multiplication in Galois field
-void mix_columns(BYTE *src, BYTE *dst){
-    BYTE a0, a1, a2, a3;
-    for(int col = @\color{red}{0}@; col < @\color{brown}{COLUMNS}@; col++){ 
-        a0 = src[col]; 
-        a1 = src[col+@\color{red}{4}@];
-        a2 = src[col+@\color{red}{8}@];
-        a3 = src[col+@\color{red}{12}@];
-        //using precomputed tables
-        dst[col]    = g2[a0] ^ g3[a1] ^ a2     ^ a3;
-        dst[col+@\color{red}{4}@] @\hspace{0.9pt}@ = a0     ^ g2[a1] ^ g3[a2] ^ a3;
-        dst[col+@\color{red}{8}@] @\hspace{0.9pt}@ = a0     ^ a1     ^ g2[a2] ^ g3[a3];
-        dst[col+@\color{red}{12}@]@\hspace{1.9pt}@ = g3[a0] ^ a1     ^ a2     ^ g2[a3];
-    }
-}
-\end{lstlisting}
-\end{figure}
 The multiplication in Galois field by matrix defined in chapter 
 \ref{chapter:srtp} is computationally expensive, therefore, the implementation
 consits of precomputed values stored in arrays and then the mixture of columns.
-
-\begin{figure}[H]
-\begin{lstlisting}
-void shift_rows(BYTE *src, BYTE *dst){   
-    for(int row = @\color{red}{0}@; row < @\color{brown}{ROWS}@; row++){
-        rotate_row(src+(row*@\color{brown}{COLUMNS}@), dst+(row*@\color{brown}{COLUMNS}@), row);
-    }
-}
-\end{lstlisting}
-\end{figure}
 
 Both \texttt{xor\_key()} and \texttt{shift\_rows()} are simple and selfexplanatory
 functions. The \texttt{shift\_rows} uses helper function \texttt{rotate\_row()}.
@@ -1644,53 +1581,14 @@ The \texttt{xor\_key()} takes three arguments, iterates over AES state in the
 first argument \texttt{src} and applies XOR function on corresponding byte from 
 given key in argument \texttt{key}. Result is written to the \texttt{dst} array. 
 
-\begin{figure}[H]
-\begin{lstlisting}
-static const BYTE sbox[] = {@\color{red}{0x63}@, ... };
-void sub_bytes(BYTE *src, BYTE *dst){
-    for(int i = @\color{red}{0}@; i < @\color{brown}{BLOCK\_SIZE}@; i++){
-        dst[i] = sbox[src[i]];
-    }
-}
-\end{lstlisting}
-\end{figure}                                                                    
-
 Following are two helper functions for AES algorithm that are neither described 
 in the theoretical part of the thesis nor the AES definition document. Their
 implementation has single purpose -- higher code readability.
-
-\begin{figure}[H]
-\begin{lstlisting}
-void rotate_row(BYTE *src, BYTE *dst, int n){
-    int max = @\color{brown}{COLUMNS}@-n;
-    for(int i = @\color{red}{0}@; i < max; i++){
-        dst[i] = src[i+n];    
-    }
-    for(int i = max; i < @\color{brown}{COLUMNS}@; i++){
-        dst[i] = src[i-max];
-    }
-}
-\end{lstlisting}
-\end{figure}
 
 The values in a row specified by arguments \texttt{src} and \texttt{dst} as 
 pointers to the particular row in both blocks are rotated by the value 
 \texttt{n}. Code is split into two cycles when both together cycle through the 
 particular row only once. 
-
-\begin{figure}[H]
-\begin{lstlisting}
-void rotate_column(BYTE *src, BYTE *dst, int col1, int col2, int n){
-    int max = @\color{brown}{ROWS}@-n;
-    for(int i = @\color{red}{0}@; i < max; i++){
-        dst_state[i*@\color{brown}{COLUMNS}@ + col1] = src_state[(i+n)*@\color{brown}{COLUMNS}@ + col2];
-    }
-    for(int i = max; i < @\color{brown}{ROWS}@; i++){
-        dst_state[i*@\color{brown}{COLUMNS}@ + col1] = src_state[(i-max)*@\color{brown}{COLUMNS}@ + col2];
-    }
-}
-\end{lstlisting}
-\end{figure}
 
 Because AES block is stored in the linear memory by rows, when rotating columns
 it won't be sufficient to pass the pointer to specific column. Therefore,
@@ -1709,28 +1607,14 @@ read from device memory on a cache miss. For the persisten thread reading from
 the constant cache is as fast as reading from a register as long as all threads 
 read the same address.
 
-
-\begin{figure}[H]
-\begin{lstlisting}
-//AES block encryption
-void encode_block(BYTE *counter, BYTE *dst, BYTE **round_key){
-    BYTE temp[@\color{brown}{BLOCK\_SIZE}@];
-    xor_key(counter, temp, round_key[@\color{red}{0}@]);
-    for(int i = @\color{red}{1}@; i < @\color{brown}{ROUNDS}@; i++){
-        sub_bytes(temp, dst);
-        shift_rows(dst, temp);
-        mix_columns(temp, dst);
-        xor_key(dst, temp, round_key[i]);
-    }
-    sub_bytes(temp,dst);
-    shift_rows(dst,temp);
-    xor_key(temp,dst,round_key[@\color{brown}{ROUNDS}@]);
-}
-\end{lstlisting}
-\end{figure}
-
-The round key schedule was moved from the kernel to host code. Other lines are
-similar to the serial code.
+The round key schedule was moved from the kernel to host code. Otherwise
+the code for packet encryption for kernel in OpenCL language is quite similar 
+to serial implementation in C++. Firstly the work-item must find out its
+global ID and then continue the execution only, if its global ID is smaller
+than number of bytes in AES block. Each work-item includes single loop iterating
+through its indexed position in each AES block. In addition, only first work-item
+takes care of updating counter the counter which requires a barrier for 
+local synchronization to avoid encoding part of payload with different counter.
 
 \begin{figure}[H]
 \begin{lstlisting}
@@ -1757,61 +1641,21 @@ void encode_block(__local BYTE *counter, __local BYTE *dst,
 \end{lstlisting}
 \end{figure}
 
-Encoding the block requires local synchronization which is achieved by
+Encoding the block requires local synchronization which is achieved again by 
 \texttt{barrier()} function. Each step of the algorithm may start computations
 after the previous step has been finished for all work-items.
-
-Because both global and local ID of the work-item is cached, calling function 
+Because both global and local ID of the work-item are cached, calling function 
 \texttt{get\_global\_id()} doesn't bring any slack-off, therefore, it is not 
 necessary to pass the work-item ID to the functions of AES implementation.
 
-\begin{figure}[H]
-\begin{lstlisting}
-void mix_columns(__local BYTE *src, __local BYTE *dst){
-    @\color{gray}{...}@
-    if(row == @\color{red}{0}@){
-        dst[i] = g2[a0] ^ g3[a1] ^ a2     ^ a3;
-    } else if(row == @\color{red}{1}@) {
-        dst[i] = a0     ^ g2[a1] ^ g3[a2] ^ a3;
-    } else if(row == @\color{red}{2}@) {
-        dst[i] = a0     ^ a1     ^ g2[a2] ^ g3[a3];
-    } else if(row == @\color{red}{3}@) {
-        dst[i] = g3[a0] ^ a1     ^ a2     ^ g2[a3];
-    }
-}
-\end{lstlisting}
-\end{figure}
 
-The work-item during kernel execution must identify itself and then find out to 
-which branch of code it belongs.
-
-\begin{figure}[H]
-\begin{lstlisting}
-void shift_rows(__local BYTE *src, __local BYTE *dst){   
-    @\color{gray}{...}@
-    if(row == @\color{red}{0}@){
-        dst[i] = src[i];
-    } else if(row == @\color{red}{1}@) {
-        if(col == @\color{red}{3}@)
-            dst[i] = src[i-@\color{red}{3}@];
-        else
-            dst[i] = src[i+@\color{red}{1}@];
-    } else if(row == @\color{red}{2}@) {
-        if(col <= @\color{red}{1}@)
-            dst[i] = src[i+@\color{red}{2}@];
-        else
-            dst[i] = src[i-@\color{red}{2}@];
-    } else if(row == @\color{red}{3}@) {
-        dst[i] = src[i-@\color{red}{1}@];
-    }
-}
-\end{lstlisting}
-\end{figure}
-
-The kernel code requires work-item categorization again as the rows shifting 
-doesn't provide any means for generalization. This branching in mentioned device
+The kernel code for \texttt{mix\_column()} and \texttt{shift\_rows()} requires 
+work-item categorization, which means that during kernel execution it must 
+identify itself and then find out to which branch of code it belongs. 
+As the rows shifting and column mixture doesn't provide any means for 
+generalization. This branching in mentioned device
 code doesn't bring any considerable additional computations nor increase the
-overhead.
+overhead as it is only a simple switch-case implementation.
 
 \subsection{Transcoding}
 The plugin system was implemented with usage of the GNU C Library. All of the 
@@ -1878,7 +1722,7 @@ To ensure proper implementation, each codec plugin includes header file
 \texttt{transcode\_plugin.h}.
 
 
-\section{Management Tool}\ref{management-tool}
+\section{Management Tool}\label{management-tool}
 As it is quite difficult to monitor processing and reliability of VoIP sessions
 the part of implementation includes management tool for basic management of 
 telephone devices in the network and visualization of ongoing sessions and 
