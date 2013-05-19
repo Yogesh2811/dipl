@@ -15,7 +15,7 @@ of approaches in implementing the protocol stacks.
 The communication protocols for VoIP gateway can be divided into two groups. 
 Signalization, which consists mostly of textually represented protocols, where 
 the messages' occurrence is either periodical with quite small frequency, or 
-based on the users initiative which is a stochastical event depending on the 
+based on the users initiative which is a stochastic event depending on the 
 activity of the user. However, generally the recurrence of both is rather 
 similar. Comparably more resources during indirect simultaneous call sessions 
 consumes processing the second group of protocols, transport of multimedia 
@@ -163,10 +163,10 @@ called \textit{cryptographic context}. It must consist of the following:
 
 \begin{itemize}
 \item Rollover Counter -- 32-bit unsigned number, records how many times 
-has the RTP sequential number been reseted to zero passed the value 65~535.
+has the RTP sequential number been reset to zero passed the value 65~535.
 \item Highest Received SEQ -- 16-bit unsigned number
 \item Identifier of the Encryption Algorithm -- the cipher and its mode
-\item Replay List -- containing indices of recently received and 
+\item Replay List -- containing indexes of recently received and 
 authenticated SRTP packets
 \item MKI -- if the MKI is present in current session, the length
 of the MKI field in octets, actual value of currently used MKI
@@ -291,9 +291,9 @@ $b_i$ 0 or 1 and this notation $b_7x^7 + b_6x^6 + b_5x^5 + b_4x^4 + b_3x^3
 \end{itemize}
 
 \subsubsection*{Addition}
-Addition is defined as addition of coefficinets of both polynomials modulo
+Addition is defined as addition of coefficients of both polynomials modulo
 2. This operation has the same result as bitwise XOR and because 
-each value is its own inversion, addition and substraction are equal
+each value is its own inversion, addition and subtraction are equal
 operations.
 
 \subsubsection*{Multiplication}
@@ -648,7 +648,7 @@ overhead. The characteristics of such application are\cite{Owens:2008:GC}:
 \begin{itemize}
 \item Utilization of data-parallelism -- many non-graphical problems might be
 separated into fractional procedures and computed separately, such as matrix 
-calculations individially for each cell.
+calculations individually for each cell.
 \item Large portion of computation -- GPU processors are optimized for 
 computations over handling conditional evaluations.
 \item Throughput over Latency -- computations on GPU are designed for large
@@ -688,7 +688,7 @@ Project Denver\cite{nvidia:apu}.
 
 \section{OpenCL}
 Development for parallel computation brought need for infrastructure. OpenCL
-is an industry standard framework for programming heterogenous systems 
+is an industry standard framework for programming heterogeneous systems 
 composed of a combination of CPUs, GPUs, DSP and other processing 
 units\cite{opencl}. With OpenCL it is possible to write a software that will
 run on wide variety of platforms from cell phones or computers to massive
@@ -696,7 +696,7 @@ supercomputers.
 
 The \textit{OpenCL programming language} has syntax based
 on the language C with few additions and limitations arising from the design
-and architecture of heterogenous platforms. Among most important limitations
+and architecture of heterogeneous platforms. Among most important limitations
 it omits the use of recursion, function pointers and header files. On the 
 other hand, the language is extended to the use of parallelism with build 
 in types and synchronization. Also it defines many functions and four new
@@ -711,7 +711,7 @@ and are used for managing command queues, memory and program.
 \item Kernel -- function written in OpenCL programming language that 
 is executed on OpenCL device. 
 \item Work-item -- instance of executing kernel. 
-\item Work-group -- organisation of work-items. 
+\item Work-group -- organization of work-items. 
 \item Command-queue -- interaction between the host and OpenCL
 device through commands posted by the host and provides synchronization
 methods for the execution of the commands.
@@ -729,7 +729,7 @@ of work-item is possible through combination of its local ID inside a specific
 \textit{work-group} and the work-group global ID.
 
 \subsection{Platform Model}
-The OpenCL provides a high-level abstraction model representing any heterogenous
+The OpenCL provides a high-level abstraction model representing any heterogeneous
 platform. The \textit{host} is a bridge between parallel computations on one or
 more devices and interaction with external environment. \textit{Device} could be
 CPU, GPU, DSP or any other processing unit supporting OpenCL and consists
@@ -845,7 +845,7 @@ with another colleague
 The mediator object communicates with multiple colleague object through defined
 interface, the interaction between colleague objects is strictly limited.
 One of the issues of such design is that the data flow might be bottlenecked by
-the only option of mutual communication is realised via single object. If there
+the only option of mutual communication is realized via single object. If there
 is a need for critical section and their exclusion some of the colleagues may
 not get the chance as often as they would need slowing down the total 
 responsiveness.
@@ -854,7 +854,7 @@ responsiveness.
 During creation of the application architecture certain class may be required
 to provide global point of access to it while preserving only one instance.
 One approach could be to have global variable but that is not complete 
-fulfilment of the requests, because multiple instances could still be created. 
+fulfillment of the requests, because multiple instances could still be created. 
 Singleton design pattern offers a solution when the class itself is responsible 
 for the number of instances which ensures that nowhere in the code multiple 
 object of such class may be created. This doesn't affect the rest of the design, 
@@ -872,7 +872,7 @@ globally available from well known access point
 \subsection{Protocol Stack Pattern}
 There are two design patterns closely related to the protocol stack design 
 pattern which it uses as higher level of abstraction in explaining the 
-correspondign relations in design.
+corresponding relations in design.
 \begin{itemize}
 \item \textbf{Protocol Layer} -- provide a common interface for implementing
 different layers of communication protocol stack.
@@ -939,7 +939,7 @@ directly.
 
 The modules of SIP gateway are implemented using two different programming 
 languages which made the interaction little more complicated. Each of the modules
-serve specified purpose and interacts with remaining modules eihter directly
+serve specified purpose and interacts with remaining modules either directly
 or through the gateway core.
 \begin{itemize}
 \item \textbf{Gateway core} -- provides communication between each module and 
@@ -948,7 +948,7 @@ protocols SIP to LCP and vice versa, the management of RTP stack and
 devices representation.
 \item \textbf{SIP Stack} -- includes network interface for communication
 over SIP protocol with registrar, representing LCP telephones as SIP clients.
-Encapsulates part of the SIP protocol with automated answeres without putting
+Encapsulates part of the SIP protocol with automated answers without putting
 unnecessary load on the gateway core. Remaining communication is provided through 
 interface functions to either gateway core or directly to LCP stack.
 \item \textbf{LCP Stack} -- separate network interface for devices communicating
@@ -961,7 +961,7 @@ necessary bridging point.
 
 Measurement of utilization of computational resources during execution of 
 ciphering algorithm does provide correct and exact results, however in real 
-deployment the effectivity could be negatively affected by the other processes 
+deployment the effectiveness could be negatively affected by the other processes 
 running on the softgate. SIP Gateway is a collection of programs and utilities
 whose together implement a server for lightweight LCP phones and supplement a
 SIP functionality for each phone to be able to connect to an actual SIP 
@@ -1009,7 +1009,7 @@ instance of \texttt{Client} class, and universal interface for remote
 communication and administration shall be provided as well.
 
 \texttt{RTP Stack} is devoted increased amount of attention in design because it 
-covers the focus of this thesis. All of the stacks are interchangable and during 
+covers the focus of this thesis. All of the stacks are interchangeable and during 
 their design were used recommendations from protocol stack design pattern and 
 its related patterns.
 
@@ -1029,10 +1029,10 @@ be implemented as thread safe pool of buffers  with sufficient size and both,
 synchronization techniques and memory override protection.
 \item \textbf{transcoding module} -- due to various reasons, endpoints may not be
 able of negotiate the same media compressing codec. The SRTP stack should allow
-the transcoding and then encapsulate the process without unneccessary additional
+the transcoding and then encapsulate the process without unnecessary additional
 demands for the gateway.
 \item \textbf{integration interface} -- most of the procedures implemented in
-SRTP stack should be encapsulated to minimize overloading data transferres with
+SRTP stack should be encapsulated to minimize overloading data transfers with
 the gateway providing only essential and minimal interface with callback
 features to simplify and unify the integration process.
 \end{itemize}
@@ -1116,9 +1116,9 @@ following purposes:
 \item \textbf{Network Layer} -- enables the communication with external devices
 through SRTP protocol, transfer of the multimedia data packets between endpoints
 and implements buffer pool for packet data.  
-\item \textbf{Packet Processing Layer} -- without unneccessary data reallocation
+\item \textbf{Packet Processing Layer} -- without unnecessary data reallocation
 the proper structures are casted for easier readability and extraction of important
-data from the incomming packets. 
+data from the incoming packets. 
 \item \textbf{Payload Encoding} -- complete implementations of encryption and 
 decryption of the packet payload.
 \end{itemize}
@@ -1142,7 +1142,7 @@ the design of parallel encryption is done in similar fashion.
 
 The design prevents the executing implementations from creating any additional
 temporary buffers to decrease unnecessary allocations. These can be predicted in
-the startup of SRTP stack and already preallocated with maximal size a packet
+the start-up of SRTP stack and already preallocated with maximal size a packet
 can have. This approach consumes more memory, but improves memory management and
 saves execution time during critical sections. Also it is assumed that softgate
 gateway code runs on machine with enough memory and these buffers most certainly
@@ -1151,7 +1151,7 @@ shouldn't mean any excessive memory consumption.
 The buffer pools provided are used in both serial and parallel encryption,
 and to increase the level of algorithm categorization, their implementation is
 based on template classes. The pool guarantees to protect buffer from overwrite
-and data persistency.
+and data persistence.
 
 \subsubsection*{Massive Parallel Processing}
 Traditional parallel programming style relies heavily on SIMT\footnote{ SIMT -- 
@@ -1211,7 +1211,7 @@ for synchronization within work-group can be used to synchronize calculations
 through the entire execution at any given point which is used in 
 synchronization across AES blocks for update of \textit{round key}.
 \item \textbf{Computational overhead} -- the amount of computations in a 
-work-item for 128-bit AES is larger than initialization, startup and cleanup
+work-item for 128-bit AES is larger than initialization, start-up and cleanup
 of the kernel, but those factors are not completely insignificant. Limiting
 the number of consecutive executions decreases the ratio of OpenCL overhead and
 the algorithm performance in positive way.
@@ -1244,10 +1244,10 @@ SRTP stack uses plugin system for multimedia codec transcoding.
 
 The design of plugin system takes into consideration the lifetime of packet data 
 buffers and  for optimization purposes may defer the release of buffers on the 
-side of codec plugin. The core desing is simple and consists of two parts.
+side of codec plugin. The core design is simple and consists of two parts.
 
 \begin{itemize}
-\item \textbf{Plugin System Module} -- part of the gateway, on the startup 
+\item \textbf{Plugin System Module} -- part of the gateway, on the start-up 
 browses defined directory for any plugins and dynamically links them into the 
 application. The plugin system may offer the management of packet memory buffers
 on the side of codec plugin, but the system doesn't guarantee the consistency 
@@ -1278,7 +1278,7 @@ and separate codec plugins.}
 The application's specifications were variable through the life-cycle of the 
 entire development. SIP gateway's implementation started as a prototype for 
 translating LCP protocol and subset of SIP protocol enabling basic functionality 
-for  new lighweight prototype telephones. As the statement of requirements 
+for  new lightweight prototype telephones. As the statement of requirements 
 included reference Java application that combined LCP server and multiple SIP 
 clients,  the implementation languages differ from the SRTP stack which is the 
 core of this thesis.
@@ -1426,10 +1426,10 @@ template <class buffer_item> class Buffer_pool {
 To achieve higher degree of code reusability and categorization, buffer pool
 is implemented as template class offering both the OpenCL implementation
 use its own pool for memory objects on the host side and network interface
-use its own pool for incomming and outgoing packets and their structures.
+use its own pool for incoming and outgoing packets and their structures.
 
 Class \texttt{RTP\_item} implements items for buffer pool storing data captured
-from network and their processed variant.It includes the buffers for incomming and 
+from network and their processed variant.It includes the buffers for incoming and 
 outgoing packets and the pointers to payload to avoid perpetual header removal.
 Network interface uses GNU C standard implementation of BSD sockets, therefore,
 this item includes structures for the sockets as well to keep the information
@@ -1441,11 +1441,11 @@ SRTP packet length, later mentioned only as \texttt{src}.
 \item \textbf{Destination data buffer} -- array of bytes allocated to same
 length as \texttt{src}, later only \texttt{dst}.
 \item \textbf{Payload data} -- pointers to \texttt{src} data buffer after
-processing SRTP header in incomming packet and another pointer to \texttt{dst}
+processing SRTP header in incoming packet and another pointer to \texttt{dst}
 as well right after SRTP header.
 \item \textbf{Temporary buffer} -- during encryption implementation and
 codec translation, some payloads might use temporary buffers. To prevent 
-costly allocations during sessions, auxilliary buffers are statically allocated
+costly allocations during sessions, auxiliary buffers are statically allocated
 at the compilation time.
 \item \textbf{Structures for sockets} -- function \texttt{recvmsg()} expects
 specific structures present for capturing packets, \texttt{sockaddr\_in6} for
@@ -1459,7 +1459,7 @@ called \texttt{cl\_mem}. Buffer pool item for parallel implementation represente
 in class \texttt{cl\_item} requires only those memory objects.Because single 
 network packet needs multiple callings of 
 \texttt{clEnqueueWriteBuffer()} during the data transfers to the OpenCL device 
-memory, we can select the option of nonblocking write, which is faster than 
+memory, we can select the option of non-blocking write, which is faster than 
 blocking write. The calling of the kernel can be immediate, but events returned 
 by \texttt{clEnqueueWriteBuffer} must be queried in order to release the 
 \texttt{cl\_item} in the buffer pool.
@@ -1513,13 +1513,13 @@ devided into two steps.
 
 \begin{enumerate}
 \item calculates the first column of the key state XORing values from last 
-column of previous round key applicated on substitution box
+column of previous round key applied on substitution box
 \item and then are calculated columns two, three and four always derived from
 the previous column of previous round key.
 \end{enumerate} 
 
 Because every array in the SRTP stack is considered
-one dimensional exactly as the incomming packet, the index to the state matrix
+one dimensional exactly as the incoming packet, the index to the state matrix
 memory must be computed exclusively.
 
 \subsubsection*{Serial Encryption}
@@ -1574,7 +1574,7 @@ The multiplication in Galois field by matrix defined in chapter
 \ref{chapter:srtp} is computationally expensive, therefore, the implementation
 consits of precomputed values stored in arrays and then the mixture of columns.
 
-Both \texttt{xor\_key()} and \texttt{shift\_rows()} are simple and selfexplanatory
+Both \texttt{xor\_key()} and \texttt{shift\_rows()} are simple and self-explanatory
 functions. The \texttt{shift\_rows} uses helper function \texttt{rotate\_row()}.
 The \texttt{xor\_key()} takes three arguments, iterates over AES state in the
 first argument \texttt{src} and applies XOR function on corresponding byte from 
@@ -1597,12 +1597,12 @@ block and \texttt{col2} as index of column in \texttt{dst} block. The argument
  
 \subsubsection*{Parallel Encryption}
 Code for parallel encryption consists mostly of the kernel code in OpenCL 
-language executed in device. The code for host is large but programmed rutines are
+language executed in device. The code for host is large but programmed routines are
 common and doesn't display any efforts of improvement and own contribution.
 
 Again the AES tables are precomputed and stored in constant memory space which 
 is cached. As a result, a read from constant memory shouldn't cost more than one
-read from device memory on a cache miss. For the persisten thread reading from 
+read from device memory on a cache miss. For the persistent thread reading from 
 the constant cache is as fast as reading from a register as long as all threads 
 read the same address.
 
@@ -1695,7 +1695,7 @@ int transcode(BYTE *src, BYTE *dst, //packet buffers
 \end{lstlisting}
 \end{figure}
 
-The code sniplet above defines the structure for loaded codec plugins on the 
+The code snippet above defines the structure for loaded codec plugins on the 
 host application side and interface for plugin module and rest of the SRTP 
 stack. Transcoding is always executed through \texttt{transcode()} function and
 never directly, because the function handles the possibilities of plugins
@@ -1732,7 +1732,7 @@ solution.
 
 Model-view-controller design also allows to interchange any of the application
 modules without necessity of modifying the remaining modules. For the
-communication between SIP gateway was designed simple protocol transfered
+communication between SIP gateway was designed simple protocol transferred
 through WebSocket containing only two parts -- header and body.
 
 \begin{itemize}
@@ -1815,7 +1815,7 @@ information regarding especially the correct usage of SRTP on the gateway. Even
 though AES was designed to be fast algorithm, while executed on large amount of
 flowing data it can cause measurable overhead.
 
-For the purposes of this chapter there was designed loadtest with following
+For the purposes of this chapter there was designed load-test with following
 attributes:
 \begin{itemize}
 \item each test fulfilled these properties:
@@ -1836,7 +1836,7 @@ attributes:
 
 
 The tests were executed on the machine running 32-bit OpenSUSE 12.2 with similar
-hardware as HiPath4000 softgate is equiped. During the tests, only SIP gateway
+hardware as HiPath4000 softgate is equipped. During the tests, only SIP gateway
 with SRTP stack were running on the separate machine from the virtualized
 telephone clients. The following list summarizes the
 softgate properties and used software products for compilation of SRTP stack.
@@ -1865,18 +1865,18 @@ clients were emulated on different computer.
 And finally the real life test was executed in Siemens laboratories in Brno.
 The testing scheme consisted of one real SIP telephone, one prototype of LCP 
 phone, SIP gateway and HighPath4000 SIP registrar. Effort of this test wasn't
-any time or quality measurements, but determination of intergation capabilities.
-The last test was successfull.
+any time or quality measurements, but determination of integration capabilities.
+The last test was successful.
    
 
 \section{Packet Encryption}\label{enc_comp}
 The most accurate results can be reached by measuring directly in the code for
-packet encryption on the gateway. Also this aproach offers the easiest way
-for comparison with well-known implementations to increase creadibility of 
+packet encryption on the gateway. Also this approach offers the easiest way
+for comparison with well-known implementations to increase credibility of 
 the improvement of the reference implementations distributed with this thesis. 
 
 \subsection*{AES}
-For the comparison of effectivity of the AES implementation, in table 
+For the comparison of effectiveness of the AES implementation, in table 
 \ref{aes-comparison} are given time requirements for execution of multiple
 blocks encrypted by 128-bit AES with the implementation proposed in this thesis
 and reference implementations M5t\footnote{ M5t framework includes AES 
@@ -1929,7 +1929,7 @@ Graphs \ref{serial-res} and \ref{pt-res} include packet delay
 during concurrent calls. Every captured SRTP packet has been entered into
 results. Single column shows the distribution of delays during the particular
 number of concurrent calls where the thicker area of the column visualizes
-90\% of the packets. The remainding 10\% were considered as abnormal and thanks
+90\% of the packets. The remaining 10\% were considered as abnormal and thanks
 to satisfying the common limitations of real-time 
 communications\cite{perkins:rtp2003}, the exceeding 5\% can be neglected.
 
@@ -1996,7 +1996,7 @@ potential thanks to recent development in the field of parallel computational
 units.
 
 Since the current development of processing units begins to be limited by
-physical atributes of used materials, the focus drifts more on the design
+physical attributes of used materials, the focus drifts more on the design
 of such units. Instruction and thread level parallelism brings new possibilities 
 of improvement showing that software design should take parallel paradigm under 
 consideration. Not only in utilization of GPU for general purpose computations
@@ -2015,16 +2015,16 @@ That brings unusual complications in design whose must be carefully considered.
 \subsubsection*{Contribution}
 After understanding the limitations in common kernel design and kernel 
 execution for many separate packets, such as lack of resources, there was effort
-for examination of alternative kernel design named persisten thread. Trading off
+for examination of alternative kernel design named persistent thread. Trading off
 portion of parallelization for higher level of control over kernel execution
-and limiting OpenCL computational overhead ratio proven itself as valid aproach
+and limiting OpenCL computational overhead ratio proven itself as valid approach
 especially for SRTP packets with larger payload. Processing time for single
 G.711 packet can be reduced to half compared with serial implementation. 
 Measuring round-trip time during multiple sessions the improvement was
-successfull to the greater degree lowering the delay to one third for maximal
+successful to the greater degree lowering the delay to one third for maximal
 number of concurrent channels which is set to the gateway as 120.
 
-At first, comparison of implementated algorithms efectivity was measured on
+At first, comparison of implemented algorithms effectiveness was measured on
 a simple designed benchmark, where experimentally gained results endorsed the
 theoretical ideas supporting the development. Even though these results produced
 exact comparison, it was necessary to produce measurements on deployed machine 
