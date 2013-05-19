@@ -190,9 +190,9 @@ communication overhead.
 
 \textbf{ZRTP} is a protocol extension of RTP for secure establishing session key 
 using Diffie-Hellman key exchange improved for detection of man-in-the-middle 
-attack, which is briefly described in section \ref{mitm}, \cite{rfc6189}.
+attack, which is briefly described in section \ref{mitm}.
 Another advantage of the improvement is that it doesn't require any prior shared 
-secret nor public key infrastructure.
+secret nor public key infrastructure\cite{rfc6189}.
 
 \textbf{SDES} is protocol extension of SDP\cite{rfc:sdp, rfc:sdes} typically in 
 SIP\cite{rfc:sip} message. It is responsibility of the SIP stack to protect the 
@@ -585,8 +585,8 @@ deciphering).
 
 \subsubsection*{F8-mode}
 The f8-mode is a variant of commonly known Output Feedback Mode (OFB)
-\cite{blockciphers} with more elaborate initialization and feedback function
-\cite{rfc3711}. The first output block $O_1$ is computed from $IV$, then it
+with more elaborate initialization and feedback function\cite{rfc3711, blockciphers}. 
+The first output block $O_1$ is computed from $IV$, then it
 is XORed with plaintext to produce the first ciphertext block. The output block
 from previous step $O_{j-1}$ is used to compute the current output block $O_j$
 which is always XORed with current plaintext in encryption algorithm. 
@@ -677,7 +677,7 @@ algorithms\cite{nvidia:sample, amd:apps}.
 Usual solutions with graphics card can have high power consumption. The modern
 trend and need of transportable forced development to reduce negative 
 effects of GPUs while keeping as much of latest visual experience as 
-possible\cite{apu:efficiency}.
+possible\cite{apu:efficiency, apu:crypto}.
 Both solutions utilize a portion of computer's system RAM memory.
 
 APU is Accelerated Processing Unit that is designed to accelerate certain
@@ -798,7 +798,7 @@ and GPU, part of host memory. It is slower than global memory.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{Design}\label{chapter:design}%\cite{apu:crypto}
+\chapter{Design}\label{chapter:design}%
 The aim of the implementation is to determine whether the parallel processing
 of SRTP could improve the limitations on modern VoIP softgates. The development
 of sophisticated softgate requires elaborate engineering and implementation
@@ -819,8 +819,8 @@ which the implementation could be based on and as the field of VoIP
 communication has been known for decent amount of time, there are currently
 couple of advised design patterns, from which the particular implementation for 
 this thesis stands on three -- mediator pattern, singleton 
-pattern\cite{design-patterns} and protocol stack pattern 
-\cite{protocol-stack}. None of these design patterns could be thought as 
+pattern\cite{design-patterns} and protocol stack 
+pattern\cite{protocol-stack}. None of these design patterns could be thought as 
 contribution of the thesis as they all belong to common public knowledge and 
 their examination was not the main topic of the  research. However, their 
 explanation is provided in order to make the rest of the chapter more 
@@ -1021,7 +1021,7 @@ of the gateway during indirect media sessions. Proper implementation must not la
 
 \begin{itemize}
 \item \textbf{encryption module} -- implementation of AES-128b cipher as defined
-in RFC-3711 \cite{rfc3711} in at least CRT mode that provides protection of transferred
+in RFC-3711\cite{rfc3711} in at least CRT mode that provides protection of transferred
 data with different keys for each endpoint in all concurrent sessions.
 \item \textbf{input and output buffers} -- in order to avoid exhaustive allocation
 and deallocation of structures for input and output packets, the data storage should
@@ -1066,8 +1066,7 @@ codecs, their sampling periods and payload size are mentioned in table
  \hline
 \end{tabular}
 \end{center}
-\caption[Codec payloads]{Selected codecs and payload information 
-\cite{rtpbandwidth}.}
+\caption[Codec payloads]{Selected codecs and payload information\cite{rtpbandwidth}.}
 \label{bandwidth}
 \end{table}
 
@@ -1157,7 +1156,7 @@ and data persistency.
 \subsubsection*{Massive Parallel Processing}
 Traditional parallel programming style relies heavily on SIMT\footnote{ SIMT -- 
 Single Instruction Multiple Thread} and SPMD\footnote{ SPMD -- Single Program
-Multiple Data} programming paradigms \cite{Flynn:1972}. The native OpenCL 
+Multiple Data} programming paradigms\cite{Flynn:1972}. The native OpenCL 
 approach is based on abstracting the units of work from the programmers code 
 into virtual threads -- work-items. The convenience it offers in allocation
 of resources brings couple of limitations as well. 
@@ -1189,7 +1188,7 @@ every single execution. However, the aim of this thesis is to minimize large
 delays for multiple sessions which requires rather careful allocation of
 resources. Persistent threads is special type of programing paradigm combining 
 both, the possible gain of mapping the program for parallel computation and
-considerate usage of resources \cite{pt}.
+considerate usage of resources\cite{pt}.
 
 Since the initialization of computational kernel can consume significant amount 
 of time compared to the actual execution, larger kernel reusing its resources 
@@ -1849,7 +1848,7 @@ softgate properties and used software products for compilation of SRTP stack.
 \end{itemize}
  
 The commercial gateway with optimized hardware and software can hold around 120 
-concurrent calls \cite{hp4k}, therefore, the tests did not aim for much higher
+concurrent calls\cite{hp4k}, therefore, the tests did not aim for much higher
 numbers and the analysis of the results focus around the known maximal number.
 
 The testing environment differed from the type of executed test. For the
@@ -1931,8 +1930,8 @@ during concurrent calls. Every captured SRTP packet has been entered into
 results. Single column shows the distribution of delays during the particular
 number of concurrent calls where the thicker area of the column visualizes
 90\% of the packets. The remainding 10\% were considered as abnormal and thanks
-to satisfying the common limitations of real-time communications 
-\cite{perkins:rtp2003}, the exceeding 5\% can be neglected.
+to satisfying the common limitations of real-time 
+communications\cite{perkins:rtp2003}, the exceeding 5\% can be neglected.
 
 \begin{figure}[H]
 \centering
