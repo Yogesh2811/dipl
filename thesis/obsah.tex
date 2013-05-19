@@ -1881,9 +1881,8 @@ For the comparison of effectivity of the AES implementation, in table
 \ref{aes-comparison} are given time requirements for execution of multiple
 blocks encrypted by 128-bit AES with the implementation proposed in this thesis
 and reference implementations M5t\footnote{ M5t framework includes AES 
-implementation currently used in many Siemens devices\cite{m5t}.}, 
-EfAesLib\footnote{ EfAesLib is a highly optimized Advanced Encryption Standard 
-library\cite{aes-lib}.} and OpenSSL\footnote{ OpenSSL is open-source 
+implementation currently used in many Siemens devices\cite{m5t}.}
+ and OpenSSL\footnote{ OpenSSL is open-source 
 implementation of SSL and TLS protocols including cryptographic 
 functions\cite{openssl}.}. The values in table \ref{aes-comparison} were 
 obtained through simple benchmark passing the array of bytes representing
@@ -1898,14 +1897,12 @@ Implementation &  1 block & 5 blocks & 10 blocks & 15 blocks & 20 blocks\\\hline
 %Serial  &16 $\micro$s&28 $\micro$s&48 $\micro$s&66 $\micro$s&86 $\micro$s\\
 %Persistent thread&44 $\micro$s&45 $\micro$s&44 $\micro$s&44 $\micro$s&45 $\micro$s\\
 %Massive Parallel&55 $\micro$s&55 $\micro$s&54 $\micro$s&55 $\micro$s&62 $\micro$s\\
-%EfAesLib &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\
 %OpenSSL &XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s&XX $\micro$s\\\hline
 M5t  &26 $\mu$s&32 $\mu$s&46 $\mu$s&69 $\mu$s&82 $\mu$s\\ 
 Serial  &16 $\mu$s&28 $\mu$s&48 $\mu$s&66 $\mu$s&86 $\mu$s\\
 Persistent thread&44 $\mu$s&45 $\mu$s&44 $\mu$s&44 $\mu$s&45 $\mu$s\\
 Massive Parallel&55 $\mu$s&55 $\mu$s&54 $\mu$s&55 $\mu$s&62 $\mu$s\\
-EfAesLib &XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s\\
-OpenSSL &XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s&XX $\mu$s\\\hline
+OpenSSL &9 $\mu$s&16 $\mu$s&33 $\mu$s&47 $\mu$s&63 $\mu$s\\\hline
 \end{tabular}
 \end{center}
 \caption{Comparison of selected AES implementations.}
@@ -1945,14 +1942,6 @@ of delays during SRTP sessions with serial encryption implementation.}
 \label{serial-res}
 \end{figure}
 
-Predictably the average delay of the packet increases with the amount of 
-concurrent calls in figure \ref{serial-res} for serial implementation. The time
-for 150 concurrent calls was not included due its excessive values which would
-make readability of the graph more difficult. 
-Even though the increase of delay seems to be linear, higher number of 
-concurrent calls shows that the increase is exponential, which can be visible
-on the figure \ref{pt-res} for persistent thread implementation. 
-
 \begin{figure}[H]
 \centering
 \includegraphics[width=15cm]{fig/persistent-thread-res.pdf}
@@ -1961,6 +1950,14 @@ distribution of delays during SRTP sessions with parallel encryption
 implementation.}
 \label{pt-res}
 \end{figure}
+
+Predictably the average delay of the packet increases with the amount of 
+concurrent calls in figure \ref{serial-res} for serial implementation. The time
+for 150 concurrent calls was not included due its excessive values which would
+make readability of the graph more difficult. 
+Even though the increase of delay seems to be linear, higher number of 
+concurrent calls shows that the increase is exponential, which can be visible
+on the figure \ref{pt-res} for persistent thread implementation. 
 
 Less predictable increase is visible in persistent thread implementation.
 Inconsistent extreme values of delays may be produced by host and device
@@ -1993,7 +1990,6 @@ around 27~ms.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Conclusion}\label{chapter:conclusion}
-%TODO split to two - 1. contribution and 2. further suggestions
 There are lot of possibilities for optimization of SRTP processing. Selected
 approach focuses on methods of parallelization of encryption and decryption
 processes of default 128-bit AES cipher in counter mode, which offers large 
@@ -2004,7 +2000,9 @@ Since the current development of processing units begins to be limited by
 physical atributes of used materials, the focus drifts more on the design
 of such units. Instruction and thread level parallelism brings new possibilities 
 of improvement showing that software design should take parallel paradigm under 
-consideration.  
+consideration. Not only in utilization of GPU for general purpose computations
+but also modern CPU have multi-core design or hybrid design consisting of
+additional computing units such as GPU chip or FPGA.
 
 Proposed architectures and designs are currently far from being complete. The 
 most effort was invested in correct analysis and understanding of  
